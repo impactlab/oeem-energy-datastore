@@ -1,10 +1,14 @@
 from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
 from .models import ProjectOwner
+from .models import Project
 from django.utils.timezone import now, timedelta
 from oauth2_provider.models import AccessToken
 from oauth2_provider.models import get_application_model
 import json
+from datetime import datetime
+from eemeter.project import Project as EEMeterProject
+from eemeter.evaluation import Period
 
 ApplicationModel = get_application_model()
 
@@ -140,3 +144,60 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['weather_station'] == "STATION"
         assert response.data['latitude'] == 0.0
         assert response.data['longitude'] == 0.0
+
+class ProjectTestCase(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user("user", "test@user.com", "123456")
+        self.project_owner = ProjectOwner(user=self.user)
+        self.project_owner.save()
+        self.project = Project(
+                project_owner=self.project_owner,
+                project_id="TEST_PROJECT",
+                baseline_period_start=now(),
+                baseline_period_end=now(),
+                reporting_period_start=now(),
+                reporting_period_end=now(),
+                zipcode=None,
+                weather_station=None,
+                latitude=None,
+                longitude=None,
+                )
+
+    def tearDown(self):
+        self.user.delete()
+        self.project_owner.delete()
+
+    def test_project_baseline_period(self):
+        period = self.project.baseline_period
+        assert isinstance(period, Period)
+        assert isinstance(period.start, datetime)
+        assert isinstance(period.end, datetime)
+
+    def test_project_reporting_period(self):
+        period = self.project.reporting_period
+        assert isinstance(period, Period)
+        assert isinstance(period.start, datetime)
+        assert isinstance(period.end, datetime)
+
+    def test_project_lat_lng(self):
+        assert self.project.lat_lng is None
+        self.project.latitude = 41.8
+        self.project.longitude = -87.6
+        self.project.lat_lng is not None
+
+    def test_project_eemeter_project_with_zipcode(self):
+        self.project.zipcode = "91104"
+        project = self.project.eemeter_project()
+
+    def test_project_eemeter_project_with_lat_lng(self):
+        self.project.latitude = 41.8
+        self.project.longitude = -87.6
+        project = self.project.eemeter_project()
+        assert isinstance(project, EEMeterProject)
+
+    def test_project_eemeter_project_with_station(self):
+        self.project.weather_station = "722880"
+        project = self.project.eemeter_project()
+        assert isinstance(project, EEMeterProject)
+

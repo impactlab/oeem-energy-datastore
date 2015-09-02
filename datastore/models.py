@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from eemeter.evaluation import Period
+from eemeter.project import Project as EEMeterProject
+from eemeter.location import Location
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
@@ -15,6 +18,32 @@ class Project(models.Model):
     weather_station = models.CharField(max_length=10, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
+
+    @property
+    def baseline_period(self):
+        return Period(self.baseline_period_start, self.baseline_period_end)
+
+    @property
+    def reporting_period(self):
+        return Period(self.reporting_period_start, self.reporting_period_end)
+
+    @property
+    def lat_lng(self):
+        if self.latitude is not None and self.longitude is not None:
+            return (self.latitude, self.longitude)
+        else:
+            return None
+
+    def eemeter_project(self):
+        if self.lat_lng is not None:
+            location = Location(lat_lng=self.lat_lng)
+        elif self.weather_station is not None:
+            location = Location(station=self.weather_station)
+        else:
+            location = Location(zipcode=self.zipcode)
+        consumption = []
+        project = EEMeterProject(location, consumption, self.baseline_period, self.reporting_period)
+        return project
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
