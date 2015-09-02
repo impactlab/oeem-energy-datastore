@@ -4,15 +4,13 @@ from django.contrib.auth.models import User
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
 
-class Period(models.Model):
-    start = models.DateTimeField(blank=True, null=True)
-    end = models.DateTimeField(blank=True, null=True)
-
 class Project(models.Model):
     project_owner = models.ForeignKey(ProjectOwner)
     project_id = models.CharField(max_length=255)
-    baseline_period = models.OneToOneField(Period, related_name="baseline_period", blank=True, null=True)
-    reporting_period = models.OneToOneField(Period, related_name="reporting_period", blank=True, null=True)
+    baseline_period_start = models.DateTimeField(blank=True, null=True)
+    baseline_period_end = models.DateTimeField(blank=True, null=True)
+    reporting_period_start = models.DateTimeField(blank=True, null=True)
+    reporting_period_end = models.DateTimeField(blank=True, null=True)
     zipcode = models.CharField(max_length=10, blank=True, null=True)
     weather_station = models.CharField(max_length=10, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)

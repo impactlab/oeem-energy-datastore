@@ -1,5 +1,6 @@
 from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
+from .models import ProjectOwner
 from django.utils.timezone import now, timedelta
 from oauth2_provider.models import AccessToken
 from oauth2_provider.models import get_application_model
@@ -13,6 +14,8 @@ class OAuthTestCase(TestCase):
         self.factory = RequestFactory()
         self.client = Client()
         self.user = User.objects.create_user("user", "test@user.com", "123456")
+        self.project_owner = ProjectOwner(user=self.user)
+        self.project_owner.save()
         self.app = ApplicationModel.objects.create(
                     name='app',
                     client_type=ApplicationModel.CLIENT_CONFIDENTIAL,
@@ -27,6 +30,7 @@ class OAuthTestCase(TestCase):
 
     def tearDown(self):
             self.user.delete()
+            self.project_owner.delete()
             self.app.delete()
             self.token.delete()
 
@@ -65,22 +69,74 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         response = self.client.post('/datastore/consumption/', data, content_type="application/json", **auth_headers)
 
         assert response.status_code == 201
+
+        assert isinstance(response.data['id'], int)
         assert response.data['energy_unit'] == 'KWH'
         assert response.data['fuel_type'] == 'E'
-        assert isinstance(response.data['id'], int)
+        assert response.data['project'] == None
         assert len(response.data['records']) == 1
 
         consumption_metadata_id = response.data['id']
         response = self.client.get('/datastore/consumption/{}/'.format(consumption_metadata_id), **auth_headers)
+
         assert response.status_code == 200
+
+        assert response.data['id'] == consumption_metadata_id
         assert response.data['energy_unit'] == 'KWH'
         assert response.data['fuel_type'] == 'E'
-        assert response.data['id'] == consumption_metadata_id
+        assert response.data['project'] == None
+
         assert len(response.data['records']) == 1
         assert response.data['records'][0]['start'] == "2014-01-01T00:00:00Z"
         assert response.data['records'][0]['value'] == 0
         assert response.data['records'][0]['estimated'] == False
 
-
     def test_project_create_read(self):
-        pass
+        auth_headers = { "Authorization": "Bearer " + "tokstr" }
+
+        project_data = {
+                "project_owner": self.project_owner.id,
+                "project_id": "PROJECT_ID",
+                "baseline_period_start": "2014-01-01T00:00:00+00:00",
+                "baseline_period_end": "2014-01-01T00:00:00+00:00",
+                "reporting_period_start": "2014-01-01T00:00:00+00:00",
+                "reporting_period_end": "2014-01-01T00:00:00+00:00",
+                "zipcode": "ZIPCODE",
+                "weather_station": "STATION",
+                "latitude": 0.0,
+                "longitude": 0.0,
+                }
+
+        data = json.dumps(project_data)
+        response = self.client.post('/datastore/project/', data, content_type="application/json", **auth_headers)
+        assert response.status_code == 201
+
+        assert isinstance(response.data['id'], int)
+
+        assert response.data['project_owner'] == self.project_owner.id
+        assert response.data['project_id'] == "PROJECT_ID"
+        assert response.data['baseline_period_start'] == "2014-01-01T00:00:00Z"
+        assert response.data['baseline_period_end'] == "2014-01-01T00:00:00Z"
+        assert response.data['reporting_period_start'] == "2014-01-01T00:00:00Z"
+        assert response.data['reporting_period_end'] == "2014-01-01T00:00:00Z"
+        assert response.data['zipcode'] == "ZIPCODE"
+        assert response.data['weather_station'] == "STATION"
+        assert response.data['latitude'] == 0.0
+        assert response.data['longitude'] == 0.0
+
+        project_id = response.data['id']
+        response = self.client.get('/datastore/project/{}/'.format(project_id), **auth_headers)
+        assert response.status_code == 200
+
+        assert response.data['id'] == project_id
+
+        assert response.data['project_owner'] == self.project_owner.id
+        assert response.data['project_id'] == "PROJECT_ID"
+        assert response.data['baseline_period_start'] == "2014-01-01T00:00:00Z"
+        assert response.data['baseline_period_end'] == "2014-01-01T00:00:00Z"
+        assert response.data['reporting_period_start'] == "2014-01-01T00:00:00Z"
+        assert response.data['reporting_period_end'] == "2014-01-01T00:00:00Z"
+        assert response.data['zipcode'] == "ZIPCODE"
+        assert response.data['weather_station'] == "STATION"
+        assert response.data['latitude'] == 0.0
+        assert response.data['longitude'] == 0.0
