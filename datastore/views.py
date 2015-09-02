@@ -16,12 +16,12 @@ class ConsumptionMetadataDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = ConsumptionMetadata.objects.all()
     serializer_class = ConsumptionMetadataSerializer
 
-class ProjectList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-
-class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
+# class ProjectList(generics.ListCreateAPIView):
+#     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+#     queryset = Project.objects.all()
+#     serializer_class = ProjectSerializer
+#
+# class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
+#     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+#     queryset = Project.objects.all()
+#     serializer_class = ProjectSerializer

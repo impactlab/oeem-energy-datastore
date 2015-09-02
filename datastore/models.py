@@ -4,9 +4,19 @@ from django.contrib.auth.models import User
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
 
+class Period(models.Model):
+    start = models.DateTimeField(blank=True, null=True)
+    end = models.DateTimeField(blank=True, null=True)
+
 class Project(models.Model):
     project_owner = models.ForeignKey(ProjectOwner)
     project_id = models.CharField(max_length=255)
+    baseline_period = models.OneToOneField(Period, related_name="baseline_period", blank=True, null=True)
+    reporting_period = models.OneToOneField(Period, related_name="reporting_period", blank=True, null=True)
+    zipcode = models.CharField(max_length=10, blank=True, null=True)
+    weather_station = models.CharField(max_length=10, blank=True, null=True)
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
 
 class Block(models.Model):
     name = models.CharField(max_length=255)
@@ -17,12 +27,12 @@ class ConsumptionMetadata(models.Model):
         ('E', 'electricity'),
         ('NG', 'natural_gas'),
     )
-    FUEL_UNIT_CHOICES = (
+    ENERGY_UNIT_CHOICES = (
         ('KWH', 'kilowatthours'),
         ('THM', 'therms'),
     )
     fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
-    fuel_unit = models.CharField(max_length=3, choices=FUEL_UNIT_CHOICES)
+    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
 
 class ConsumptionRecord(models.Model):

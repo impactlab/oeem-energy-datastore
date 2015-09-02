@@ -16,7 +16,6 @@ from .models import ModelParameters
 
 class ProjectSerializer(serializers.ModelSerializer):
 
-
     class Meta:
         model = Project
         fields = ('id', 'project_owner', 'project_id')
@@ -31,7 +30,7 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ConsumptionMetadata
-        fields = ('id', 'fuel_type', 'fuel_unit', 'records', 'project')
+        fields = ('id', 'fuel_type', 'energy_unit', 'records')
 
     def create(self, validated_data):
         records_data = validated_data.pop('records')
