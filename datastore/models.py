@@ -16,7 +16,7 @@ class Project(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
 
-class Block(models.Model):
+class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
     project = models.ManyToManyField(Project)
 
@@ -43,9 +43,21 @@ class ConsumptionRecord(models.Model):
         ordering = ['start']
 
 class MeterRun(models.Model):
+    MODEL_TYPE_CHOICES = (
+        ('DFLT_RES_E', 'Default Residential Electricity'),
+        ('DFLT_RES_NG', 'Default Residential Natural Gas'),
+        ('DFLT_COM_E', 'Default Commercial Electricity'),
+        ('DFLT_COM_NG', 'Default Commercial Natural Gas'),
+    )
     project = models.ForeignKey(Project)
     consumption_metadata_id = models.ForeignKey(ConsumptionMetadata)
     serialization = models.CharField(max_length=100000)
+    annual_usage_baseline = models.FloatField(blank=True, null=True)
+    annual_usage_reporting = models.FloatField(blank=True, null=True)
+    gross_savings = models.FloatField(blank=True, null=True)
+    annual_savings = models.FloatField(blank=True, null=True)
+    model_type = models.CharField(max_length=250, choices=MODEL_TYPE_CHOICES, blank=True, null=True)
+    model_parameter_json = models.CharField(max_length=10000, blank=True, null=True)
 
 class DailyUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
@@ -56,27 +68,3 @@ class DailyUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
-
-class AnnualUsageBaseline(models.Model):
-    meter_run = models.ForeignKey(MeterRun)
-    value = models.FloatField()
-
-class AnnualUsageReporting(models.Model):
-    meter_run = models.ForeignKey(MeterRun)
-    value = models.FloatField()
-
-class GrossSavings(models.Model):
-    meter_run = models.ForeignKey(MeterRun)
-    value = models.FloatField()
-
-class AnnualSavings(models.Model):
-    meter_run = models.ForeignKey(MeterRun)
-    value = models.FloatField()
-
-class ModelType(models.Model):
-    model_name = models.CharField(max_length=255)
-
-class ModelParameters(models.Model):
-    meter_run = models.ForeignKey(MeterRun)
-    model_type = models.ForeignKey(ModelType)
-    parameters_json = models.CharField(max_length=255)
