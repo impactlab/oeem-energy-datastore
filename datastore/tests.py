@@ -2,12 +2,15 @@ from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
 from .models import ProjectOwner
 from .models import Project
+from .models import ConsumptionMetadata
+from .models import ConsumptionRecord
 from django.utils.timezone import now, timedelta
 from oauth2_provider.models import AccessToken
 from oauth2_provider.models import get_application_model
 import json
 from datetime import datetime
 from eemeter.project import Project as EEMeterProject
+from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.evaluation import Period
 
 ApplicationModel = get_application_model()
@@ -201,3 +204,28 @@ class ProjectTestCase(TestCase):
         project = self.project.eemeter_project()
         assert isinstance(project, EEMeterProject)
 
+
+class ConsumptionTestCase(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user("user", "test@user.com", "123456")
+        self.consumption_metadata = ConsumptionMetadata(fuel_type="E", energy_unit="KWH")
+        self.consumption_metadata.save()
+        self.record = ConsumptionRecord(
+            metadata=self.consumption_metadata, start=now(), estimated=False)
+        self.record.save()
+
+    def tearDown(self):
+        self.user.delete()
+
+    def test_consumption_eemeter_consumption_data(self):
+        consumption_data = self.consumption_metadata.eemeter_consumption_data()
+        assert isinstance(consumption_data, EEMeterConsumptionData)
+
+    def test_consumption_eemeter_record(self):
+        record = self.record.eemeter_record()
+        assert isinstance(record, dict)
+        assert record["start"] == self.record.start
+        assert record["value"] == self.record.value
+        assert record["estimated"] == self.record.estimated
+        assert len(record) == 3

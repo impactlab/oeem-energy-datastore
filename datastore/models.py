@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from eemeter.evaluation import Period
 from eemeter.project import Project as EEMeterProject
+from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.location import Location
 
 class ProjectOwner(models.Model):
@@ -41,7 +42,7 @@ class Project(models.Model):
             location = Location(station=self.weather_station)
         else:
             location = Location(zipcode=self.zipcode)
-        consumption = []
+        consumption = [cm.eemeter_consumption_data() for cm in self.consumptionmetadata_set.all()]
         project = EEMeterProject(location, consumption, self.baseline_period, self.reporting_period)
         return project
 
@@ -50,17 +51,36 @@ class ProjectBlock(models.Model):
     project = models.ManyToManyField(Project)
 
 class ConsumptionMetadata(models.Model):
-    FUEL_TYPE_CHOICES = (
-        ('E', 'electricity'),
-        ('NG', 'natural_gas'),
-    )
-    ENERGY_UNIT_CHOICES = (
-        ('KWH', 'kilowatthours'),
-        ('THM', 'therms'),
-    )
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
-    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES)
+    FUEL_TYPE_CHOICES = {
+            'E': 'electricity',
+            'NG': 'natural_gas',
+            }
+    ENERGY_UNIT_CHOICES = {
+            'KWH': 'kWh',
+            'THM': 'therm',
+            }
+
+    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
+    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES.items())
     project = models.ForeignKey(Project, blank=True, null=True)
+
+    def eemeter_consumption_data(self):
+        FUEL_TYPE_CHOICES = {
+                'E': 'electricity',
+                'NG': 'natural_gas',
+                }
+        ENERGY_UNIT_CHOICES = {
+                'KWH': 'kWh',
+                'THM': 'therm',
+                }
+        records = self.records.all()
+        records = [r.eemeter_record() for r in records]
+        fuel_type = FUEL_TYPE_CHOICES[self.fuel_type]
+        unit_name = ENERGY_UNIT_CHOICES[self.energy_unit]
+        consumption_data = EEMeterConsumptionData(records, fuel_type=fuel_type,
+                unit_name=unit_name, record_type="arbitrary_start")
+        return consumption_data
+
 
 class ConsumptionRecord(models.Model):
     metadata = models.ForeignKey(ConsumptionMetadata, related_name="records")
@@ -70,6 +90,9 @@ class ConsumptionRecord(models.Model):
 
     class Meta:
         ordering = ['start']
+
+    def eemeter_record(self):
+        return {"start": self.start, "value": self.value, "estimated": self.estimated }
 
 class MeterRun(models.Model):
     MODEL_TYPE_CHOICES = (
