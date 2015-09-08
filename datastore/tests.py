@@ -187,11 +187,12 @@ class ProjectTestCase(TestCase):
         assert self.project.lat_lng is None
         self.project.latitude = 41.8
         self.project.longitude = -87.6
-        self.project.lat_lng is not None
+        assert self.project.lat_lng is not None
 
     def test_project_eemeter_project_with_zipcode(self):
         self.project.zipcode = "91104"
         project = self.project.eemeter_project()
+        assert isinstance(project, EEMeterProject)
 
     def test_project_eemeter_project_with_lat_lng(self):
         self.project.latitude = 41.8
