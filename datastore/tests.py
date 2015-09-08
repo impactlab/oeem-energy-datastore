@@ -166,6 +166,7 @@ class ProjectTestCase(TestCase):
                 latitude=None,
                 longitude=None,
                 )
+        self.project.save()
 
     def tearDown(self):
         self.user.delete()
@@ -191,19 +192,38 @@ class ProjectTestCase(TestCase):
 
     def test_project_eemeter_project_with_zipcode(self):
         self.project.zipcode = "91104"
-        project = self.project.eemeter_project()
+        project, cm_ids = self.project.eemeter_project()
         assert isinstance(project, EEMeterProject)
+        assert cm_ids == []
 
     def test_project_eemeter_project_with_lat_lng(self):
         self.project.latitude = 41.8
         self.project.longitude = -87.6
-        project = self.project.eemeter_project()
+        project, cm_ids= self.project.eemeter_project()
         assert isinstance(project, EEMeterProject)
+        assert cm_ids == []
+
 
     def test_project_eemeter_project_with_station(self):
         self.project.weather_station = "722880"
-        project = self.project.eemeter_project()
+        project, cm_ids = self.project.eemeter_project()
         assert isinstance(project, EEMeterProject)
+        assert cm_ids == []
+
+    def test_project_run_meter(self):
+        assert len(self.project.meterrun_set.all()) == 0
+
+        # set up project
+        self.project.weather_station = "722880"
+        consumption_metadata = ConsumptionMetadata(project=self.project,
+                fuel_type="E", energy_unit="KWH")
+        consumption_metadata.save()
+
+        # run meter
+        self.project.run_meter()
+
+        assert len(self.project.meterrun_set.all()) == 1
+
 
 
 class ConsumptionTestCase(TestCase):

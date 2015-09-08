@@ -4,6 +4,7 @@ from eemeter.evaluation import Period
 from eemeter.project import Project as EEMeterProject
 from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.location import Location
+from warnings import warn
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
@@ -43,8 +44,37 @@ class Project(models.Model):
         else:
             location = Location(zipcode=self.zipcode)
         consumption = [cm.eemeter_consumption_data() for cm in self.consumptionmetadata_set.all()]
+        consumption_metadata_ids = [cm.id for cm in self.consumptionmetadata_set.all()]
+
         project = EEMeterProject(location, consumption, self.baseline_period, self.reporting_period)
-        return project
+        return project, consumption_metadata_ids
+
+    def run_meter(self, model_type='residential'):
+        try:
+            project, cm_ids = self.eemeter_project()
+        except ValueError:
+            message = "Cannot create eemeter project; skipping project id={}.".format(self.project_id)
+            warn(message)
+
+        for consumption_data, cm_id in zip(project.consumption, cm_ids):
+
+            # determine model type
+            model_type_str = None
+            if model_type == "residential":
+                if consumption_data.fuel_type == "electricity":
+                    model_type_str = "DFLT_RES_E"
+                elif consumption_data.fuel_type == "natural_gas":
+                    model_type_str = "DFLT_RES_NG"
+            elif model_type == "commercial":
+                if consumption_data.fuel_type == "electricity":
+                    model_type_str = "DFLT_COM_E"
+                elif consumption_data.fuel_type == "natural_gas":
+                    model_type_str = "DFLT_COM_NG"
+
+            meter_run = MeterRun(project=self,
+                    consumption_metadata_id=ConsumptionMetadata.objects.get(pk=cm_id),
+                    model_type=model_type_str)
+            meter_run.save()
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
@@ -103,7 +133,7 @@ class MeterRun(models.Model):
     )
     project = models.ForeignKey(Project)
     consumption_metadata_id = models.ForeignKey(ConsumptionMetadata)
-    serialization = models.CharField(max_length=100000)
+    serialization = models.CharField(max_length=100000, blank=True, null=True)
     annual_usage_baseline = models.FloatField(blank=True, null=True)
     annual_usage_reporting = models.FloatField(blank=True, null=True)
     gross_savings = models.FloatField(blank=True, null=True)
