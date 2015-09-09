@@ -20,9 +20,9 @@ class OAuthTestCase(TestCase):
 
     def setUp(self):
         """
-        Sets up the test cases. Includes a client, 
+        Sets up the test cases. Includes a client,
         factory, a demo user, project owners, an application model
-        and finally, a Oauth token. 
+        and finally, a Oauth token.
         """
         self.factory = RequestFactory()
         self.client = Client()
@@ -56,8 +56,8 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
     def test_consumption_metatdata_bad_token(self):
         """
         Tests the oauth token againist the consumption
-        API. Makes sure that that section of the 
-        API requires auth. 
+        API. Makes sure that that section of the
+        API requires auth.
         """
         auth_headers = {"Authorization": "Bearer " + "badtoken" }
         response = self.client.get('/datastore/consumption/', **auth_headers)
@@ -66,8 +66,8 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
     def test_consumption_metadata_bad_scope(self):
         """
-        Tests for valid token being posted to /datastore/consumption 
-        endpoint. Basically a permissions test. 
+        Tests for valid token being posted to /datastore/consumption
+        endpoint. Basically a permissions test.
         """
         self.token = AccessToken.objects.create(user=self.user,
                                                 token='tokstr_no_scope',
@@ -80,8 +80,8 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
     def test_consumption_metadata_create_read(self):
         """
-        Tests if a user, with proper permissions, can 
-        create consumption data using the api at 
+        Tests if a user, with proper permissions, can
+        create consumption data using the api at
         /datastore/consmption
         """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
@@ -126,7 +126,7 @@ class ProjectAPITestCase(OAuthTestCase):
 
     def test_project_create_read(self):
         """
-        Tests if a user with proper auth can 
+        Tests if a user with proper auth can
         post and read back data for a project
         endpoint under test: /datastore/project
         """
@@ -183,8 +183,8 @@ class MeterRunAPITestCase(OAuthTestCase):
 
     def setUp(self):
         """
-        Setup methods for a eemeter run storage 
-        engine. 
+        Setup methods for a eemeter run storage
+        engine.
         """
         super(MeterRunAPITestCase,self).setUp()
 
