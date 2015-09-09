@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'oauth2_provider',
     'rest_framework',
     'datastore',
+    'django_pdb',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -53,6 +54,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django_pdb.middleware.PdbMiddleware',
 )
 
 ROOT_URLCONF = 'oeem_energy_datastore.urls'

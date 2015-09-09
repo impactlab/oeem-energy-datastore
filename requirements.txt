@@ -3,7 +3,7 @@ Django
 django-oauth-toolkit
 django-sslserver
 djangorestframework
-eemeter
 pandas
 psycopg2
 requests
+eemeter
