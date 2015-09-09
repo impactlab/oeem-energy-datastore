@@ -19,6 +19,11 @@ ApplicationModel = get_application_model()
 class OAuthTestCase(TestCase):
 
     def setUp(self):
+        """
+        Sets up the test cases. Includes a client, 
+        factory, a demo user, project owners, an application model
+        and finally, a Oauth token. 
+        """
         self.factory = RequestFactory()
         self.client = Client()
         self.user = User.objects.create_user("user", "test@user.com", "123456")
@@ -37,20 +42,33 @@ class OAuthTestCase(TestCase):
                                                 scope="read write")
 
     def tearDown(self):
-            self.user.delete()
-            self.project_owner.delete()
-            self.app.delete()
-            self.token.delete()
+        """
+        Removes persistent data from the datastore
+        after running tests.
+        """
+        self.user.delete()
+        self.project_owner.delete()
+        self.app.delete()
+        self.token.delete()
 
 class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
     def test_consumption_metatdata_bad_token(self):
+        """
+        Tests the oauth token againist the consumption
+        API. Makes sure that that section of the 
+        API requires auth. 
+        """
         auth_headers = {"Authorization": "Bearer " + "badtoken" }
         response = self.client.get('/datastore/consumption/', **auth_headers)
         assert response.status_code == 401
         assert response.data["detail"] == "Authentication credentials were not provided."
 
-    def test_consumption_metatdata_bad_scope(self):
+    def test_consumption_metadata_bad_scope(self):
+        """
+        Tests for valid token being posted to /datastore/consumption 
+        endpoint. Basically a permissions test. 
+        """
         self.token = AccessToken.objects.create(user=self.user,
                                                 token='tokstr_no_scope',
                                                 application=self.app,
@@ -60,7 +78,12 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.status_code == 403
         assert response.data["detail"] == "You do not have permission to perform this action."
 
-    def test_consumption_metatdata_create_read(self):
+    def test_consumption_metadata_create_read(self):
+        """
+        Tests if a user, with proper permissions, can 
+        create consumption data using the api at 
+        /datastore/consmption
+        """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
         consumption_data = {
@@ -102,6 +125,11 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 class ProjectAPITestCase(OAuthTestCase):
 
     def test_project_create_read(self):
+        """
+        Tests if a user with proper auth can 
+        post and read back data for a project
+        endpoint under test: /datastore/project
+        """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
         project_data = {
@@ -154,6 +182,10 @@ class ProjectAPITestCase(OAuthTestCase):
 class MeterRunAPITestCase(OAuthTestCase):
 
     def setUp(self):
+        """
+        Setup methods for a eemeter run storage 
+        engine. 
+        """
         super(MeterRunAPITestCase,self).setUp()
 
         self.project = Project(
@@ -181,7 +213,11 @@ class MeterRunAPITestCase(OAuthTestCase):
                 consumption_metadata=self.consumption_metadata)
         self.meter_run.save()
 
-    def test_meter_run_create_read(self):
+    def test_meter_run_read(self):
+        """
+        Tests reading a meter run data.
+        endpoint: /datastore/meter_run/{id}
+        """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
         response = self.client.get('/datastore/meter_run/{}/'.format(self.meter_run.id), **auth_headers)
