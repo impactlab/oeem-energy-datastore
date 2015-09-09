@@ -2,33 +2,33 @@ Open Energy Efficiency Meter Energy Datastore
 =============================================
 
 This datastore app provides an API for storing consumption data, project data,
-and reading meter run data.
+and reading meter run data. It is an OAuth 2 provider.
 
 Setup
 -----
 
-### Make sure OS level dependencies are installed
+#### Make sure OS level dependencies are installed
 
 - postgres
 
-### Clone the repo & change directories
+#### Clone the repo & change directories
 
     git clone git@github.com:impactlab/oeem-energy-datastore.git
     cd oeem-energy-datastore
 
-### Install required python packages
+#### Install required python packages
 
 We recommend using virtualenv to manage python packages
 
     mkvirtualenv oeem-energy-datastore
     pip install -r requirements.txt
 
-### Create the database (and optionally the eemeter weather cache database)
+#### Create the database (and optionally the eemeter weather cache database)
 
     createdb oeem_energy_datastore
     createdb eemeter_weather_cache # optional
 
-### Define the following environment variables
+#### Define the following environment variables
 
     export DJANGO_SETTINGS_MODULE=oeem_energy_datastore.settings
     export DATABASE_URL=postgres://:@localhost:5432/oeem_energy_datastore
@@ -41,18 +41,18 @@ You might consider adding these to your virtualenv activate script
     vim /path/to/virtualenvs/oeem-energy-datastore/bin/activate
     workon oeem-energy-datastore
 
-### Run migrations
+#### Run migrations
 
     python manage.py migrate
 
-### Create a superuser (for admin access)
+#### Create a superuser (for admin access)
 
     python manage.py createsuperuser
 
-### Run the tests
+#### Run the tests
 
     python manage.py test
 
-### Start a server
+#### Start a server
 
     python manage.py runserver
