@@ -72,7 +72,7 @@ class Project(models.Model):
                     model_type_str = "DFLT_COM_NG"
 
             meter_run = MeterRun(project=self,
-                    consumption_metadata_id=ConsumptionMetadata.objects.get(pk=cm_id),
+                    consumption_metadata=ConsumptionMetadata.objects.get(pk=cm_id),
                     model_type=model_type_str)
             meter_run.save()
 
@@ -132,7 +132,7 @@ class MeterRun(models.Model):
         ('DFLT_COM_NG', 'Default Commercial Natural Gas'),
     )
     project = models.ForeignKey(Project)
-    consumption_metadata_id = models.ForeignKey(ConsumptionMetadata)
+    consumption_metadata = models.ForeignKey(ConsumptionMetadata)
     serialization = models.CharField(max_length=100000, blank=True, null=True)
     annual_usage_baseline = models.FloatField(blank=True, null=True)
     annual_usage_reporting = models.FloatField(blank=True, null=True)

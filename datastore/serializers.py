@@ -3,12 +3,12 @@ from .models import Project
 # from .models import ProjectBlock
 from .models import ConsumptionMetadata
 from .models import ConsumptionRecord
-# from .models import MeterRun
-# from .models import DailyUsageBaseline
-# from .models import DailyUsageReporting
-# from .models import ModelType
+from .models import MeterRun
+from .models import DailyUsageBaseline
+from .models import DailyUsageReporting
 
 class ProjectSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Project
         fields = (
@@ -23,6 +23,39 @@ class ProjectSerializer(serializers.ModelSerializer):
                 'weather_station',
                 'latitude',
                 'longitude')
+
+
+class DailyUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DailyUsageBaseline
+        fields = ('id', 'date', 'value',)
+
+class DailyUsageReportingEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DailyUsageReporting
+        fields = ('id', 'date', 'value',)
+
+class MeterRunSerializer(serializers.ModelSerializer):
+    dailyusagebaseline_set = DailyUsageBaselineEmbeddedSerializer(many=True)
+    dailyusagereporting_set = DailyUsageReportingEmbeddedSerializer(many=True)
+
+    class Meta:
+        model = MeterRun
+        fields = (
+                'project',
+                'consumption_metadata',
+                'serialization',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'gross_savings',
+                'annual_savings',
+                'model_type',
+                'model_parameter_json',
+                'dailyusagebaseline_set',
+                'dailyusagereporting_set',
+                )
 
 class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):
 

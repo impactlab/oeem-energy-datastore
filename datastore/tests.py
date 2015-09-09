@@ -2,6 +2,7 @@ from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
 from .models import ProjectOwner
 from .models import Project
+from .models import MeterRun
 from .models import ConsumptionMetadata
 from .models import ConsumptionRecord
 from django.utils.timezone import now, timedelta
@@ -98,6 +99,8 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['records'][0]['value'] == 0
         assert response.data['records'][0]['estimated'] == False
 
+class ProjectAPITestCase(OAuthTestCase):
+
     def test_project_create_read(self):
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
@@ -147,6 +150,54 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['weather_station'] == "STATION"
         assert response.data['latitude'] == 0.0
         assert response.data['longitude'] == 0.0
+
+class MeterRunAPITestCase(OAuthTestCase):
+
+    def setUp(self):
+        super(MeterRunAPITestCase,self).setUp()
+
+        self.project = Project(
+                project_owner=self.project_owner,
+                project_id="TEST_PROJECT",
+                baseline_period_start=now(),
+                baseline_period_end=now(),
+                reporting_period_start=now(),
+                reporting_period_end=now(),
+                zipcode=None,
+                weather_station=None,
+                latitude=None,
+                longitude=None,
+                )
+        self.project.save()
+
+        self.consumption_metadata = ConsumptionMetadata(project=self.project,
+                fuel_type="E", energy_unit="KWH")
+        self.consumption_metadata.save()
+
+        self.record = ConsumptionRecord(metadata=self.consumption_metadata,
+                start=now(), estimated=False)
+        self.record.save()
+        self.meter_run = MeterRun(project=self.project,
+                consumption_metadata=self.consumption_metadata)
+        self.meter_run.save()
+
+    def test_meter_run_create_read(self):
+        auth_headers = { "Authorization": "Bearer " + "tokstr" }
+
+        response = self.client.get('/datastore/meter_run/{}/'.format(self.meter_run.id), **auth_headers)
+        assert response.status_code == 200
+        assert response.data["project"] == self.project.id
+        assert response.data["consumption_metadata"] == self.consumption_metadata.id
+        assert response.data["model_parameter_json"] == None
+        assert response.data["annual_usage_reporting"] == None
+        assert response.data["annual_usage_baseline"] == None
+        assert response.data["gross_savings"] == None
+        assert response.data["annual_savings"] == None
+        assert response.data["model_type"] == None
+        assert response.data["serialization"] == None
+        assert response.data["dailyusagebaseline_set"] == []
+        assert response.data["dailyusagereporting_set"] == []
+
 
 class ProjectTestCase(TestCase):
 
@@ -223,7 +274,6 @@ class ProjectTestCase(TestCase):
         self.project.run_meter()
 
         assert len(self.project.meterrun_set.all()) == 1
-
 
 
 class ConsumptionTestCase(TestCase):

@@ -1,6 +1,8 @@
 from .models import Project
+from .models import MeterRun
 from .models import ConsumptionMetadata
 from .serializers import ProjectSerializer
+from .serializers import MeterRunSerializer
 from .serializers import ConsumptionMetadataSerializer
 
 from rest_framework import generics, permissions
@@ -25,3 +27,13 @@ class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+class MeterRunList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+    queryset = MeterRun.objects.all()
+    serializer_class = MeterRunSerializer
+
+class MeterRunDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+    queryset = MeterRun.objects.all()
+    serializer_class = MeterRunSerializer
