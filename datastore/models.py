@@ -57,15 +57,14 @@ class Project(models.Model):
         except ValueError:
             message = "Cannot create eemeter project; skipping project id={}.".format(self.project_id)
             warn(message)
-        
+
         if model_type == "residential":
             meter = DefaultResidentialMeter()
         elif model_type == "commercial":
             raise NotImplementedError
-        
-        import pdb; pdb.set_trace()
+
         meter_results = meter.evaluate(DataCollection(project=project))
-        
+
         meter_runs = []
         for consumption_data, cm_id in zip(project.consumption, cm_ids):
 

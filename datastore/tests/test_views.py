@@ -1,19 +1,23 @@
 from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
-from .models import ProjectOwner
-from .models import Project
-from .models import MeterRun
-from .models import ConsumptionMetadata
-from .models import ConsumptionRecord
 from django.utils.timezone import now, timedelta
+
+from ..models import ProjectOwner
+from ..models import Project
+from ..models import MeterRun
+from ..models import ConsumptionMetadata
+from ..models import ConsumptionRecord
+
 from oauth2_provider.models import AccessToken
 from oauth2_provider.models import get_application_model
+
+from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
+from eemeter.project import Project as EEMeterProject
+from eemeter.examples import get_example_project
+from eemeter.evaluation import Period
+
 import json
 from datetime import datetime
-from eemeter.project import Project as EEMeterProject
-from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
-from eemeter.evaluation import Period
-from eemeter.examples import get_example_project
 
 ApplicationModel = get_application_model()
 
@@ -223,6 +227,7 @@ class MeterRunAPITestCase(OAuthTestCase):
                     value=record["value"],
                     estimated=False)
                 record.save()
+
         ## Attempt to run the meter
         self.project.run_meter()
         self.meter_runs = self.project.meterrun_set.all()
@@ -241,116 +246,14 @@ class MeterRunAPITestCase(OAuthTestCase):
             response = self.client.get('/datastore/meter_run/{}/'.format(meter_run.id), **auth_headers)
             assert response.status_code == 200
             assert response.data["project"] == self.project.id
-            assert type(response.data["consumption_metadata"]) == int 
+            assert type(response.data["consumption_metadata"]) == int
             assert response.data["model_parameter_json"] == None
             assert response.data["annual_usage_reporting"] == None
             assert response.data["annual_usage_baseline"] == None
             assert response.data["gross_savings"] == None
             assert response.data["annual_savings"] == None
-            assert response.data["model_type"] == "DFLT_RES_E" or "DFLT_RES_NG" 
+            assert response.data["model_type"] == "DFLT_RES_E" or "DFLT_RES_NG"
             assert response.data["serialization"] == None
             assert response.data["dailyusagebaseline_set"] == []
             assert response.data["dailyusagereporting_set"] == []
 
-
-class ProjectTestCase(TestCase):
-
-    def setUp(self):
-        self.user = User.objects.create_user("user", "test@user.com", "123456")
-        self.project_owner = ProjectOwner(user=self.user)
-        self.project_owner.save()
-        self.project = Project(
-                project_owner=self.project_owner,
-                project_id="TEST_PROJECT",
-                baseline_period_start=now(),
-                baseline_period_end=now(),
-                reporting_period_start=now(),
-                reporting_period_end=now(),
-                zipcode=None,
-                weather_station=None,
-                latitude=None,
-                longitude=None,
-                )
-        self.project.save()
-
-    def tearDown(self):
-        self.user.delete()
-        self.project_owner.delete()
-
-    def test_project_baseline_period(self):
-        period = self.project.baseline_period
-        assert isinstance(period, Period)
-        assert isinstance(period.start, datetime)
-        assert isinstance(period.end, datetime)
-
-    def test_project_reporting_period(self):
-        period = self.project.reporting_period
-        assert isinstance(period, Period)
-        assert isinstance(period.start, datetime)
-        assert isinstance(period.end, datetime)
-
-    def test_project_lat_lng(self):
-        assert self.project.lat_lng is None
-        self.project.latitude = 41.8
-        self.project.longitude = -87.6
-        assert self.project.lat_lng is not None
-
-    def test_project_eemeter_project_with_zipcode(self):
-        self.project.zipcode = "91104"
-        project, cm_ids = self.project.eemeter_project()
-        assert isinstance(project, EEMeterProject)
-        assert cm_ids == []
-
-    def test_project_eemeter_project_with_lat_lng(self):
-        self.project.latitude = 34.16
-        self.project.longitude = -118.12
-        project, cm_ids= self.project.eemeter_project()
-        assert isinstance(project, EEMeterProject)
-        assert cm_ids == []
-
-
-    def test_project_eemeter_project_with_station(self):
-        self.project.weather_station = "722880"
-        project, cm_ids = self.project.eemeter_project()
-        assert isinstance(project, EEMeterProject)
-        assert cm_ids == []
-
-    def test_project_run_meter(self):
-        assert len(self.project.meterrun_set.all()) == 0
-
-        # set up project
-        self.project.weather_station = "722880"
-        consumption_metadata = ConsumptionMetadata(project=self.project,
-                fuel_type="E", energy_unit="KWH")
-        consumption_metadata.save()
-
-        # run meter
-        self.project.run_meter()
-
-        assert len(self.project.meterrun_set.all()) == 1
-
-
-class ConsumptionTestCase(TestCase):
-
-    def setUp(self):
-        self.user = User.objects.create_user("user", "test@user.com", "123456")
-        self.consumption_metadata = ConsumptionMetadata(fuel_type="E", energy_unit="KWH")
-        self.consumption_metadata.save()
-        self.record = ConsumptionRecord(
-            metadata=self.consumption_metadata, start=now(), estimated=False)
-        self.record.save()
-
-    def tearDown(self):
-        self.user.delete()
-
-    def test_consumption_eemeter_consumption_data(self):
-        consumption_data = self.consumption_metadata.eemeter_consumption_data()
-        assert isinstance(consumption_data, EEMeterConsumptionData)
-
-    def test_consumption_eemeter_record(self):
-        record = self.record.eemeter_record()
-        assert isinstance(record, dict)
-        assert record["start"] == self.record.start
-        assert record["value"] == self.record.value
-        assert record["estimated"] == self.record.estimated
-        assert len(record) == 3
