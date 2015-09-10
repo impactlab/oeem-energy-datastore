@@ -4,6 +4,8 @@ from eemeter.evaluation import Period
 from eemeter.project import Project as EEMeterProject
 from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.location import Location
+from eemeter.meter import DataCollection
+from eemeter.meter import DefaultResidentialMeter
 from warnings import warn
 
 class ProjectOwner(models.Model):
@@ -55,7 +57,16 @@ class Project(models.Model):
         except ValueError:
             message = "Cannot create eemeter project; skipping project id={}.".format(self.project_id)
             warn(message)
-
+        
+        if model_type == "residential":
+            meter = DefaultResidentialMeter()
+        elif model_type == "commercial":
+            raise NotImplementedError
+        
+        import pdb; pdb.set_trace()
+        meter_results = meter.evaluate(DataCollection(project=project))
+        
+        meter_runs = []
         for consumption_data, cm_id in zip(project.consumption, cm_ids):
 
             # determine model type
@@ -75,6 +86,8 @@ class Project(models.Model):
                     consumption_metadata=ConsumptionMetadata.objects.get(pk=cm_id),
                     model_type=model_type_str)
             meter_run.save()
+            meter_runs.append(meter_run)
+        return meter_runs
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)

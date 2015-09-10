@@ -189,30 +189,44 @@ class MeterRunAPITestCase(OAuthTestCase):
         """
         super(MeterRunAPITestCase,self).setUp()
 
+        project = get_example_project("60642")
+
         self.project = Project(
                 project_owner=self.project_owner,
                 project_id="TEST_PROJECT",
-                baseline_period_start=now(),
-                baseline_period_end=now(),
-                reporting_period_start=now(),
-                reporting_period_end=now(),
-                zipcode=None,
+                baseline_period_start=project.baseline_period.start,
+                baseline_period_end=project.baseline_period.end,
+                reporting_period_start=project.reporting_period.start,
+                reporting_period_end=project.reporting_period.end,
+                zipcode="60642",
                 weather_station=None,
                 latitude=None,
                 longitude=None,
                 )
         self.project.save()
 
-        self.consumption_metadata = ConsumptionMetadata(project=self.project,
-                fuel_type="E", energy_unit="KWH")
-        self.consumption_metadata.save()
+        fuel_types = {"electricity": "E", "natural_gas": "NG"}
+        energy_units = {"kWh": "KWH", "therm": "THM"}
 
-        self.record = ConsumptionRecord(metadata=self.consumption_metadata,
-                start=now(), estimated=False)
-        self.record.save()
-        self.meter_run = MeterRun(project=self.project,
-                consumption_metadata=self.consumption_metadata)
-        self.meter_run.save()
+        self.consumption_metadatas = []
+        for consumption_data in project.consumption:
+            consumption_metadata = ConsumptionMetadata(
+                    project=self.project,
+                    fuel_type=fuel_types[consumption_data.fuel_type],
+                    energy_unit=energy_units[consumption_data.unit_name])
+            consumption_metadata.save()
+            self.consumption_metadatas.append(consumption_metadata)
+
+            for record in consumption_data.records(record_type="arbitrary_start"):
+                record = ConsumptionRecord(metadata=consumption_metadata,
+                    start=record["start"].isoformat(),
+                    value=record["value"],
+                    estimated=False)
+                record.save()
+        ## Attempt to run the meter
+        self.project.run_meter()
+        self.meter_runs = self.project.meterrun_set.all()
+        assert len(self.meter_runs) == 2
 
     def test_meter_run_read(self):
         """
@@ -221,19 +235,22 @@ class MeterRunAPITestCase(OAuthTestCase):
         """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
-        response = self.client.get('/datastore/meter_run/{}/'.format(self.meter_run.id), **auth_headers)
-        assert response.status_code == 200
-        assert response.data["project"] == self.project.id
-        assert response.data["consumption_metadata"] == self.consumption_metadata.id
-        assert response.data["model_parameter_json"] == None
-        assert response.data["annual_usage_reporting"] == None
-        assert response.data["annual_usage_baseline"] == None
-        assert response.data["gross_savings"] == None
-        assert response.data["annual_savings"] == None
-        assert response.data["model_type"] == None
-        assert response.data["serialization"] == None
-        assert response.data["dailyusagebaseline_set"] == []
-        assert response.data["dailyusagereporting_set"] == []
+
+        for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
+
+            response = self.client.get('/datastore/meter_run/{}/'.format(meter_run.id), **auth_headers)
+            assert response.status_code == 200
+            assert response.data["project"] == self.project.id
+            assert type(response.data["consumption_metadata"]) == int 
+            assert response.data["model_parameter_json"] == None
+            assert response.data["annual_usage_reporting"] == None
+            assert response.data["annual_usage_baseline"] == None
+            assert response.data["gross_savings"] == None
+            assert response.data["annual_savings"] == None
+            assert response.data["model_type"] == "DFLT_RES_E" or "DFLT_RES_NG" 
+            assert response.data["serialization"] == None
+            assert response.data["dailyusagebaseline_set"] == []
+            assert response.data["dailyusagereporting_set"] == []
 
 
 class ProjectTestCase(TestCase):
