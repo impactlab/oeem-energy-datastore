@@ -13,6 +13,7 @@ from datetime import datetime
 from eemeter.project import Project as EEMeterProject
 from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.evaluation import Period
+from eemeter.examples import get_example_project
 
 ApplicationModel = get_application_model()
 
@@ -284,8 +285,8 @@ class ProjectTestCase(TestCase):
         assert cm_ids == []
 
     def test_project_eemeter_project_with_lat_lng(self):
-        self.project.latitude = 41.8
-        self.project.longitude = -87.6
+        self.project.latitude = 34.16
+        self.project.longitude = -118.12
         project, cm_ids= self.project.eemeter_project()
         assert isinstance(project, EEMeterProject)
         assert cm_ids == []
