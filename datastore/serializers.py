@@ -52,7 +52,8 @@ class MeterRunSerializer(serializers.ModelSerializer):
                 'gross_savings',
                 'annual_savings',
                 'model_type',
-                'model_parameter_json',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
                 'dailyusagebaseline_set',
                 'dailyusagereporting_set',
                 )

@@ -1,11 +1,11 @@
 dj-database-url
 Django
 django-oauth-toolkit
-django-pdb
 django-sslserver
 djangorestframework
 eemeter
 pandas
 psycopg2
+pytest-django
 requests
 sqlalchemy

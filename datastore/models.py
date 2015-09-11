@@ -1,12 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
+
 from eemeter.evaluation import Period
 from eemeter.project import Project as EEMeterProject
 from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.location import Location
 from eemeter.meter import DataCollection
 from eemeter.meter import DefaultResidentialMeter
+from eemeter.config.yaml_parser import dump
+
 from warnings import warn
+import json
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
@@ -62,6 +66,8 @@ class Project(models.Model):
             meter = DefaultResidentialMeter()
         elif model_type == "commercial":
             raise NotImplementedError
+        else:
+            raise NotImplementedError
 
         meter_results = meter.evaluate(DataCollection(project=project))
 
@@ -81,11 +87,32 @@ class Project(models.Model):
                 elif consumption_data.fuel_type == "natural_gas":
                     model_type_str = "DFLT_COM_NG"
 
+            fuel_type_tag = consumption_data.fuel_type
+
+            annual_usage_baseline = meter_results.get_data("annualized_usage", ["baseline", fuel_type_tag]).value
+            annual_usage_reporting = meter_results.get_data("annualized_usage", ["reporting", fuel_type_tag]).value
+            gross_savings = meter_results.get_data("gross_savings", [fuel_type_tag]).value
+
+            annual_savings = annual_usage_baseline - annual_usage_reporting
+
+
+            model_parameter_json_baseline=json.dumps(meter_results.get_data("model_params", ["baseline", fuel_type_tag]).value.to_dict())
+            model_parameter_json_reporting=json.dumps(meter_results.get_data("model_params", ["reporting", fuel_type_tag]).value.to_dict())
+
             meter_run = MeterRun(project=self,
                     consumption_metadata=ConsumptionMetadata.objects.get(pk=cm_id),
-                    model_type=model_type_str)
+                    serialization=dump(meter.meter),
+                    annual_usage_baseline=annual_usage_baseline,
+                    annual_usage_reporting=annual_usage_reporting,
+                    gross_savings=gross_savings,
+                    annual_savings=annual_savings,
+                    model_type=model_type_str,
+                    model_parameter_json_baseline=model_parameter_json_baseline,
+                    model_parameter_json_reporting=model_parameter_json_reporting)
+
             meter_run.save()
             meter_runs.append(meter_run)
+
         return meter_runs
 
 class ProjectBlock(models.Model):
@@ -151,7 +178,8 @@ class MeterRun(models.Model):
     gross_savings = models.FloatField(blank=True, null=True)
     annual_savings = models.FloatField(blank=True, null=True)
     model_type = models.CharField(max_length=250, choices=MODEL_TYPE_CHOICES, blank=True, null=True)
-    model_parameter_json = models.CharField(max_length=10000, blank=True, null=True)
+    model_parameter_json_baseline = models.CharField(max_length=10000, blank=True, null=True)
+    model_parameter_json_reporting = models.CharField(max_length=10000, blank=True, null=True)
 
 class DailyUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)

@@ -18,6 +18,7 @@ from eemeter.evaluation import Period
 
 import json
 from datetime import datetime
+from numpy.testing import assert_allclose
 
 ApplicationModel = get_application_model()
 
@@ -193,7 +194,8 @@ class MeterRunAPITestCase(OAuthTestCase):
         """
         super(MeterRunAPITestCase,self).setUp()
 
-        project = get_example_project("60642")
+        zipcode = "91104"
+        project = get_example_project(zipcode)
 
         self.project = Project(
                 project_owner=self.project_owner,
@@ -202,8 +204,8 @@ class MeterRunAPITestCase(OAuthTestCase):
                 baseline_period_end=project.baseline_period.end,
                 reporting_period_start=project.reporting_period.start,
                 reporting_period_end=project.reporting_period.end,
-                zipcode="60642",
-                weather_station=None,
+                zipcode=None,
+                weather_station=project.location.station,
                 latitude=None,
                 longitude=None,
                 )
@@ -230,7 +232,7 @@ class MeterRunAPITestCase(OAuthTestCase):
 
         ## Attempt to run the meter
         self.project.run_meter()
-        self.meter_runs = self.project.meterrun_set.all()
+        self.meter_runs = [MeterRun.objects.get(consumption_metadata=cm) for cm in self.consumption_metadatas]
         assert len(self.meter_runs) == 2
 
     def test_meter_run_read(self):
@@ -246,14 +248,24 @@ class MeterRunAPITestCase(OAuthTestCase):
             response = self.client.get('/datastore/meter_run/{}/'.format(meter_run.id), **auth_headers)
             assert response.status_code == 200
             assert response.data["project"] == self.project.id
-            assert type(response.data["consumption_metadata"]) == int
-            assert response.data["model_parameter_json"] == None
-            assert response.data["annual_usage_reporting"] == None
-            assert response.data["annual_usage_baseline"] == None
-            assert response.data["gross_savings"] == None
-            assert response.data["annual_savings"] == None
-            assert response.data["model_type"] == "DFLT_RES_E" or "DFLT_RES_NG"
-            assert response.data["serialization"] == None
+            assert response.data["consumption_metadata"] == consumption_metadata.id
+
+            model_parameters_baseline = json.loads(response.data["model_parameter_json_baseline"])
+            model_parameters_reporting = json.loads(response.data["model_parameter_json_reporting"])
+
+            assert type(model_parameters_baseline) == dict
+            assert type(model_parameters_reporting) == dict
+
+            assert len(response.data["serialization"]) > 7000
             assert response.data["dailyusagebaseline_set"] == []
             assert response.data["dailyusagereporting_set"] == []
+
+            assert response.data["model_type"] == "DFLT_RES_E" or \
+                    response.data["model_type"] == "DFLT_RES_NG"
+
+            assert type(response.data["annual_usage_baseline"]) == float
+            assert type(response.data["annual_usage_reporting"]) == float
+            assert type(response.data["gross_savings"]) == float
+            assert type(response.data["annual_savings"]) == float
+
 

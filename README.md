@@ -51,7 +51,7 @@ You might consider adding these to your virtualenv activate script
 
 #### Run the tests
 
-    python manage.py test
+    py.test
 
 #### Start a server
 

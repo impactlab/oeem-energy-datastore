@@ -42,7 +42,6 @@ INSTALLED_APPS = (
     'oauth2_provider',
     'rest_framework',
     'datastore',
-    'django_pdb',
 )
 
 MIDDLEWARE_CLASSES = (
