@@ -1,6 +1,6 @@
 from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
-from django.utils.timezone import now, timedelta
+from django.utils.timezone import now, timedelta, make_aware
 
 from ..models import ProjectOwner
 from ..models import Project
@@ -231,7 +231,7 @@ class MeterRunAPITestCase(OAuthTestCase):
                 record.save()
 
         ## Attempt to run the meter
-        self.project.run_meter()
+        self.project.run_meter(start_date=make_aware(datetime(2011,1,1)), end_date=make_aware(datetime(2015,1,1)))
         self.meter_runs = [MeterRun.objects.get(consumption_metadata=cm) for cm in self.consumption_metadatas]
         assert len(self.meter_runs) == 2
 
@@ -241,7 +241,6 @@ class MeterRunAPITestCase(OAuthTestCase):
         endpoint: /datastore/meter_run/{id}
         """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
-
 
         for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
 
@@ -257,11 +256,12 @@ class MeterRunAPITestCase(OAuthTestCase):
             assert type(model_parameters_reporting) == dict
 
             assert len(response.data["serialization"]) > 7000
-            assert response.data["dailyusagebaseline_set"] == []
-            assert response.data["dailyusagereporting_set"] == []
 
-            assert response.data["model_type"] == "DFLT_RES_E" or \
-                    response.data["model_type"] == "DFLT_RES_NG"
+            assert len(response.data["dailyusagebaseline_set"]) == 1461
+            assert len(response.data["dailyusagereporting_set"]) == 1461
+
+            assert response.data["meter_type"] == "DFLT_RES_E" or \
+                    response.data["meter_type"] == "DFLT_RES_NG"
 
             assert type(response.data["annual_usage_baseline"]) == float
             assert type(response.data["annual_usage_reporting"]) == float
