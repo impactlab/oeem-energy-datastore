@@ -107,7 +107,6 @@ class Project(models.Model):
             elif model_type == "commercial":
                 meter_type_str = "DFLT_COM_" + meter_type_suffix
 
-
             # gather meter results
             annual_usage_baseline = meter_results.get_data("annualized_usage", ["baseline", fuel_type_tag])
             if annual_usage_baseline is not None:
@@ -124,6 +123,15 @@ class Project(models.Model):
             annual_savings = None
             if annual_usage_baseline is not None and annual_usage_reporting is not None:
                 annual_savings = annual_usage_baseline - annual_usage_reporting
+
+            # gather meter results
+            cvrmse_baseline = meter_results.get_data("cvrmse", ["baseline", fuel_type_tag])
+            if cvrmse_baseline is not None:
+                cvrmse_baseline = cvrmse_baseline.value
+
+            cvrmse_reporting = meter_results.get_data("cvrmse", ["reporting", fuel_type_tag])
+            if cvrmse_reporting is not None:
+                cvrmse_reporting = cvrmse_reporting.value
 
             model_parameter_json_baseline = meter_results.get_data("model_params", ["baseline", fuel_type_tag])
             model_parameter_array_baseline = None
@@ -148,7 +156,9 @@ class Project(models.Model):
                     annual_savings=annual_savings,
                     meter_type=meter_type_str,
                     model_parameter_json_baseline=model_parameter_json_baseline,
-                    model_parameter_json_reporting=model_parameter_json_reporting)
+                    model_parameter_json_reporting=model_parameter_json_reporting,
+                    cvrmse_baseline=cvrmse_baseline,
+                    cvrmse_reporting=cvrmse_reporting)
 
             meter_run.save()
             meter_runs.append(meter_run)
@@ -236,6 +246,8 @@ class MeterRun(models.Model):
     meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, blank=True, null=True)
     model_parameter_json_baseline = models.CharField(max_length=10000, blank=True, null=True)
     model_parameter_json_reporting = models.CharField(max_length=10000, blank=True, null=True)
+    cvrmse_baseline = models.FloatField(blank=True,null=True)
+    cvrmse_reporting = models.FloatField(blank=True,null=True)
 
 class DailyUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)

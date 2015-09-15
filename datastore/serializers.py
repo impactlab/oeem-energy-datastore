@@ -54,6 +54,8 @@ class MeterRunSerializer(serializers.ModelSerializer):
                 'meter_type',
                 'model_parameter_json_baseline',
                 'model_parameter_json_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
                 'dailyusagebaseline_set',
                 'dailyusagereporting_set',
                 )

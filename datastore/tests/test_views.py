@@ -267,5 +267,7 @@ class MeterRunAPITestCase(OAuthTestCase):
             assert type(response.data["annual_usage_reporting"]) == float
             assert type(response.data["gross_savings"]) == float
             assert type(response.data["annual_savings"]) == float
+            assert type(response.data["cvrmse_baseline"]) == float
+            assert type(response.data["cvrmse_reporting"]) == float
 
 
