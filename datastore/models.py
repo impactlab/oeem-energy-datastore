@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
+from django.utils.encoding import python_2_unicode_compatible
 
 from eemeter.evaluation import Period
 from eemeter.project import Project as EEMeterProject
@@ -18,6 +19,12 @@ import json
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'ProjectOwner {}'.format(self.user.username)
 
 class Project(models.Model):
     project_owner = models.ForeignKey(ProjectOwner)
@@ -30,6 +37,12 @@ class Project(models.Model):
     weather_station = models.CharField(max_length=10, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'Project {}'.format(self.project_id)
 
     @property
     def baseline_period(self):
@@ -184,6 +197,12 @@ class Project(models.Model):
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
     project = models.ManyToManyField(Project)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'ProjectBlock {}'.format(self.name)
 
 class ConsumptionMetadata(models.Model):
     FUEL_TYPE_CHOICES = {
@@ -198,6 +217,8 @@ class ConsumptionMetadata(models.Model):
     fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
     energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES.items())
     project = models.ForeignKey(Project, blank=True, null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def eemeter_consumption_data(self):
         FUEL_TYPE_CHOICES = {
@@ -216,12 +237,21 @@ class ConsumptionMetadata(models.Model):
                 unit_name=unit_name, record_type="arbitrary_start")
         return consumption_data
 
+    @python_2_unicode_compatible
+    def __str__(self):
+        n = len(self.records.all())
+        return u'ConsumptionMetadata(fuel_type={}, energy_unit={}, n={})'.format(self.fuel_type, self.energy_unit, n)
+
 
 class ConsumptionRecord(models.Model):
     metadata = models.ForeignKey(ConsumptionMetadata, related_name="records")
     start = models.DateTimeField()
     value = models.FloatField(blank=True, null=True)
     estimated = models.BooleanField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'Consumption(start={}, value={}, estimated={})'.format(self.start, self.value, self.estimated)
 
     class Meta:
         ordering = ['start']
@@ -246,13 +276,24 @@ class MeterRun(models.Model):
     meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, blank=True, null=True)
     model_parameter_json_baseline = models.CharField(max_length=10000, blank=True, null=True)
     model_parameter_json_reporting = models.CharField(max_length=10000, blank=True, null=True)
-    cvrmse_baseline = models.FloatField(blank=True,null=True)
-    cvrmse_reporting = models.FloatField(blank=True,null=True)
+    cvrmse_baseline = models.FloatField(blank=True, null=True)
+    cvrmse_reporting = models.FloatField(blank=True, null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'MeterRun(project_id={})'.format(self.project.project_id)
 
 class DailyUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'DailyUsageBaseline(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
@@ -261,6 +302,10 @@ class DailyUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'DailyUsageReporting(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
