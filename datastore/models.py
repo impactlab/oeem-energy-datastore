@@ -139,7 +139,7 @@ class Project(models.Model):
 
             # gather meter results
             cvrmse_baseline = meter_results.get_data("cvrmse", ["baseline", fuel_type_tag])
-            if cvrmse_baseline is not None:
+            if cvrmse_baseline is None:
                 cvrmse_baseline = cvrmse_baseline.value
 
             cvrmse_reporting = meter_results.get_data("cvrmse", ["reporting", fuel_type_tag])
@@ -281,10 +281,14 @@ class MeterRun(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-
     @python_2_unicode_compatible
     def __str__(self):
-        return u'MeterRun(project_id={})'.format(self.project.project_id)
+        return u'MeterRun(project_id={}, valid={})'.format(self.project.project_id, self.valid_meter_run())
+
+    def valid_meter_run(self, threshold=20):
+        if self.cvrmse_baseline is None or self.cvrmse_reporting is None:
+            return False
+        return self.cvrmse_baseline < threshold and self.cvrmse_reporting < threshold
 
 class DailyUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
