@@ -139,7 +139,7 @@ class Project(models.Model):
 
             # gather meter results
             cvrmse_baseline = meter_results.get_data("cvrmse", ["baseline", fuel_type_tag])
-            if cvrmse_baseline is None:
+            if cvrmse_baseline is not None:
                 cvrmse_baseline = cvrmse_baseline.value
 
             cvrmse_reporting = meter_results.get_data("cvrmse", ["reporting", fuel_type_tag])

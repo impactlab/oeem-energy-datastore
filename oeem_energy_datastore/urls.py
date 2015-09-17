@@ -13,6 +13,7 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
+from django.views.generic.base import RedirectView
 from django.conf.urls import include, url
 from django.contrib import admin
 
@@ -20,4 +21,5 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^oauth2/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url(r'^datastore/', include('datastore.urls', namespace='datastore')),
+    url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
 ]
