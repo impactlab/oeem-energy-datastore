@@ -31,13 +31,13 @@ class DailyUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DailyUsageBaseline
-        fields = ('id', 'date', 'value',)
+        fields = ('date', 'value',)
 
 class DailyUsageReportingEmbeddedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DailyUsageReporting
-        fields = ('id', 'date', 'value',)
+        fields = ('date', 'value',)
 
 class MeterRunSerializer(serializers.ModelSerializer):
     dailyusagebaseline_set = DailyUsageBaselineEmbeddedSerializer(many=True)
@@ -60,6 +60,49 @@ class MeterRunSerializer(serializers.ModelSerializer):
                 'cvrmse_reporting',
                 'dailyusagebaseline_set',
                 'dailyusagereporting_set',
+                'fuel_type',
+                )
+
+class MeterRunSummarySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MeterRun
+        fields = (
+                'project',
+                'consumption_metadata',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'gross_savings',
+                'annual_savings',
+                'meter_type',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'fuel_type',
+                )
+
+class MeterRunDailySerializer(serializers.ModelSerializer):
+    dailyusagebaseline_set = DailyUsageBaselineEmbeddedSerializer(many=True)
+    dailyusagereporting_set = DailyUsageReportingEmbeddedSerializer(many=True)
+
+    class Meta:
+        model = MeterRun
+        fields = (
+                'project',
+                'consumption_metadata',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'gross_savings',
+                'annual_savings',
+                'meter_type',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'dailyusagebaseline_set',
+                'dailyusagereporting_set',
+                'fuel_type',
                 )
 
 class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):

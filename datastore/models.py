@@ -289,6 +289,10 @@ class MeterRun(models.Model):
     def __str__(self):
         return u'MeterRun(project_id={}, valid={})'.format(self.project.project_id, self.valid_meter_run())
 
+    @property
+    def fuel_type(self):
+        return self.consumption_metadata.fuel_type
+
     def valid_meter_run(self, threshold=20):
         if self.cvrmse_baseline is None or self.cvrmse_reporting is None:
             return False
