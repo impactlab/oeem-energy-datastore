@@ -194,8 +194,12 @@ class Project(models.Model):
 
         return meter_runs
 
+    def recent_meter_runs(self):
+        return [c.meterrun_set.latest('added') for c in self.consumptionmetadata_set.all()]
+
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
+    project_owner = models.ForeignKey(ProjectOwner)
     project = models.ManyToManyField(Project)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

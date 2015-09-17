@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils.timezone import now, timedelta, make_aware
 
 from ..models import ProjectOwner
+from ..models import ProjectBlock
 from ..models import Project
 from ..models import MeterRun
 from ..models import ConsumptionMetadata
@@ -184,6 +185,7 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['weather_station'] == "STATION"
         assert response.data['latitude'] == 0.0
         assert response.data['longitude'] == 0.0
+        assert response.data['recent_meter_runs'] == []
 
 class MeterRunAPITestCase(OAuthTestCase):
 
@@ -270,4 +272,40 @@ class MeterRunAPITestCase(OAuthTestCase):
             assert type(response.data["cvrmse_baseline"]) == float
             assert type(response.data["cvrmse_reporting"]) == float
 
+class ProjectBlockAPITestCase(OAuthTestCase):
 
+    def setUp(self):
+        """
+        Setup methods for a eemeter run storage
+        engine.
+        """
+        super(ProjectBlockAPITestCase,self).setUp()
+
+        self.project = Project(
+                project_owner=self.project_owner,
+                project_id="TEST_PROJECT",
+                baseline_period_start=now(),
+                baseline_period_end=now(),
+                reporting_period_start=now(),
+                reporting_period_end=now(),
+                zipcode=None,
+                weather_station=None,
+                latitude=None,
+                longitude=None,
+                )
+        self.project.save()
+        self.project_block = ProjectBlock(name="NAME", project_owner=self.project_owner)
+        self.project_block.save()
+        self.project_block.project.add(self.project)
+        self.project_block.save()
+
+    def test_project_block_read(self):
+
+        auth_headers = { "Authorization": "Bearer " + "tokstr" }
+
+        response = self.client.get('/datastore/project_block/{}/'.format(self.project_block.id), **auth_headers)
+        assert response.status_code == 200
+        assert response.data['project'][0] == self.project.id
+        assert response.data['project_owner'] == self.project_owner.id
+        assert response.data['id'] == self.project_block.id
+        assert response.data['name'] == 'NAME'

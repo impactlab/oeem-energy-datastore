@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Project
-# from .models import ProjectBlock
+from .models import ProjectBlock
 from .models import ConsumptionMetadata
 from .models import ConsumptionRecord
 from .models import MeterRun
@@ -8,6 +8,7 @@ from .models import DailyUsageBaseline
 from .models import DailyUsageReporting
 
 class ProjectSerializer(serializers.ModelSerializer):
+    recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Project
@@ -22,7 +23,8 @@ class ProjectSerializer(serializers.ModelSerializer):
                 'zipcode',
                 'weather_station',
                 'latitude',
-                'longitude')
+                'longitude',
+                'recent_meter_runs',)
 
 
 class DailyUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
@@ -67,6 +69,7 @@ class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):
         fields = ('id', 'start', 'value', 'estimated')
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
+
     records = ConsumptionRecordEmbeddedSerializer(many=True)
 
     class Meta:
@@ -84,3 +87,17 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
                     **record_data)
 
         return consumption_metadata
+
+class ProjectIdEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Project
+        fields = ('id',)
+
+class ProjectBlockSerializer(serializers.ModelSerializer):
+
+    project = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = ProjectBlock
+        fields = ( 'id', 'name', 'project_owner', 'project')

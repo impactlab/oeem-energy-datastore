@@ -136,3 +136,21 @@ class ProjectTestCase(TestCase):
         self.project.run_meter()
 
         assert len(self.project.meterrun_set.all()) == 2
+
+    def test_project_recent_meter_runs(self):
+
+        # set up project
+        self.project.weather_station = "722880"
+
+        # run meter
+        self.project.run_meter()
+
+        assert len(self.project.meterrun_set.all()) == 2
+
+        self.project.run_meter()
+
+        assert len(self.project.meterrun_set.all()) == 4
+
+        recent_meter_runs = self.project.recent_meter_runs()
+
+        assert len(recent_meter_runs) == 2
