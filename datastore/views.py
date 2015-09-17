@@ -6,6 +6,7 @@ from .serializers import ProjectSerializer
 from .serializers import MeterRunSerializer
 from .serializers import MeterRunSummarySerializer
 from .serializers import MeterRunDailySerializer
+from .serializers import MeterRunMonthlySerializer
 from .serializers import ProjectBlockSerializer
 from .serializers import ConsumptionMetadataSerializer
 
@@ -61,6 +62,11 @@ class MeterRunDailyDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = MeterRun.objects.all()
     serializer_class = MeterRunDailySerializer
+
+class MeterRunMonthlyDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+    queryset = MeterRun.objects.all()
+    serializer_class = MeterRunMonthlySerializer
 
 class ProjectBlockList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]

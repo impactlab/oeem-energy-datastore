@@ -13,9 +13,10 @@ from eemeter.config.yaml_parser import dump
 from eemeter.models.temperature_sensitivity import AverageDailyTemperatureSensitivityModel
 
 from warnings import warn
-from datetime import timedelta
+from datetime import timedelta, datetime
 import numpy as np
 import json
+from collections import defaultdict
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
@@ -183,6 +184,11 @@ class Project(models.Model):
             values_baseline = model.transform(avg_temps, model_parameters_baseline)
             values_reporting = model.transform(avg_temps, model_parameters_reporting)
 
+            month_names = [daily_evaluation_period.start.strftime("%Y-%m")]
+
+            month_groups_baseline = defaultdict(list)
+            month_groups_reporting = defaultdict(list)
+
             for value_baseline, value_reporting, days in zip(values_baseline, values_reporting, range(daily_evaluation_period.timedelta.days)):
                 date = daily_evaluation_period.start + timedelta(days=days)
 
@@ -191,6 +197,28 @@ class Project(models.Model):
 
                 daily_usage_reporting = DailyUsageReporting(meter_run=meter_run, value=value_reporting, date=date)
                 daily_usage_reporting.save()
+
+                # track monthly usage as well
+                current_month = date.strftime("%Y-%m")
+                if not current_month == month_names[-1]:
+                    month_names.append(current_month)
+
+                month_groups_baseline[current_month].append(value_baseline)
+                month_groups_reporting[current_month].append(value_reporting)
+
+            for month_name in month_names:
+                baseline_values = month_groups_baseline[month_name]
+                reporting_values = month_groups_reporting[month_name]
+
+                monthly_average_baseline = 0 if baseline_values == [] else np.nanmean(baseline_values)
+                monthly_average_reporting = 0 if reporting_values == [] else np.nanmean(reporting_values)
+
+                dt = datetime.strptime(month_name, "%Y-%m")
+                monthly_average_usage_baseline = MonthlyAverageUsageBaseline(meter_run=meter_run, value=monthly_average_baseline, date=dt)
+                monthly_average_usage_baseline.save()
+
+                monthly_average_usage_reporting = MonthlyAverageUsageReporting(meter_run=meter_run, value=monthly_average_reporting, date=dt)
+                monthly_average_usage_reporting.save()
 
         return meter_runs
 
@@ -321,3 +349,28 @@ class DailyUsageReporting(models.Model):
 
     class Meta:
         ordering = ['date']
+
+class MonthlyAverageUsageBaseline(models.Model):
+    meter_run = models.ForeignKey(MeterRun)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'MonthlyAverageUsageBaseline(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class MonthlyAverageUsageReporting(models.Model):
+    meter_run = models.ForeignKey(MeterRun)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'MonthlyAverageUsageReporting(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+

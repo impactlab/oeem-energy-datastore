@@ -6,6 +6,8 @@ from .models import ConsumptionRecord
 from .models import MeterRun
 from .models import DailyUsageBaseline
 from .models import DailyUsageReporting
+from .models import MonthlyAverageUsageBaseline
+from .models import MonthlyAverageUsageReporting
 
 class ProjectSerializer(serializers.ModelSerializer):
     recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -37,6 +39,18 @@ class DailyUsageReportingEmbeddedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DailyUsageReporting
+        fields = ('date', 'value',)
+
+class MonthlyAverageUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MonthlyAverageUsageBaseline
+        fields = ('date', 'value',)
+
+class MonthlyAverageUsageReportingEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MonthlyAverageUsageReporting
         fields = ('date', 'value',)
 
 class MeterRunSerializer(serializers.ModelSerializer):
@@ -102,6 +116,29 @@ class MeterRunDailySerializer(serializers.ModelSerializer):
                 'cvrmse_reporting',
                 'dailyusagebaseline_set',
                 'dailyusagereporting_set',
+                'fuel_type',
+                )
+
+class MeterRunMonthlySerializer(serializers.ModelSerializer):
+    monthlyaverageusagebaseline_set = MonthlyAverageUsageBaselineEmbeddedSerializer(many=True)
+    monthlyaverageusagereporting_set = MonthlyAverageUsageReportingEmbeddedSerializer(many=True)
+
+    class Meta:
+        model = MeterRun
+        fields = (
+                'project',
+                'consumption_metadata',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'gross_savings',
+                'annual_savings',
+                'meter_type',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'monthlyaverageusagebaseline_set',
+                'monthlyaverageusagereporting_set',
                 'fuel_type',
                 )
 
