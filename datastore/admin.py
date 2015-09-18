@@ -20,3 +20,5 @@ admin.site.register(DailyUsageBaseline)
 admin.site.register(DailyUsageReporting)
 admin.site.register(MonthlyAverageUsageBaseline)
 admin.site.register(MonthlyAverageUsageReporting)
+
+admin.site.site_header = "Open Energy Efficiency Meter"
