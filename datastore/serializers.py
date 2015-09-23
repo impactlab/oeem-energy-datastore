@@ -11,6 +11,7 @@ from .models import MonthlyAverageUsageReporting
 
 class ProjectSerializer(serializers.ModelSerializer):
     recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Project
@@ -26,6 +27,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                 'weather_station',
                 'latitude',
                 'longitude',
+                'consumptionmetadata_set',
                 'recent_meter_runs',)
 
 
