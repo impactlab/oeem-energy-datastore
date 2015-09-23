@@ -1,6 +1,7 @@
 dj-database-url
 Django
 django-oauth-toolkit
+django-suit
 django-sslserver
 djangorestframework
 eemeter
