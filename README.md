@@ -4,7 +4,7 @@ Open Energy Efficiency Meter Energy Datastore
 This datastore app provides an API for storing consumption data, project data,
 and reading meter run data. It is an OAuth 2 provider.
 
-Setup
+Setup (with Postgres)
 -----
 
 #### Make sure OS level dependencies are installed
@@ -56,3 +56,24 @@ You might consider adding these to your virtualenv activate script
 #### Start a server
 
     python manage.py runserver
+
+
+Setup (with Cassandra)
+-----
+
+#### Make sure OS level dependencies are installed
+
+- Cassandra
+- Python 3.4 or above.
+
+*on OSX, use `brew install cassandra` and `brew install python3`. You'll need [Homebrew](http://brew.sh) installed.*
+
+#### Start Cassandra
+
+Type `cassandra -f` on a shell prompt. It should start a cassandra server. 
+
+#### Enable the Cassandra backened. 
+
+Change the variable `CASSANDRA` to `True` in `datastore/settings.py`. 
+
+#### Continue with the Postgres install

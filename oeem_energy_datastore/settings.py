@@ -13,9 +13,11 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import dj_database_url
+from cassandra import ConsistencyLevel
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+CASSANDRA = True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -28,9 +30,7 @@ DEBUG = os.environ.get("DEBUG","false").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
-
 INSTALLED_APPS = (
     'suit',
     'django.contrib.admin',
@@ -44,6 +44,10 @@ INSTALLED_APPS = (
     'rest_framework',
     'datastore',
 )
+
+if CASSANDRA:
+    INSTALLED_APPS = ('django_cassandra_engine',) + INSTALLED_APPS
+
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,7 +88,31 @@ WSGI_APPLICATION = 'oeem_energy_datastore.wsgi.application'
 
 DATABASES = {'default': dj_database_url.config()}
 
-
+if CASSANDRA:
+    DATABASES['cassandra'] = {
+        'ENGINE': 'django_cassandra_engine',
+        'NAME': 'db',
+        'USER': 'user',
+        'PASSWORD': 'pass',
+        'TEST_NAME': 'test_db',
+        'HOST': '127.0.0.1',
+        'OPTIONS': {
+            'replication': {
+                'strategy_class': 'SimpleStrategy',
+                'replication_factor': 1
+            },
+            'connection': {
+                'consistency': ConsistencyLevel.ONE,
+                'retry_connect': True
+                # + All connection options for cassandra.cluster.Cluster()
+            },
+            'session': {
+                'default_timeout': 10,
+                'default_fetch_size': 10000
+                # + All options for cassandra.cluster.Session()
+            }
+        }
+        }
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
