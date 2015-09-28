@@ -74,6 +74,8 @@ Type `cassandra -f` on a shell prompt. It should start a cassandra server.
 
 #### Enable the Cassandra backened. 
 
-Change the variable `CASSANDRA` to `True` in `datastore/settings.py`. 
+Change the variable `CASSANDRA` to `True` in `datastore/settings.py`.
+
+#### Create User/Password/Keyspace in CQLSH
 
 #### Continue with the Postgres install
