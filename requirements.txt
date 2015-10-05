@@ -11,3 +11,4 @@ pytest-django
 requests
 sqlalchemy
 gunicorn
+django-pdb
