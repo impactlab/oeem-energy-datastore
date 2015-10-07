@@ -49,6 +49,10 @@ You might consider adding these to your virtualenv activate script
 
     python manage.py createsuperuser
 
+#### Run the setup script (optional)
+
+    python manage.py setup
+
 #### Run the tests
 
     py.test
