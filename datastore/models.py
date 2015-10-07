@@ -247,7 +247,7 @@ class ProjectBlock(models.Model):
 
     @python_2_unicode_compatible
     def __str__(self):
-        return u'ProjectBlock {}'.format(self.name)
+        return u'(name={}, n_projects={})'.format(self.name, self.project.count())
 
     def run_meters(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
         """ Run meter for each project in the project block.

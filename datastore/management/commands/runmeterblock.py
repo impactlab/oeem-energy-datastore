@@ -11,9 +11,13 @@ class Command(BaseCommand):
 
         project_block = ProjectBlock.objects.get(id=options["block_id"])
 
-        for project in project_block.project.all():
+        projects = project_block.project.all()
+
+        print("Running meter for {}".format(project_block, len(projects)))
+
+        for project in projects:
             print("Running meter for {}".format(project))
             project.run_meter()
 
-        print("Computing project summary")
-        project_block.compute_compute_summary_timeseries()
+        print("Computing project block summary timeseries.")
+        project_block.compute_summary_timeseries()
