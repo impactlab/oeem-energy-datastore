@@ -1,11 +1,11 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
-from django.utils.timezone import now
 
 from ..models import ConsumptionMetadata
 from ..models import ConsumptionRecord
 from ..models import ProjectOwner
 from ..models import Project
+from ..models import ProjectBlock
+from ..models import FuelTypeSummary
 
 from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
 from eemeter.project import Project as EEMeterProject
@@ -13,19 +13,59 @@ from eemeter.examples import get_example_project
 from eemeter.evaluation import Period
 
 from datetime import datetime
+import pytz
+
+import pytest
+
+class ProjectBlockTestCase(TestCase):
+
+    fixtures = ['testing.yaml']
+
+    def setUp(self):
+        self.project_block = ProjectBlock.objects.all()[0]
+
+    def test_project_block_run_meters(self):
+        for project in self.project_block.project.all():
+            assert len(project.meterrun_set.all()) == 0
+        self.project_block.run_meters()
+        for project in self.project_block.project.all():
+            assert len(project.meterrun_set.all()) == 2
+
+    def test_project_block_compute_summary_timeseries(self):
+        self.project_block.run_meters(end_date=datetime(2015,1,1,tzinfo=pytz.utc))
+        assert len(self.project_block.fueltypesummary_set.all()) == 0
+        self.project_block.compute_summary_timeseries()
+        assert len(self.project_block.fueltypesummary_set.all()) == 2
+        assert len(self.project_block.fueltypesummary_set.all()[0] \
+                .dailyusagesummarybaseline_set.all()) == 1461
+        assert len(self.project_block.fueltypesummary_set.all()[0] \
+                .dailyusagesummaryactual_set.all()) == 1461
+        assert len(self.project_block.fueltypesummary_set.all()[0] \
+                .dailyusagesummaryreporting_set.all()) == 1461
+
+        assert len(self.project_block.fueltypesummary_set.all()[0] \
+                .monthlyusagesummarybaseline_set.all()) == 48
+        assert len(self.project_block.fueltypesummary_set.all()[0] \
+                .monthlyusagesummaryactual_set.all()) == 48
+        assert len(self.project_block.fueltypesummary_set.all()[0] \
+                .monthlyusagesummaryreporting_set.all()) == 48
+
+    def test_project_block_recent_summaries(self):
+        self.project_block.run_meters()
+        self.project_block.compute_summary_timeseries()
+        self.project_block.compute_summary_timeseries()
+        recent_summaries = self.project_block.recent_summaries()
+        assert len(recent_summaries) == 2
+        for summary in recent_summaries:
+            assert isinstance(summary, FuelTypeSummary)
 
 class ConsumptionTestCase(TestCase):
 
-    def setUp(self):
-        self.user = User.objects.create_user("user", "test@user.com", "123456")
-        self.consumption_metadata = ConsumptionMetadata(fuel_type="E", energy_unit="KWH")
-        self.consumption_metadata.save()
-        self.record = ConsumptionRecord(
-            metadata=self.consumption_metadata, start=now(), estimated=False)
-        self.record.save()
+    fixtures = ["testing.yaml"]
 
-    def tearDown(self):
-        self.user.delete()
+    def setUp(self):
+        self.consumption_metadata = ConsumptionMetadata.objects.all()[0]
+        self.record = ConsumptionRecord.objects.all()[0]
 
     def test_consumption_eemeter_consumption_data(self):
         consumption_data = self.consumption_metadata.eemeter_consumption_data()
@@ -41,52 +81,10 @@ class ConsumptionTestCase(TestCase):
 
 class ProjectTestCase(TestCase):
 
+    fixtures = ["testing.yaml"]
+
     def setUp(self):
-        self.user = User.objects.create_user("user", "test@user.com", "123456")
-        self.project_owner = ProjectOwner(user=self.user)
-        self.project_owner.save()
-
-        project = get_example_project("91104")
-
-        self.project = Project(
-                project_owner=self.project_owner,
-                project_id="TEST_PROJECT",
-                baseline_period_start=project.baseline_period.start,
-                baseline_period_end=project.baseline_period.end,
-                reporting_period_start=project.reporting_period.start,
-                reporting_period_end=project.reporting_period.end,
-                zipcode=None,
-                weather_station=None,
-                latitude=None,
-                longitude=None,
-                )
-        self.project.save()
-
-        fuel_types = {"electricity": "E", "natural_gas": "NG"}
-        energy_units = {"kWh": "KWH", "therm": "THM"}
-
-        self.consumption_metadatas = []
-        for consumption_data in project.consumption:
-            consumption_metadata = ConsumptionMetadata(
-                    project=self.project,
-                    fuel_type=fuel_types[consumption_data.fuel_type],
-                    energy_unit=energy_units[consumption_data.unit_name])
-            consumption_metadata.save()
-            self.consumption_metadatas.append(consumption_metadata)
-
-            for record in consumption_data.records(record_type="arbitrary_start"):
-                record = ConsumptionRecord(metadata=consumption_metadata,
-                    start=record["start"].isoformat(),
-                    value=record["value"],
-                    estimated=False)
-                record.save()
-
-    def tearDown(self):
-        self.user.delete()
-        self.project_owner.delete()
-        self.project.delete()
-        for c in self.consumption_metadatas:
-            c.delete()
+        self.project = Project.objects.all()[0]
 
     def test_project_baseline_period(self):
         period = self.project.baseline_period
@@ -119,7 +117,6 @@ class ProjectTestCase(TestCase):
         assert isinstance(project, EEMeterProject)
         assert len(cm_ids) == 2
 
-
     def test_project_eemeter_project_with_station(self):
         self.project.weather_station = "722880"
         project, cm_ids = self.project.eemeter_project()
@@ -144,13 +141,10 @@ class ProjectTestCase(TestCase):
 
         # run meter
         self.project.run_meter()
-
         assert len(self.project.meterrun_set.all()) == 2
 
         self.project.run_meter()
-
         assert len(self.project.meterrun_set.all()) == 4
 
         recent_meter_runs = self.project.recent_meter_runs()
-
         assert len(recent_meter_runs) == 2

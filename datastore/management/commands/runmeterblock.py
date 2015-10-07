@@ -9,6 +9,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        for project in ProjectBlock.objects.get(id=options["block_id"]).project.all():
+        project_block = ProjectBlock.objects.get(id=options["block_id"])
+
+        for project in project_block.project.all():
             print("Running meter for {}".format(project))
             project.run_meter()
+
+        print("Computing project summary")
+        project_block.compute_compute_summary_timeseries()

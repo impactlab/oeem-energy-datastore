@@ -21,6 +21,8 @@ import json
 from datetime import datetime
 from numpy.testing import assert_allclose
 
+import pytest
+
 ApplicationModel = get_application_model()
 
 class OAuthTestCase(TestCase):
@@ -33,7 +35,7 @@ class OAuthTestCase(TestCase):
         """
         self.factory = RequestFactory()
         self.client = Client()
-        self.user = User.objects.create_user("user", "test@user.com", "123456")
+        self.user = User.objects.create_user("username", "user@example.com", "123456")
         self.project_owner = ProjectOwner(user=self.user)
         self.project_owner.save()
         self.app = ApplicationModel.objects.create(
@@ -275,30 +277,18 @@ class MeterRunAPITestCase(OAuthTestCase):
 
 class ProjectBlockAPITestCase(OAuthTestCase):
 
+    fixtures = ["testing.yaml"]
+
     def setUp(self):
         """
         Setup methods for a eemeter run storage
         engine.
         """
-        super(ProjectBlockAPITestCase,self).setUp()
+        super(ProjectBlockAPITestCase, self).setUp()
 
-        self.project = Project(
-                project_owner=self.project_owner,
-                project_id="TEST_PROJECT",
-                baseline_period_start=now(),
-                baseline_period_end=now(),
-                reporting_period_start=now(),
-                reporting_period_end=now(),
-                zipcode=None,
-                weather_station=None,
-                latitude=None,
-                longitude=None,
-                )
-        self.project.save()
-        self.project_block = ProjectBlock(name="NAME", project_owner=self.project_owner)
-        self.project_block.save()
-        self.project_block.project.add(self.project)
-        self.project_block.save()
+        self.project_block = ProjectBlock.objects.all()[0]
+        self.project_block.run_meters()
+        self.project_block.compute_summary_timeseries()
 
     def test_project_block_read(self):
 
@@ -306,7 +296,21 @@ class ProjectBlockAPITestCase(OAuthTestCase):
 
         response = self.client.get('/datastore/project_block/{}/'.format(self.project_block.id), **auth_headers)
         assert response.status_code == 200
-        assert response.data['project'][0] == self.project.id
-        assert response.data['project_owner'] == self.project_owner.id
+        assert response.data['project'][0] == self.project_block.project.all()[0].id
+        assert response.data['project_owner'] == self.project_block.project_owner.id
         assert response.data['id'] == self.project_block.id
-        assert response.data['name'] == 'NAME'
+        assert response.data['name'] == 'TEST_PROJECT_BLOCK'
+        with pytest.raises(KeyError):
+            response.data['recent_summaries']
+
+    def test_project_block_monthly_timeseries(self):
+
+        auth_headers = { "Authorization": "Bearer " + "tokstr" }
+
+        response = self.client.get('/datastore/project_block_monthly_timeseries/{}/'.format(self.project_block.id), **auth_headers)
+        assert response.status_code == 200
+        assert response.data['project'][0] == self.project_block.project.all()[0].id
+        assert response.data['project_owner'] == self.project_block.project_owner.id
+        assert response.data['id'] == self.project_block.id
+        assert response.data['name'] == 'TEST_PROJECT_BLOCK'
+        assert len(response.data['recent_summaries']) == 2

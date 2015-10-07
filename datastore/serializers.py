@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Project
 from .models import ProjectBlock
 from .models import ConsumptionMetadata
@@ -8,6 +9,9 @@ from .models import DailyUsageBaseline
 from .models import DailyUsageReporting
 from .models import MonthlyAverageUsageBaseline
 from .models import MonthlyAverageUsageReporting
+from .models import FuelTypeSummary
+from .models import MonthlyUsageSummaryBaseline
+from .models import MonthlyUsageSummaryActual
 
 class ProjectSerializer(serializers.ModelSerializer):
     recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -183,3 +187,43 @@ class ProjectBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectBlock
         fields = ( 'id', 'name', 'project_owner', 'project')
+
+class MonthlyUsageSummaryBaselineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MonthlyUsageSummaryBaseline
+        fields = ( 'id', 'value', 'date')
+
+class MonthlyUsageSummaryActualSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MonthlyUsageSummaryActual
+        fields = ( 'id', 'value', 'date')
+
+class FuelTypeSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
+
+    monthlyusagesummarybaseline_set = MonthlyUsageSummaryBaselineSerializer(many=True, read_only=True)
+    monthlyusagesummaryactual_set = MonthlyUsageSummaryActualSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FuelTypeSummary
+        fields = (
+                'id',
+                'fuel_type',
+                'monthlyusagesummarybaseline_set',
+                'monthlyusagesummaryactual_set',
+                )
+
+class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
+
+    project = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    recent_summaries = FuelTypeSummaryMonthlyTimeseriesSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ProjectBlock
+        fields = (
+                'id',
+                'name',
+                'project_owner',
+                'project',
+                'recent_summaries',
+                )

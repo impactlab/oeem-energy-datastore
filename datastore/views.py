@@ -8,6 +8,7 @@ from .serializers import MeterRunSummarySerializer
 from .serializers import MeterRunDailySerializer
 from .serializers import MeterRunMonthlySerializer
 from .serializers import ProjectBlockSerializer
+from .serializers import ProjectBlockMonthlyTimeseriesSerializer
 from .serializers import ConsumptionMetadataSerializer
 
 from rest_framework import generics, permissions
@@ -77,4 +78,9 @@ class ProjectBlockDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = ProjectBlock.objects.all()
     serializer_class = ProjectBlockSerializer
+
+class ProjectBlockMonthlyTimeseriesDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+    queryset = ProjectBlock.objects.all()
+    serializer_class = ProjectBlockMonthlyTimeseriesSerializer
 

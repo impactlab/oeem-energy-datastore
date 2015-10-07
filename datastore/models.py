@@ -18,6 +18,16 @@ import numpy as np
 import json
 from collections import defaultdict
 
+FUEL_TYPE_CHOICES = {
+    'E': 'electricity',
+    'NG': 'natural_gas',
+}
+
+ENERGY_UNIT_CHOICES = {
+    'KWH': 'kWh',
+    'THM': 'therm',
+}
+
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
     added = models.DateTimeField(auto_now_add=True)
@@ -74,11 +84,14 @@ class Project(models.Model):
         return project, consumption_metadata_ids
 
     def run_meter(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
+        """ If possible, run the meter specified by meter_type.
+        """
         try:
             project, cm_ids = self.eemeter_project()
         except ValueError:
             message = "Cannot create eemeter project; skipping project id={}.".format(self.project_id)
             warn(message)
+            return
 
         if meter_type == "residential":
             meter = DefaultResidentialMeter()
@@ -236,16 +249,100 @@ class ProjectBlock(models.Model):
     def __str__(self):
         return u'ProjectBlock {}'.format(self.name)
 
-class ConsumptionMetadata(models.Model):
-    FUEL_TYPE_CHOICES = {
-            'E': 'electricity',
-            'NG': 'natural_gas',
-            }
-    ENERGY_UNIT_CHOICES = {
-            'KWH': 'kWh',
-            'THM': 'therm',
-            }
+    def run_meters(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
+        """ Run meter for each project in the project block.
+        """
+        for project in self.project.all():
+            project.run_meter(meter_type, start_date, end_date, n_days)
 
+    def compute_summary_timeseries(self):
+        """ Compute aggregate timeseries for all projects in project block.
+        """
+        data_by_fuel_type = defaultdict(lambda: {
+            "baseline_by_month": defaultdict(list),
+            "baseline_by_date": defaultdict(list),
+            "actual_by_month": defaultdict(list),
+            "actual_by_date": defaultdict(list),
+            "reporting_by_month": defaultdict(list),
+            "reporting_by_date": defaultdict(list),
+        })
+
+        for project in self.project.all():
+            for meter_run in project.recent_meter_runs():
+
+                fuel_type = meter_run.consumption_metadata.fuel_type
+                dailyusagebaseline_set = meter_run.dailyusagebaseline_set.all()
+                dailyusagereporting_set = meter_run.dailyusagereporting_set.all()
+                assert len(dailyusagebaseline_set) == len(dailyusagereporting_set)
+
+                fuel_type_data = data_by_fuel_type[fuel_type]
+                baseline_by_month = fuel_type_data["baseline_by_month"]
+                baseline_by_date = fuel_type_data["baseline_by_date"]
+                actual_by_month = fuel_type_data["actual_by_month"]
+                actual_by_date = fuel_type_data["actual_by_date"]
+                reporting_by_month = fuel_type_data["reporting_by_month"]
+                reporting_by_date = fuel_type_data["reporting_by_date"]
+
+                for daily_usage_baseline, daily_usage_reporting in \
+                        zip(dailyusagebaseline_set, dailyusagereporting_set):
+
+                    # should be the same as the month for the reporting period
+                    date = daily_usage_baseline.date
+                    month = date.strftime("%Y-%m")
+
+                    baseline_value = daily_usage_baseline.value
+                    reporting_value = daily_usage_reporting.value
+
+                    if date > project.reporting_period_start.date():
+                        actual_value = reporting_value
+                    else:
+                        actual_value = baseline_value
+
+                    baseline_by_month[month].append(baseline_value)
+                    baseline_by_date[date].append(baseline_value)
+                    actual_by_month[month].append(actual_value)
+                    actual_by_date[date].append(actual_value)
+                    reporting_by_month[month].append(reporting_value)
+                    reporting_by_date[date].append(reporting_value)
+
+        for fuel_type, fuel_type_data in data_by_fuel_type.items():
+
+            baseline_by_month = fuel_type_data["baseline_by_month"]
+            baseline_by_date = fuel_type_data["baseline_by_date"]
+            actual_by_month = fuel_type_data["actual_by_month"]
+            actual_by_date = fuel_type_data["actual_by_date"]
+            reporting_by_month = fuel_type_data["reporting_by_month"]
+            reporting_by_date = fuel_type_data["reporting_by_date"]
+
+            date_labels = sorted(baseline_by_date.keys())
+            month_labels = sorted(baseline_by_month.keys())
+
+            fuel_type_summary = FuelTypeSummary(project_block=self,
+                    fuel_type=fuel_type)
+            fuel_type_summary.save()
+
+            for date in date_labels:
+                DailyUsageSummaryBaseline(fuel_type_summary=fuel_type_summary,
+                        value=np.nansum(baseline_by_date[date]), date=date).save()
+                DailyUsageSummaryActual(fuel_type_summary=fuel_type_summary,
+                        value=np.nansum(actual_by_date[date]), date=date).save()
+                DailyUsageSummaryReporting(fuel_type_summary=fuel_type_summary,
+                        value=np.nansum(reporting_by_date[date]), date=date).save()
+
+            for month in month_labels:
+                date = datetime.strptime(month, "%Y-%m")
+                MonthlyUsageSummaryBaseline(fuel_type_summary=fuel_type_summary,
+                        value=np.nansum(baseline_by_month[month]), date=date).save()
+                MonthlyUsageSummaryActual(fuel_type_summary=fuel_type_summary,
+                        value=np.nansum(actual_by_month[month]), date=date).save()
+                MonthlyUsageSummaryReporting(fuel_type_summary=fuel_type_summary,
+                        value=np.nansum(reporting_by_month[month]), date=date).save()
+
+    def recent_summaries(self):
+        fuel_types = set([fts['fuel_type'] for fts in self.fueltypesummary_set.values('fuel_type')])
+        return [self.fueltypesummary_set.filter(fuel_type=fuel_type).latest('added') for fuel_type in fuel_types]
+
+class ConsumptionMetadata(models.Model):
     fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
     energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES.items())
     project = models.ForeignKey(Project, blank=True, null=True)
@@ -253,14 +350,6 @@ class ConsumptionMetadata(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def eemeter_consumption_data(self):
-        FUEL_TYPE_CHOICES = {
-                'E': 'electricity',
-                'NG': 'natural_gas',
-                }
-        ENERGY_UNIT_CHOICES = {
-                'KWH': 'kWh',
-                'THM': 'therm',
-                }
         records = self.records.all()
         records = [r.eemeter_record() for r in records]
         fuel_type = FUEL_TYPE_CHOICES[self.fuel_type]
@@ -370,6 +459,88 @@ class MonthlyAverageUsageReporting(models.Model):
     @python_2_unicode_compatible
     def __str__(self):
         return u'MonthlyAverageUsageReporting(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class FuelTypeSummary(models.Model):
+    project_block = models.ForeignKey(ProjectBlock)
+    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'FuelTypeSummary(project_block={}, fuel_type={})'.format(self.project_block, self.fuel_type)
+
+class DailyUsageSummaryBaseline(models.Model):
+    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'DailyUsageSummaryBaseline(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class DailyUsageSummaryActual(models.Model):
+    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'DailyUsageSummaryActual(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class DailyUsageSummaryReporting(models.Model):
+    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'DailyUsageSummaryReporting(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class MonthlyUsageSummaryBaseline(models.Model):
+    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'MonthlyUsageSummaryBaseline(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class MonthlyUsageSummaryActual(models.Model):
+    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'MonthlyUsageSummaryActual(date={}, value={})'.format(self.date, self.value)
+
+    class Meta:
+        ordering = ['date']
+
+class MonthlyUsageSummaryReporting(models.Model):
+    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    value = models.FloatField()
+    date = models.DateField()
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'MonthlyUsageSummaryReporting(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
