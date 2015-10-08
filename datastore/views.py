@@ -10,9 +10,13 @@ from .serializers import MeterRunMonthlySerializer
 from .serializers import ProjectBlockSerializer
 from .serializers import ProjectBlockMonthlyTimeseriesSerializer
 from .serializers import ConsumptionMetadataSerializer
+from .serializers import FuelTypeSummaryMonthlyTimeseriesSerializer
 
 from rest_framework import generics, permissions
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
+
+
+##### Consumption
 
 class ConsumptionMetadataList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
@@ -23,6 +27,9 @@ class ConsumptionMetadataDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = ConsumptionMetadata.objects.all()
     serializer_class = ConsumptionMetadataSerializer
+
+
+##### Projects
 
 class ProjectList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
@@ -43,6 +50,8 @@ class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+
+##### Meter Runs
 
 class MeterRunList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
@@ -69,6 +78,9 @@ class MeterRunMonthlyDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = MeterRun.objects.all()
     serializer_class = MeterRunMonthlySerializer
 
+
+##### Project Blocks
+
 class ProjectBlockList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = ProjectBlock.objects.all()
@@ -83,4 +95,3 @@ class ProjectBlockMonthlyTimeseriesDetail(generics.RetrieveUpdateDestroyAPIView)
     permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = ProjectBlock.objects.all()
     serializer_class = ProjectBlockMonthlyTimeseriesSerializer
-

@@ -197,7 +197,7 @@ class MonthlyUsageSummaryActualSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MonthlyUsageSummaryActual
-        fields = ( 'id', 'value', 'date')
+        fields = ( 'id', 'value', 'date', 'n_projects')
 
 class FuelTypeSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
 
