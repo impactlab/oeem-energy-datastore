@@ -319,8 +319,8 @@ class ProjectBlock(models.Model):
             actual_by_date = fuel_type_data["actual_by_date"]
             reporting_by_month = fuel_type_data["reporting_by_month"]
             reporting_by_date = fuel_type_data["reporting_by_date"]
-            n_completed_projects_by_month = fuel_type_data["reporting_by_month"]
-            n_completed_projects_by_date = fuel_type_data["reporting_by_date"]
+            n_completed_projects_by_month = fuel_type_data["n_completed_projects_by_month"]
+            n_completed_projects_by_date = fuel_type_data["n_completed_projects_by_date"]
 
             date_labels = sorted(baseline_by_date.keys())
             month_labels = sorted(baseline_by_month.keys())
