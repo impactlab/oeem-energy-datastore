@@ -265,7 +265,6 @@ class ProjectBlock(models.Model):
             "actual_by_date": defaultdict(list),
             "reporting_by_month": defaultdict(list),
             "reporting_by_date": defaultdict(list),
-            "n_completed_projects_by_month": defaultdict(lambda: 0),
             "n_completed_projects_by_date": defaultdict(lambda: 0),
         })
 
@@ -284,7 +283,6 @@ class ProjectBlock(models.Model):
                 actual_by_date = fuel_type_data["actual_by_date"]
                 reporting_by_month = fuel_type_data["reporting_by_month"]
                 reporting_by_date = fuel_type_data["reporting_by_date"]
-                n_completed_projects_by_month = fuel_type_data["n_completed_projects_by_month"]
                 n_completed_projects_by_date = fuel_type_data["n_completed_projects_by_date"]
 
                 for daily_usage_baseline, daily_usage_reporting in \
@@ -299,7 +297,6 @@ class ProjectBlock(models.Model):
 
                     if date > project.reporting_period_start.date():
                         actual_value = reporting_value
-                        n_completed_projects_by_month[month] += 1
                         n_completed_projects_by_date[date] += 1
                     else:
                         actual_value = baseline_value
@@ -319,7 +316,6 @@ class ProjectBlock(models.Model):
             actual_by_date = fuel_type_data["actual_by_date"]
             reporting_by_month = fuel_type_data["reporting_by_month"]
             reporting_by_date = fuel_type_data["reporting_by_date"]
-            n_completed_projects_by_month = fuel_type_data["n_completed_projects_by_month"]
             n_completed_projects_by_date = fuel_type_data["n_completed_projects_by_date"]
 
             date_labels = sorted(baseline_by_date.keys())
@@ -344,7 +340,7 @@ class ProjectBlock(models.Model):
                         value=np.nansum(baseline_by_month[month]), date=date).save()
                 MonthlyUsageSummaryActual(fuel_type_summary=fuel_type_summary,
                         value=np.nansum(actual_by_month[month]), date=date,
-                        n_projects=n_completed_projects_by_month[month]).save()
+                        n_projects=n_completed_projects_by_date[date]).save()
                 MonthlyUsageSummaryReporting(fuel_type_summary=fuel_type_summary,
                         value=np.nansum(reporting_by_month[month]), date=date).save()
 
