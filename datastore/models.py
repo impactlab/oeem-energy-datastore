@@ -335,7 +335,7 @@ class ProjectBlock(models.Model):
                         value=np.nansum(reporting_by_date[date]), date=date).save()
 
             for month in month_labels:
-                date = datetime.strptime(month, "%Y-%m")
+                date = datetime.strptime(month, "%Y-%m").date()
                 MonthlyUsageSummaryBaseline(fuel_type_summary=fuel_type_summary,
                         value=np.nansum(baseline_by_month[month]), date=date).save()
                 MonthlyUsageSummaryActual(fuel_type_summary=fuel_type_summary,
