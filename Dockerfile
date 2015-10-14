@@ -1,5 +1,7 @@
-FROM python:3.5
+FROM continuumio/anaconda3
 ENV PYTHONUNBUFFERED 1
+RUN apt-get update
+RUN apt-get install -y  postgresql libpq-dev
 RUN mkdir /code
 WORKDIR /code
 ADD requirements.txt /code/
