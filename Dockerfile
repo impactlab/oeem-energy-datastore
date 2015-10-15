@@ -11,4 +11,6 @@ ADD . /code/
 ENV DATABASE_URL postgres://postgres:@db:5432/postgres
 ENV DJANGO_SETTINGS_MODULE oeem_energy_datastore.settings
 ENV SECRET_KEY jalksdfk3229p0trjgoislskj
+ENV DJANGO_DEBUG true
+
 
