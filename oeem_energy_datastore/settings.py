@@ -81,7 +81,6 @@ WSGI_APPLICATION = 'oeem_energy_datastore.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-print(dj_database_url.config())
 DATABASES = {'default': dj_database_url.config()}
 
 
