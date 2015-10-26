@@ -189,6 +189,7 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['longitude'] == 0.0
         assert response.data['recent_meter_runs'] == []
         assert response.data['consumptionmetadata_set'] == []
+        assert response.data['projectblock_set'] == []
 
 class MeterRunAPITestCase(OAuthTestCase):
 

@@ -13,9 +13,17 @@ from .models import FuelTypeSummary
 from .models import MonthlyUsageSummaryBaseline
 from .models import MonthlyUsageSummaryActual
 
+
+class ProjectBlockEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectBlock
+        fields = ( 'id', 'name', 'project_owner')
+
 class ProjectSerializer(serializers.ModelSerializer):
     recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    projectblock_set = ProjectBlockEmbeddedSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
@@ -32,7 +40,8 @@ class ProjectSerializer(serializers.ModelSerializer):
                 'latitude',
                 'longitude',
                 'consumptionmetadata_set',
-                'recent_meter_runs',)
+                'recent_meter_runs',
+                'projectblock_set',)
 
 
 class DailyUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
