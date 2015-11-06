@@ -13,5 +13,4 @@ ENV DJANGO_SETTINGS_MODULE oeem_energy_datastore.settings
 ENV SECRET_KEY jalksdfk3229p0trjgoislskj
 ENV DJANGO_DEBUG true
 
-CMD ["python", "manage.py","runserver","0.0.0.0:8000"]
-#CMD ["gunicorn","oeem_energy_datastore.wsgi","--bind 0.0.0.0:8000"]
+CMD ["gunicorn","--bind","0.0.0.0:8000", "oeem_energy_datastore.wsgi"]
