@@ -1,7 +1,6 @@
 dj-database-url
 Django
 django-oauth-toolkit
-django-suit
 django-sslserver
 djangorestframework
 eemeter
@@ -10,5 +9,6 @@ psycopg2
 pytest-django
 requests
 sqlalchemy
+django-grappelli
 gunicorn
 django-pdb
