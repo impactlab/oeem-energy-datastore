@@ -1,3 +1,8 @@
+amqp
+anyjson
+billiard
+celery
+kombu
 dj-database-url
 Django
 django-oauth-toolkit
