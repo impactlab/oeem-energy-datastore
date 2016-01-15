@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.utils.encoding import python_2_unicode_compatible
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from eemeter.evaluation import Period
 from eemeter.project import Project as EEMeterProject
@@ -553,3 +555,6 @@ class MonthlyUsageSummaryReporting(models.Model):
     class Meta:
         ordering = ['date']
 
+@receiver(post_save, sender=ProjectBlock)
+def project_block_compute_summary_timeseries(sender, instance, **kwargs):
+    instance.compute_summary_timeseries()
