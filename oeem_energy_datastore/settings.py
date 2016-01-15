@@ -95,12 +95,18 @@ LOGGING = {
             'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s'
         }
     },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
     'handlers': {
         'logfile': {
             'level': 'DEBUG',
+            'filters': ['require_debug_false'],
             'class': 'logging.handlers.WatchedFileHandler',
             'formatter': 'verbose',
-            'filename': '/srv/logs/django.log',
+            'filename': os.environ.get("DJANGO_LOGFILE"),
         }
     },
     'loggers': {
