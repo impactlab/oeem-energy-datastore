@@ -128,4 +128,4 @@ BROKER_URL = 'amqp://guest:guest@{}//'.format(os.environ["BROKER_HOST"])
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'j
+CELERY_RESULT_SERIALIZER = 'json'
