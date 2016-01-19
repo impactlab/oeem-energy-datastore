@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from proj.celery import app
+from oeem_energy_datastore.celery import app
 
 
 @app.task
