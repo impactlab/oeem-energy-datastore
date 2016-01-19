@@ -5,12 +5,9 @@ from django.conf import settings
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'oeem_energy_datastore.settings')
 
-app = Celery('oeem_energy_datastore',
-        broker='amqp://',
-        backend='amqp://',
-        include=['oeem_energy_datastore.tasks'])
-
+app = Celery('oeem_energy_datastore')
 app.config_from_object('django.conf:settings')
+
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 if __name__ == '__main__':
