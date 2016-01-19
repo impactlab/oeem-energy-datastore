@@ -121,3 +121,5 @@ LOGGING = {
         },
     }
 }
+
+BROKER_URL = os.environ["BROKER_URL"]
