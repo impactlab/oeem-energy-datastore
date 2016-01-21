@@ -9,12 +9,19 @@ else
 	python manage.py collectstatic --noinput
 fi
 
+mkdir /srv/logs/celery
+mkdir /srv/run/celery
+
+exec celery multi start worker1 \
+    -A oeem_energy_datastore \
+    -l info \
+    --pidfile="/srv/run/celery/%n.pid" \
+    --logfile="/srv/logs/celery/%n.log" \
+
 touch /srv/logs/gunicorn.log
 touch /srv/logs/access.log
 touch /srv/logs/django.log
 tail -n 0 -f /srv/logs/*.log &
-
-# exec celery multi start w1 -A oeem_energy_datastore -l info
 
 exec gunicorn oeem_energy_datastore.wsgi \
     --bind 0.0.0.0:8000 \
