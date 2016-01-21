@@ -73,6 +73,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get("STATIC_ROOT")
 
+STATICFILES_DIRS = ( os.path.join(BASE_DIR,'staticfiles'),)
+
 OAUTH2_PROVIDER = {
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
     'ACCESS_TOKEN_EXPIRE_SECONDS': 315360000, # 10 years
