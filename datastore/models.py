@@ -20,21 +20,21 @@ import numpy as np
 import json
 from collections import defaultdict
 
-FUEL_TYPE_CHOICES = {
-    'E': 'electricity',
-    'NG': 'natural_gas',
-}
+FUEL_TYPE_CHOICES = [
+    ('E', 'electricity'),
+    ('NG', 'natural_gas'),
+]
 
-ENERGY_UNIT_CHOICES = {
-    'KWH': 'kWh',
-    'THM': 'therm',
-}
+ENERGY_UNIT_CHOICES = [
+    ('KWH', 'kWh'),
+    ('THM', 'therm'),
+]
 
-PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = {
-    'CHAR': 'char_value',
-    'FLOAT': 'float_value',
-    'DATE': 'date_value',
-}
+PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = [
+    ('CHAR', 'char_value'),
+    ('FLOAT', 'float_value'),
+    ('DATE', 'date_value'),
+]
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
@@ -248,7 +248,7 @@ class Project(models.Model):
 
 class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100)
-    data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES.items())
+    data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
 class ProjectAttribute(models.Model):
     project = models.ForeignKey(Project)
@@ -381,8 +381,8 @@ class ProjectBlock(models.Model):
         return [self.fueltypesummary_set.filter(fuel_type=fuel_type).latest('added') for fuel_type in fuel_types]
 
 class ConsumptionMetadata(models.Model):
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
-    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES.items())
+    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
+    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -390,8 +390,8 @@ class ConsumptionMetadata(models.Model):
     def eemeter_consumption_data(self):
         records = self.records.all()
         records = [r.eemeter_record() for r in records]
-        fuel_type = FUEL_TYPE_CHOICES[self.fuel_type]
-        unit_name = ENERGY_UNIT_CHOICES[self.energy_unit]
+        fuel_type = dict(FUEL_TYPE_CHOICES)[self.fuel_type]
+        unit_name = dict(ENERGY_UNIT_CHOICES)[self.energy_unit]
         consumption_data = EEMeterConsumptionData(records, fuel_type=fuel_type,
                 unit_name=unit_name, record_type="arbitrary_start")
         return consumption_data
@@ -503,7 +503,7 @@ class MonthlyAverageUsageReporting(models.Model):
 
 class FuelTypeSummary(models.Model):
     project_block = models.ForeignKey(ProjectBlock)
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
+    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
