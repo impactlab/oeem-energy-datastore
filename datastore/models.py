@@ -30,6 +30,12 @@ ENERGY_UNIT_CHOICES = {
     'THM': 'therm',
 }
 
+PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = {
+    'CHAR': 'char_value',
+    'FLOAT': 'float_value',
+    'DATE': 'date_value',
+}
+
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
     added = models.DateTimeField(auto_now_add=True)
@@ -239,6 +245,30 @@ class Project(models.Model):
 
     def recent_meter_runs(self):
         return [c.meterrun_set.latest('added') for c in self.consumptionmetadata_set.all()]
+
+class ProjectAttributeKey(models.Model):
+    name = models.CharField(max_length=100)
+    data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES.items())
+
+class ProjectAttribute(models.Model):
+    project = models.ForeignKey(Project)
+    key = models.ForeignKey(ProjectAttributeKey)
+    char_value = models.CharField(max_length=100, blank=True, null=True)
+    float_value = models.FloatField(blank=True, null=True)
+    date_value = models.DateField(blank=True, null=True)
+
+    def name(self):
+        return self.key.name
+
+    def value(self):
+        if self.key.data_type == "char_value":
+            return self.char_value
+        elif self.key.data_type == "float_value":
+            return self.float_value
+        elif self.key.data_type == "date_value":
+            return self.date_value
+        else:
+            return None
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
