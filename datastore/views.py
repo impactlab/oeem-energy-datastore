@@ -1,26 +1,22 @@
-from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import list_route
+from rest_framework import viewsets
+
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
 from . import models
 from . import serializers
 
-##### Consumption
+default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
-class ConsumptionMetadataList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.ConsumptionMetadata.objects.all()
-    serializer_class = serializers.ConsumptionMetadataSerializer
-
-class ConsumptionMetadataDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
+    permission_classes = default_permissions_classes
     queryset = models.ConsumptionMetadata.objects.all()
     serializer_class = serializers.ConsumptionMetadataSerializer
 
 
-##### Projects
-
-class ProjectList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+class ProjectViewSet(viewsets.ModelViewSet):
+    permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectSerializer
 
     def get_queryset(self):
@@ -34,52 +30,38 @@ class ProjectList(generics.ListCreateAPIView):
             queryset = queryset.filter(projectblock=project_block_id)
         return queryset
 
-class ProjectDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.Project.objects.all()
-    serializer_class = serializers.ProjectSerializer
 
-##### Meter Runs
-
-class MeterRunList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.MeterRun.objects.all()
+class MeterRunViewSet(viewsets.ModelViewSet):
+    permission_classes = default_permissions_classes
     serializer_class = serializers.MeterRunSerializer
-
-class MeterRunDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = models.MeterRun.objects.all()
-    serializer_class = serializers.MeterRunSerializer
 
-class MeterRunSummaryDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.MeterRun.objects.all()
-    serializer_class = serializers.MeterRunSummarySerializer
+    @list_route()
+    def summary(self, request):
+        queryset = self.get_queryset()
+        serializer = serializers.MeterRunSummarySerializer(queryset, many=True)
+        return Response(serializer.data)
 
-class MeterRunDailyDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.MeterRun.objects.all()
-    serializer_class = serializers.MeterRunDailySerializer
+    @list_route()
+    def daily(self, request):
+        queryset = self.get_queryset()
+        serializer = serializers.MeterRunDailySerializer(queryset, many=True)
+        return Response(serializer.data)
 
-class MeterRunMonthlyDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.MeterRun.objects.all()
-    serializer_class = serializers.MeterRunMonthlySerializer
+    @list_route()
+    def monthly(self, request):
+        queryset = self.get_queryset()
+        serializer = serializers.MeterRunMonthlySerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
-##### Project Blocks
-
-class ProjectBlockList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.ProjectBlock.objects.all()
+class ProjectBlockViewSet(viewsets.ModelViewSet):
+    permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectBlockSerializer
-
-class ProjectBlockDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
     queryset = models.ProjectBlock.objects.all()
-    serializer_class = serializers.ProjectBlockSerializer
 
-class ProjectBlockMonthlyTimeseriesDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
-    queryset = models.ProjectBlock.objects.all()
-    serializer_class = serializers.ProjectBlockMonthlyTimeseriesSerializer
+    @list_route()
+    def monthly_timeseries(self, request):
+        queryset = self.get_queryset()
+        serializer = serializers.ProjectBlockMonthlyTimeseriesSerializer(queryset, many=True)
+        return Response(serializer.data)
