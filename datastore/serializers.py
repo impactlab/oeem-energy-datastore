@@ -2,7 +2,40 @@ from rest_framework import serializers
 
 from . import models
 
-class ProjectBlockEmbeddedSerializer(serializers.ModelSerializer):
+class ProjectOwnerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectOwner
+        fields = ( 'id', 'user')
+
+
+class ProjectAttributeKeySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectAttributeKey
+        fields = ( 'id', 'name', 'data_type')
+
+
+class ProjectAttributeSerializer(serializers.ModelSerializer):
+    projectattributekey_set = ProjectAttributeKeySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.ProjectAttribute
+        fields = (
+            'id',
+            'project',
+            'key',
+            'value',
+            'boolean_value',
+            'char_value',
+            'date_value',
+            'datetime_value',
+            'float_value',
+            'integer_value',
+        )
+
+
+class ProjectBlockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProjectBlock
@@ -12,7 +45,7 @@ class ProjectBlockEmbeddedSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    projectblock_set = ProjectBlockEmbeddedSerializer(many=True, read_only=True)
+    projectblock_set = ProjectBlockSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Project
@@ -34,28 +67,28 @@ class ProjectSerializer(serializers.ModelSerializer):
         )
 
 
-class DailyUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
+class DailyUsageBaselineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.DailyUsageBaseline
         fields = ('date', 'value',)
 
 
-class DailyUsageReportingEmbeddedSerializer(serializers.ModelSerializer):
+class DailyUsageReportingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.DailyUsageReporting
         fields = ('date', 'value',)
 
 
-class MonthlyAverageUsageBaselineEmbeddedSerializer(serializers.ModelSerializer):
+class MonthlyAverageUsageBaselineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.MonthlyAverageUsageBaseline
         fields = ('date', 'value',)
 
 
-class MonthlyAverageUsageReportingEmbeddedSerializer(serializers.ModelSerializer):
+class MonthlyAverageUsageReportingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.MonthlyAverageUsageReporting
@@ -63,8 +96,8 @@ class MonthlyAverageUsageReportingEmbeddedSerializer(serializers.ModelSerializer
 
 
 class MeterRunSerializer(serializers.ModelSerializer):
-    dailyusagebaseline_set = DailyUsageBaselineEmbeddedSerializer(many=True)
-    dailyusagereporting_set = DailyUsageReportingEmbeddedSerializer(many=True)
+    dailyusagebaseline_set = DailyUsageBaselineSerializer(many=True)
+    dailyusagereporting_set = DailyUsageReportingSerializer(many=True)
 
     class Meta:
         model = models.MeterRun
@@ -108,8 +141,8 @@ class MeterRunSummarySerializer(serializers.ModelSerializer):
 
 
 class MeterRunDailySerializer(serializers.ModelSerializer):
-    dailyusagebaseline_set = DailyUsageBaselineEmbeddedSerializer(many=True)
-    dailyusagereporting_set = DailyUsageReportingEmbeddedSerializer(many=True)
+    dailyusagebaseline_set = DailyUsageBaselineSerializer(many=True)
+    dailyusagereporting_set = DailyUsageReportingSerializer(many=True)
 
     class Meta:
         model = models.MeterRun
@@ -132,8 +165,8 @@ class MeterRunDailySerializer(serializers.ModelSerializer):
 
 
 class MeterRunMonthlySerializer(serializers.ModelSerializer):
-    monthlyaverageusagebaseline_set = MonthlyAverageUsageBaselineEmbeddedSerializer(many=True)
-    monthlyaverageusagereporting_set = MonthlyAverageUsageReportingEmbeddedSerializer(many=True)
+    monthlyaverageusagebaseline_set = MonthlyAverageUsageBaselineSerializer(many=True)
+    monthlyaverageusagereporting_set = MonthlyAverageUsageReportingSerializer(many=True)
 
     class Meta:
         model = models.MeterRun
@@ -155,7 +188,7 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
         )
 
 
-class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):
+class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionRecord
@@ -163,8 +196,7 @@ class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):
 
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
-
-    records = ConsumptionRecordEmbeddedSerializer(many=True)
+    records = ConsumptionRecordSerializer(many=True)
 
     class Meta:
         model = models.ConsumptionMetadata
@@ -183,23 +215,15 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
         return consumption_metadata
 
 
-class ProjectIdEmbeddedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Project
-        fields = ('id',)
-
-
 class ProjectBlockSerializer(serializers.ModelSerializer):
-
-    project = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = models.ProjectBlock
-        fields = ( 'id', 'name', 'project_owner', 'project')
+        fields = ( 'id', 'name', 'project_owner', 'projects')
 
 
 class MonthlyUsageSummaryBaselineSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.MonthlyUsageSummaryBaseline
         fields = ( 'id', 'value', 'date')

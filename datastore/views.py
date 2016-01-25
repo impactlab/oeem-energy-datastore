@@ -9,10 +9,16 @@ from . import serializers
 
 default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
+class ProjectOwnerViewSet(viewsets.ModelViewSet):
+    permission_classes = default_permissions_classes
+    serializer_class = serializers.ProjectOwnerSerializer
+    queryset = models.ProjectOwner.objects.all()
+
+
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
     permission_classes = default_permissions_classes
-    queryset = models.ConsumptionMetadata.objects.all()
     serializer_class = serializers.ConsumptionMetadataSerializer
+    queryset = models.ConsumptionMetadata.objects.all()
 
 
 class ProjectViewSet(viewsets.ModelViewSet):

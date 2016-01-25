@@ -31,9 +31,12 @@ ENERGY_UNIT_CHOICES = [
 ]
 
 PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = [
+    ('BOOLEAN', 'boolean_value'),
     ('CHAR', 'char_value'),
-    ('FLOAT', 'float_value'),
     ('DATE', 'date_value'),
+    ('DATETIME', 'datetime_value'),
+    ('FLOAT', 'float_value'),
+    ('INTEGER', 'integer_value'),
 ]
 
 class ProjectOwner(models.Model):
@@ -253,27 +256,31 @@ class ProjectAttributeKey(models.Model):
 class ProjectAttribute(models.Model):
     project = models.ForeignKey(Project)
     key = models.ForeignKey(ProjectAttributeKey)
+    boolean_value = models.NullBooleanField(blank=True, null=True)
     char_value = models.CharField(max_length=100, blank=True, null=True)
-    float_value = models.FloatField(blank=True, null=True)
     date_value = models.DateField(blank=True, null=True)
-
-    def name(self):
-        return self.key.name
+    datetime_value = models.DateTimeField(blank=True, null=True)
+    float_value = models.FloatField(blank=True, null=True)
+    integer_value = models.IntegerField(blank=True, null=True)
 
     def value(self):
-        if self.key.data_type == "char_value":
+        if self.key.data_type == "BOOLEAN":
+            return self.boolean_value
+        elif self.key.data_type == "CHAR":
             return self.char_value
-        elif self.key.data_type == "float_value":
-            return self.float_value
-        elif self.key.data_type == "date_value":
+        elif self.key.data_type == "DATE":
             return self.date_value
+        elif self.key.data_type == "DATETIME":
+            return self.datetime_value
+        elif self.key.data_type == "FLOAT":
+            return self.float_value
         else:
             return None
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
     project_owner = models.ForeignKey(ProjectOwner)
-    project = models.ManyToManyField(Project)
+    projects = models.ManyToManyField(Project)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
