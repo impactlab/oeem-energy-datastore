@@ -17,6 +17,7 @@ class ProjectAttributeKeySerializer(serializers.ModelSerializer):
 
 
 class ProjectAttributeSerializer(serializers.ModelSerializer):
+
     projectattributekey_set = ProjectAttributeKeySerializer(many=True, read_only=True)
 
     class Meta:
@@ -43,9 +44,10 @@ class ProjectBlockSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    projectblock_set = ProjectBlockSerializer(many=True, read_only=True)
+
+    # consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    # recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    # projectblock_set = ProjectBlockSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Project
@@ -61,9 +63,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             'weather_station',
             'latitude',
             'longitude',
-            'consumptionmetadata_set',
-            'recent_meter_runs',
-            'projectblock_set',
+            # 'consumptionmetadata_set',
+            # 'recent_meter_runs',
+            # 'projectblock_set',
         )
 
 
@@ -96,6 +98,7 @@ class MonthlyAverageUsageReportingSerializer(serializers.ModelSerializer):
 
 
 class MeterRunSerializer(serializers.ModelSerializer):
+
     dailyusagebaseline_set = DailyUsageBaselineSerializer(many=True)
     dailyusagereporting_set = DailyUsageReportingSerializer(many=True)
 
@@ -141,6 +144,7 @@ class MeterRunSummarySerializer(serializers.ModelSerializer):
 
 
 class MeterRunDailySerializer(serializers.ModelSerializer):
+
     dailyusagebaseline_set = DailyUsageBaselineSerializer(many=True)
     dailyusagereporting_set = DailyUsageReportingSerializer(many=True)
 
@@ -165,6 +169,7 @@ class MeterRunDailySerializer(serializers.ModelSerializer):
 
 
 class MeterRunMonthlySerializer(serializers.ModelSerializer):
+
     monthlyaverageusagebaseline_set = MonthlyAverageUsageBaselineSerializer(many=True)
     monthlyaverageusagereporting_set = MonthlyAverageUsageReportingSerializer(many=True)
 
@@ -196,6 +201,7 @@ class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
+
     records = ConsumptionRecordSerializer(many=True)
 
     class Meta:
@@ -213,13 +219,6 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
                     **record_data)
 
         return consumption_metadata
-
-
-class ProjectBlockSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProjectBlock
-        fields = ( 'id', 'name', 'project_owner', 'projects')
 
 
 class MonthlyUsageSummaryBaselineSerializer(serializers.ModelSerializer):
@@ -251,9 +250,15 @@ class FuelTypeSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectBlockSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectBlock
+        fields = ( 'id', 'name', 'project_owner', 'projects')
+
+
 class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
 
-    project = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     recent_summaries = FuelTypeSummaryMonthlyTimeseriesSerializer(many=True, read_only=True)
 
     class Meta:
@@ -262,7 +267,7 @@ class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'project_owner',
-            'project',
+            'projects',
             'recent_summaries',
         )
 
@@ -272,16 +277,35 @@ class ProjectAttributeKeySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProjectAttributeKey
         fields = (
+            'id',
             'name',
             'data_type',
         )
 
-class ProjectAttributeKeySerializer(serializers.ModelSerializer):
+class ProjectAttributeSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = models.ProjectAttributeKey
+        model = models.ProjectAttribute
         fields = (
+            'id',
+            'key',
             'project',
-            'name',
+            'boolean_value',
+            'char_value',
+            'date_value',
+            'datetime_value',
+            'float_value',
+            'integer_value',
+            'value',
+        )
+
+class ProjectAttributeValueSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectAttribute
+        fields = (
+            'id',
+            'key',
+            'project',
             'value',
         )

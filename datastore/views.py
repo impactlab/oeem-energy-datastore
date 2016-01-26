@@ -1,6 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import list_route
 from rest_framework import viewsets
+from rest_framework.response import Response
 
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
@@ -10,18 +11,21 @@ from . import serializers
 default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
 class ProjectOwnerViewSet(viewsets.ModelViewSet):
+
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectOwnerSerializer
-    queryset = models.ProjectOwner.objects.all()
+    queryset = models.ProjectOwner.objects
 
 
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
+
     permission_classes = default_permissions_classes
     serializer_class = serializers.ConsumptionMetadataSerializer
-    queryset = models.ConsumptionMetadata.objects.all()
+    queryset = models.ConsumptionMetadata.objects
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
+
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectSerializer
 
@@ -30,7 +34,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Optionally restricts the returned purchases to a given user,
         by filtering against a `username` query parameter in the URL.
         """
-        queryset = models.Project.objects.all()
+        queryset = models.Project.objects
         project_block_id = self.request.query_params.get('project_block', None)
         if project_block_id is not None:
             queryset = queryset.filter(projectblock=project_block_id)
@@ -38,36 +42,47 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 class MeterRunViewSet(viewsets.ModelViewSet):
+
     permission_classes = default_permissions_classes
-    serializer_class = serializers.MeterRunSerializer
-    queryset = models.MeterRun.objects.all()
+    queryset = models.MeterRun.objects
 
-    @list_route()
-    def summary(self, request):
-        queryset = self.get_queryset()
-        serializer = serializers.MeterRunSummarySerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @list_route()
-    def daily(self, request):
-        queryset = self.get_queryset()
-        serializer = serializers.MeterRunDailySerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @list_route()
-    def monthly(self, request):
-        queryset = self.get_queryset()
-        serializer = serializers.MeterRunMonthlySerializer(queryset, many=True)
-        return Response(serializer.data)
+    def get_serializer_class(self):
+        if self.request.query_params.get("summary", "false") == "true":
+            return serializers.MeterRunSummarySerializer
+        elif self.request.query_params.get("daily", "false") == "true":
+            return serializers.MeterRunDailySerializer
+        elif self.request.query_params.get("monthly", "false") == "true":
+            return serializers.MeterRunMonthlySerializer
+        else:
+            return serializers.MeterRunSerializer
 
 
 class ProjectBlockViewSet(viewsets.ModelViewSet):
-    permission_classes = default_permissions_classes
-    serializer_class = serializers.ProjectBlockSerializer
-    queryset = models.ProjectBlock.objects.all()
 
-    @list_route()
-    def monthly_timeseries(self, request):
-        queryset = self.get_queryset()
-        serializer = serializers.ProjectBlockMonthlyTimeseriesSerializer(queryset, many=True)
-        return Response(serializer.data)
+    permission_classes = default_permissions_classes
+    queryset = models.ProjectBlock.objects
+
+    def get_serializer_class(self):
+        if self.request.query_params.get("monthly_timeseries", "false") == "true":
+            return serializers.ProjectBlockMonthlyTimeseriesSerializer
+        else:
+            return serializers.ProjectBlockSerializer
+
+
+class ProjectAttributeKeyViewSet(viewsets.ModelViewSet):
+
+    permission_classes = default_permissions_classes
+    serializer_class = serializers.ProjectAttributeKeySerializer
+    queryset = models.ProjectAttributeKey.objects
+
+
+class ProjectAttributeViewSet(viewsets.ModelViewSet):
+
+    permission_classes = default_permissions_classes
+    queryset = models.ProjectAttribute.objects
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return serializers.ProjectAttributeValueSerializer
+        else:
+            return serializers.ProjectAttributeSerializer

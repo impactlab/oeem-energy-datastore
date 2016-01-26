@@ -247,7 +247,14 @@ class Project(models.Model):
         return meter_runs
 
     def recent_meter_runs(self):
-        return [c.meterrun_set.latest('added') for c in self.consumptionmetadata_set.all()]
+        consumption_metadatas = self.consumptionmetadata_set.all()
+        meter_runs = []
+        for cm in consumption_metadatas:
+            try:
+                meter_runs.append(cm.meterrun_set.latest('added'))
+            except MeterRun.DoesNotExist:
+                pass
+        return meter_runs
 
 class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100)
