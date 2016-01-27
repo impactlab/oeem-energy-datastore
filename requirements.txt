@@ -5,6 +5,7 @@ celery
 kombu
 dj-database-url
 Django
+django-filter
 django-oauth-toolkit
 django-sslserver
 djangorestframework

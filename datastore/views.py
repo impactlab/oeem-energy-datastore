@@ -2,6 +2,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework import filters
+import django_filters
 
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
@@ -14,37 +16,45 @@ class ProjectOwnerViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectOwnerSerializer
-    queryset = models.ProjectOwner.objects
+    queryset = models.ProjectOwner.objects.all()
 
 
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ConsumptionMetadataSerializer
-    queryset = models.ConsumptionMetadata.objects
+    queryset = models.ConsumptionMetadata.objects.all()
+
+
+class ProjectFilter(django_filters.FilterSet):
+
+    projectblock_and = django_filters.ModelMultipleChoiceFilter(
+            name='projectblock',
+            queryset=models.ProjectBlock.objects.all(),
+            conjoined=True)
+    projectblock_or = django_filters.ModelMultipleChoiceFilter(
+            name='projectblock',
+            queryset=models.ProjectBlock.objects.all(),
+            conjoined=False)
+
+    class Meta:
+        model = models.Project
+        fields = ['zipcode', 'projectblock_and', 'projectblock_or']
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectSerializer
-
-    def get_queryset(self):
-        """
-        Optionally restricts the returned purchases to a given user,
-        by filtering against a `username` query parameter in the URL.
-        """
-        queryset = models.Project.objects
-        project_block_id = self.request.query_params.get('project_block', None)
-        if project_block_id is not None:
-            queryset = queryset.filter(projectblock=project_block_id)
-        return queryset
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ProjectFilter
+    queryset = models.Project.objects.all()
 
 
 class MeterRunViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.MeterRun.objects
+    queryset = models.MeterRun.objects.all()
 
     def get_serializer_class(self):
         if self.request.query_params.get("summary", "false") == "true":
@@ -60,7 +70,7 @@ class MeterRunViewSet(viewsets.ModelViewSet):
 class ProjectBlockViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.ProjectBlock.objects
+    queryset = models.ProjectBlock.objects.all()
 
     def get_serializer_class(self):
         if self.request.query_params.get("monthly_timeseries", "false") == "true":
@@ -75,13 +85,13 @@ class ProjectAttributeKeyViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectAttributeKeySerializer
-    queryset = models.ProjectAttributeKey.objects
+    queryset = models.ProjectAttributeKey.objects.all()
 
 
 class ProjectAttributeViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.ProjectAttribute.objects
+    queryset = models.ProjectAttribute.objects.all()
 
     def get_serializer_class(self):
         if self.request.method == "GET":
