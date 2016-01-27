@@ -36,13 +36,6 @@ class ProjectAttributeSerializer(serializers.ModelSerializer):
         )
 
 
-class ProjectBlockSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProjectBlock
-        fields = ( 'id', 'name', 'project_owner')
-
-
 class ProjectSerializer(serializers.ModelSerializer):
 
     # consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -255,6 +248,13 @@ class ProjectBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProjectBlock
         fields = ( 'id', 'name', 'project_owner', 'projects')
+
+
+class ProjectBlockNameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectBlock
+        fields = ( 'id', 'name')
 
 
 class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
