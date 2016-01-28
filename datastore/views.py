@@ -67,6 +67,24 @@ class MeterRunViewSet(viewsets.ModelViewSet):
             return serializers.MeterRunSerializer
 
 
+class RecentMeterRunViewSet(viewsets.ModelViewSet):
+
+    permission_classes = default_permissions_classes
+    serializer_class = serializers.MeterRunSummarySerializer
+
+    def get_queryset(self):
+        queryset = models.MeterRun.objects.all()
+
+        projects = self.request.query_params.get("projects")
+        if projects is None:
+            project_list = []
+        else:
+            project_list = [int(p) for p in projects.split()]
+        queryset = queryset.filter(project__in=project_list)
+
+        return queryset
+
+
 class ProjectBlockViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes

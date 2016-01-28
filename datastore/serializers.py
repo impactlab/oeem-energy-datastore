@@ -117,6 +117,12 @@ class MeterRunSerializer(serializers.ModelSerializer):
 
 
 class MeterRunSummarySerializer(serializers.ModelSerializer):
+    annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
+    annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
+    annual_savings = serializers.FloatField(source='annual_savings_clean')
+    gross_savings = serializers.FloatField(source='gross_savings_clean')
+    cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
+    cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
 
     class Meta:
         model = models.MeterRun
@@ -128,8 +134,6 @@ class MeterRunSummarySerializer(serializers.ModelSerializer):
             'gross_savings',
             'annual_savings',
             'meter_type',
-            'model_parameter_json_baseline',
-            'model_parameter_json_reporting',
             'cvrmse_baseline',
             'cvrmse_reporting',
             'fuel_type',

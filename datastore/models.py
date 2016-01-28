@@ -458,6 +458,30 @@ class MeterRun(models.Model):
     def __str__(self):
         return u'MeterRun(project_id={}, valid={})'.format(self.project.project_id, self.valid_meter_run())
 
+    def _json_clean(self, value):
+        if value is None or np.isnan(value) or np.isinf(value):
+            return None
+        else:
+            return self.annual_usage_baseline
+
+    def annual_usage_baseline_clean(self):
+        return self._json_clean(self.annual_usage_baseline)
+
+    def annual_usage_reporting_clean(self):
+        return self._json_clean(self.annual_usage_reporting)
+
+    def gross_savings_clean(self):
+        return self._json_clean(self.gross_savings)
+
+    def annual_savings_clean(self):
+        return self._json_clean(self.annual_savings)
+
+    def cvrmse_baseline_clean(self):
+        return self._json_clean(self.cvrmse_baseline)
+
+    def cvrmse_reporting_clean(self):
+        return self._json_clean(self.cvrmse_reporting)
+
     @property
     def fuel_type(self):
         return self.consumption_metadata.fuel_type
