@@ -9,6 +9,7 @@ from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
 from . import models
 from . import serializers
+from collections import defaultdict
 
 default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
@@ -51,38 +52,57 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
 
 
+class MeterRunFilter(django_filters.FilterSet):
+    fuel_type = django_filters.MultipleChoiceFilter(
+            name="consumption_metadata__fuel_type",
+            choices=models.FUEL_TYPE_CHOICES)
+    projects = django_filters.MethodFilter(action="projects_filter")
+    most_recent = django_filters.MethodFilter(action="most_recent_filter")
+
+    class Meta:
+        model = models.MeterRun
+        fields = ['fuel_type', 'most_recent', 'projects']
+
+    def most_recent_filter(self, queryset, value):
+        if value != "True":
+            return queryset
+
+        encountered_cms = set()
+        accepted_meter_runs = set()
+        for meter_run in queryset.order_by('-updated').all():
+            if meter_run.consumption_metadata not in encountered_cms:
+                encountered_cms.add(meter_run.consumption_metadata)
+                accepted_meter_runs.add(meter_run.pk)
+
+        return queryset.filter(pk__in=accepted_meter_runs)
+
+    def projects_filter(self, queryset, value):
+        """
+        Restrict to '+' (http for <space>) separated list of projects.
+        """
+        try:
+            project_set = set(int(p) for p in value.split())
+        except ValueError:
+            project_set = set()
+        return queryset.filter(project__in=project_set)
+
+
 class MeterRunViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     queryset = models.MeterRun.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = MeterRunFilter
 
     def get_serializer_class(self):
-        if self.request.query_params.get("summary", "false") == "true":
+        if self.request.query_params.get("summary", "False") == "True":
             return serializers.MeterRunSummarySerializer
-        elif self.request.query_params.get("daily", "false") == "true":
+        elif self.request.query_params.get("daily", "False") == "True":
             return serializers.MeterRunDailySerializer
-        elif self.request.query_params.get("monthly", "false") == "true":
+        elif self.request.query_params.get("monthly", "False") == "True":
             return serializers.MeterRunMonthlySerializer
         else:
             return serializers.MeterRunSerializer
-
-
-class RecentMeterRunViewSet(viewsets.ModelViewSet):
-
-    permission_classes = default_permissions_classes
-    serializer_class = serializers.MeterRunSummarySerializer
-
-    def get_queryset(self):
-        queryset = models.MeterRun.objects.all()
-
-        projects = self.request.query_params.get("projects")
-        if projects is None:
-            project_list = []
-        else:
-            project_list = [int(p) for p in projects.split()]
-        queryset = queryset.filter(project__in=project_list)
-
-        return queryset
 
 
 class ProjectBlockViewSet(viewsets.ModelViewSet):

@@ -462,7 +462,7 @@ class MeterRun(models.Model):
         if value is None or np.isnan(value) or np.isinf(value):
             return None
         else:
-            return self.annual_usage_baseline
+            return int(value)
 
     def annual_usage_baseline_clean(self):
         return self._json_clean(self.annual_usage_baseline)

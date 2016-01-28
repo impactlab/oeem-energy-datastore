@@ -128,12 +128,10 @@ class MeterRunSummarySerializer(serializers.ModelSerializer):
         model = models.MeterRun
         fields = (
             'project',
-            'consumption_metadata',
             'annual_usage_baseline',
             'annual_usage_reporting',
             'gross_savings',
             'annual_savings',
-            'meter_type',
             'cvrmse_baseline',
             'cvrmse_reporting',
             'fuel_type',
