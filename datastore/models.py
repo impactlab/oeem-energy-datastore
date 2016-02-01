@@ -260,6 +260,10 @@ class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100)
     data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'({}, {})'.format(self.name, self.data_type)
+
 class ProjectAttribute(models.Model):
     project = models.ForeignKey(Project)
     key = models.ForeignKey(ProjectAttributeKey)
@@ -283,6 +287,10 @@ class ProjectAttribute(models.Model):
             return self.float_value
         else:
             return None
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'({}, {}, project:{})'.format(self.key.name, self.value(), self.project)
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)

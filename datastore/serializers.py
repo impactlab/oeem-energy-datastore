@@ -18,8 +18,6 @@ class ProjectAttributeKeySerializer(serializers.ModelSerializer):
 
 class ProjectAttributeSerializer(serializers.ModelSerializer):
 
-    projectattributekey_set = ProjectAttributeKeySerializer(many=True, read_only=True)
-
     class Meta:
         model = models.ProjectAttribute
         fields = (

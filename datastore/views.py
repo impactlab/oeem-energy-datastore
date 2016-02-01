@@ -40,7 +40,7 @@ class ProjectFilter(django_filters.FilterSet):
 
     class Meta:
         model = models.Project
-        fields = ['zipcode', 'projectblock_and', 'projectblock_or']
+        fields = ['zipcode', 'projectblock_and', 'projectblock_or', 'project_id']
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -119,17 +119,35 @@ class ProjectBlockViewSet(viewsets.ModelViewSet):
             return serializers.ProjectBlockSerializer
 
 
+class ProjectAttributeKeyFilter(django_filters.FilterSet):
+
+    class Meta:
+        model = models.ProjectAttributeKey
+        fields = ['name', 'data_type']
+
+
 class ProjectAttributeKeyViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectAttributeKeySerializer
     queryset = models.ProjectAttributeKey.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ProjectAttributeKeyFilter
+
+
+class ProjectAttributeFilter(django_filters.FilterSet):
+
+    class Meta:
+        model = models.ProjectAttribute
+        fields = ['key', 'project']
 
 
 class ProjectAttributeViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     queryset = models.ProjectAttribute.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ProjectAttributeFilter
 
     def get_serializer_class(self):
         if self.request.method == "GET":
