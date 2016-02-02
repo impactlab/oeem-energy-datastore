@@ -638,3 +638,7 @@ class MonthlyUsageSummaryReporting(models.Model):
 @receiver(post_save, sender=ProjectBlock)
 def project_block_compute_summary_timeseries(sender, instance, **kwargs):
     instance.compute_summary_timeseries()
+
+@receiver(post_save, sender=User)
+def create_project_owner(sender, instance, **kwargs):
+    project_owner, created = ProjectOwner.objects.get_or_create(user=instance)
