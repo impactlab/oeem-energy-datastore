@@ -9,36 +9,7 @@ class ProjectOwnerSerializer(serializers.ModelSerializer):
         fields = ( 'id', 'user')
 
 
-class ProjectAttributeKeySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProjectAttributeKey
-        fields = ( 'id', 'name', 'data_type')
-
-
-class ProjectAttributeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProjectAttribute
-        fields = (
-            'id',
-            'project',
-            'key',
-            'value',
-            'boolean_value',
-            'char_value',
-            'date_value',
-            'datetime_value',
-            'float_value',
-            'integer_value',
-        )
-
-
 class ProjectSerializer(serializers.ModelSerializer):
-
-    # consumptionmetadata_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    # recent_meter_runs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    # projectblock_set = ProjectBlockSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Project
@@ -54,9 +25,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             'weather_station',
             'latitude',
             'longitude',
-            # 'consumptionmetadata_set',
-            # 'recent_meter_runs',
-            # 'projectblock_set',
         )
 
 
@@ -276,11 +244,8 @@ class ProjectAttributeKeySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProjectAttributeKey
-        fields = (
-            'id',
-            'name',
-            'data_type',
-        )
+        fields = ( 'id', 'name', 'display_name', 'data_type')
+
 
 class ProjectAttributeSerializer(serializers.ModelSerializer):
 
@@ -288,16 +253,17 @@ class ProjectAttributeSerializer(serializers.ModelSerializer):
         model = models.ProjectAttribute
         fields = (
             'id',
-            'key',
             'project',
+            'key',
+            'value',
             'boolean_value',
             'char_value',
             'date_value',
             'datetime_value',
             'float_value',
             'integer_value',
-            'value',
         )
+
 
 class ProjectAttributeValueSerializer(serializers.ModelSerializer):
 
@@ -308,4 +274,36 @@ class ProjectAttributeValueSerializer(serializers.ModelSerializer):
             'key',
             'project',
             'value',
+        )
+
+
+class ProjectAttributeValueEmbeddedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectAttribute
+        fields = (
+            'key',
+            'value',
+        )
+
+
+class ProjectWithAttributesSerializer(serializers.ModelSerializer):
+
+    attributes = ProjectAttributeValueEmbeddedSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Project
+        fields = (
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'attributes',
         )

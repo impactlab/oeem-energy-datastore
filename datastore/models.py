@@ -256,13 +256,17 @@ class Project(models.Model):
                 pass
         return meter_runs
 
+    def attributes(self):
+        return self.projectattribute_set.all()
+
 class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100)
+    display_name = models.CharField(max_length=100)
     data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
     @python_2_unicode_compatible
     def __str__(self):
-        return u'({}, {})'.format(self.name, self.data_type)
+        return u'"{}" ({}, {})'.format(self.display_name, self.name, self.data_type)
 
 class ProjectAttribute(models.Model):
     project = models.ForeignKey(Project)

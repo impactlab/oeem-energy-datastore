@@ -17,14 +17,14 @@ class ProjectOwnerViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectOwnerSerializer
-    queryset = models.ProjectOwner.objects.all()
+    queryset = models.ProjectOwner.objects.all().order_by('pk')
 
 
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ConsumptionMetadataSerializer
-    queryset = models.ConsumptionMetadata.objects.all()
+    queryset = models.ConsumptionMetadata.objects.all().order_by('pk')
 
 
 class ProjectFilter(django_filters.FilterSet):
@@ -46,10 +46,15 @@ class ProjectFilter(django_filters.FilterSet):
 class ProjectViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    serializer_class = serializers.ProjectSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectFilter
-    queryset = models.Project.objects.all()
+    queryset = models.Project.objects.all().order_by('pk')
+
+    def get_serializer_class(self):
+        if self.request.query_params.get("with_attributes", "False") == "True":
+            return serializers.ProjectWithAttributesSerializer
+        else:
+            return serializers.ProjectSerializer
 
 
 class MeterRunFilter(django_filters.FilterSet):
@@ -90,7 +95,7 @@ class MeterRunFilter(django_filters.FilterSet):
 class MeterRunViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.MeterRun.objects.all()
+    queryset = models.MeterRun.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = MeterRunFilter
 
@@ -111,9 +116,9 @@ class ProjectBlockViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectBlock.objects.all()
 
     def get_serializer_class(self):
-        if self.request.query_params.get("monthly_timeseries", "false") == "true":
+        if self.request.query_params.get("monthly_timeseries", "false") == "True":
             return serializers.ProjectBlockMonthlyTimeseriesSerializer
-        if self.request.query_params.get("name_only", "false") == "true":
+        if self.request.query_params.get("name_only", "false") == "True":
             return serializers.ProjectBlockNameSerializer
         else:
             return serializers.ProjectBlockSerializer
@@ -130,7 +135,7 @@ class ProjectAttributeKeyViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectAttributeKeySerializer
-    queryset = models.ProjectAttributeKey.objects.all()
+    queryset = models.ProjectAttributeKey.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectAttributeKeyFilter
 
@@ -145,7 +150,7 @@ class ProjectAttributeFilter(django_filters.FilterSet):
 class ProjectAttributeViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.ProjectAttribute.objects.all()
+    queryset = models.ProjectAttribute.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectAttributeFilter
 
