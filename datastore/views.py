@@ -13,6 +13,18 @@ from collections import defaultdict
 
 default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
+
+def projects_filter(queryset, value):
+    """
+    Restrict to '+' (http for <space>) separated list of projects.
+    """
+    try:
+        project_set = set(int(p) for p in value.split())
+    except ValueError:
+        project_set = set()
+    return queryset.filter(project__in=project_set)
+
+
 class ProjectOwnerViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
@@ -20,11 +32,32 @@ class ProjectOwnerViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectOwner.objects.all().order_by('pk')
 
 
+class ConsumptionMetadataFilter(django_filters.FilterSet):
+
+    fuel_type = django_filters.MultipleChoiceFilter(
+            choices=models.FUEL_TYPE_CHOICES)
+    energy_unit = django_filters.MultipleChoiceFilter(
+            choices=models.ENERGY_UNIT_CHOICES)
+    projects = django_filters.MethodFilter(
+            action=projects_filter)
+
+    class Meta:
+        model = models.ConsumptionMetadata
+        fields = ['fuel_type', 'energy_unit', 'projects']
+
+
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    serializer_class = serializers.ConsumptionMetadataSerializer
     queryset = models.ConsumptionMetadata.objects.all().order_by('pk')
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ConsumptionMetadataFilter
+
+    def get_serializer_class(self):
+        if self.request.query_params.get("summary", "False") == "True":
+            return serializers.ConsumptionMetadataSummarySerializer
+        else:
+            return serializers.ConsumptionMetadataSerializer
 
 
 class ProjectFilter(django_filters.FilterSet):
@@ -38,9 +71,23 @@ class ProjectFilter(django_filters.FilterSet):
             queryset=models.ProjectBlock.objects.all(),
             conjoined=False)
 
+    projects = django_filters.MethodFilter(
+            action="projects_filter")
+
     class Meta:
         model = models.Project
-        fields = ['zipcode', 'projectblock_and', 'projectblock_or', 'project_id']
+        fields = ['zipcode', 'projectblock_and', 'projectblock_or', 'projects']
+
+    def projects_filter(self, queryset, value):
+        """
+        Restrict to '+' (http for <space>) separated list of projects.
+        """
+        try:
+            project_set = set(int(p) for p in value.split())
+        except ValueError:
+            project_set = set()
+        return queryset.filter(pk__in=project_set)
+
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -51,17 +98,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all().order_by('pk')
 
     def get_serializer_class(self):
-        if self.request.query_params.get("with_attributes", "False") == "True":
-            return serializers.ProjectWithAttributesSerializer
+        with_attributes = self.request.query_params.get(
+                "with_attributes", "False") == "True"
+        with_meter_runs = self.request.query_params.get(
+                "with_meter_runs", "False") == "True"
+        if with_attributes:
+            if with_meter_runs:
+                return serializers.ProjectWithAttributesAndMeterRunsSerializer
+            else:
+                return serializers.ProjectWithAttributesSerializer
         else:
-            return serializers.ProjectSerializer
+            if with_meter_runs:
+                return serializers.ProjectWithMeterRunsSerializer
+            else:
+                return serializers.ProjectSerializer
 
 
 class MeterRunFilter(django_filters.FilterSet):
     fuel_type = django_filters.MultipleChoiceFilter(
             name="consumption_metadata__fuel_type",
             choices=models.FUEL_TYPE_CHOICES)
-    projects = django_filters.MethodFilter(action="projects_filter")
+    projects = django_filters.MethodFilter(action=projects_filter)
     most_recent = django_filters.MethodFilter(action="most_recent_filter")
 
     class Meta:
@@ -80,16 +137,6 @@ class MeterRunFilter(django_filters.FilterSet):
                 accepted_meter_runs.add(meter_run.pk)
 
         return queryset.filter(pk__in=accepted_meter_runs)
-
-    def projects_filter(self, queryset, value):
-        """
-        Restrict to '+' (http for <space>) separated list of projects.
-        """
-        try:
-            project_set = set(int(p) for p in value.split())
-        except ValueError:
-            project_set = set()
-        return queryset.filter(project__in=project_set)
 
 
 class MeterRunViewSet(viewsets.ModelViewSet):

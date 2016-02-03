@@ -161,6 +161,13 @@ class ConsumptionRecordSerializer(serializers.ModelSerializer):
         fields = ('id', 'start', 'value', 'estimated')
 
 
+class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ConsumptionMetadata
+        fields = ('id', 'fuel_type', 'energy_unit', 'project')
+
+
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
     records = ConsumptionRecordSerializer(many=True)
@@ -305,5 +312,49 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
             'weather_station',
             'latitude',
             'longitude',
+            'attributes',
+        )
+
+class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
+
+    recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Project
+        fields = (
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'recent_meter_runs',
+        )
+
+class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
+
+    recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
+    attributes = ProjectAttributeValueEmbeddedSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Project
+        fields = (
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'recent_meter_runs',
             'attributes',
         )
