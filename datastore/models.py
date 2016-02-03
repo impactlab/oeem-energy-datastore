@@ -305,12 +305,12 @@ class ProjectBlock(models.Model):
 
     @python_2_unicode_compatible
     def __str__(self):
-        return u'(name={}, n_projects={})'.format(self.name, self.project.count())
+        return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
 
     def run_meters(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
         """ Run meter for each project in the project block.
         """
-        for project in self.project.all():
+        for project in self.projects.all():
             project.run_meter(meter_type, start_date, end_date, n_days)
 
     def compute_summary_timeseries(self):
@@ -326,7 +326,7 @@ class ProjectBlock(models.Model):
             "n_completed_projects_by_date": defaultdict(lambda: 0),
         })
 
-        for project in self.project.all():
+        for project in self.projects.all():
             for meter_run in project.recent_meter_runs():
 
                 fuel_type = meter_run.consumption_metadata.fuel_type
