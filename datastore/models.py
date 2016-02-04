@@ -39,6 +39,13 @@ PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = [
     ('INTEGER', 'integer_value'),
 ]
 
+def _json_clean(value):
+    if value is None or np.isnan(value) or np.isinf(value):
+        return None
+    else:
+        return value
+
+
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
     added = models.DateTimeField(auto_now_add=True)
@@ -470,29 +477,23 @@ class MeterRun(models.Model):
     def __str__(self):
         return u'MeterRun(project_id={}, valid={})'.format(self.project.project_id, self.valid_meter_run())
 
-    def _json_clean(self, value):
-        if value is None or np.isnan(value) or np.isinf(value):
-            return None
-        else:
-            return int(value)
-
     def annual_usage_baseline_clean(self):
-        return self._json_clean(self.annual_usage_baseline)
+        return _json_clean(self.annual_usage_baseline)
 
     def annual_usage_reporting_clean(self):
-        return self._json_clean(self.annual_usage_reporting)
+        return _json_clean(self.annual_usage_reporting)
 
     def gross_savings_clean(self):
-        return self._json_clean(self.gross_savings)
+        return _json_clean(self.gross_savings)
 
     def annual_savings_clean(self):
-        return self._json_clean(self.annual_savings)
+        return _json_clean(self.annual_savings)
 
     def cvrmse_baseline_clean(self):
-        return self._json_clean(self.cvrmse_baseline)
+        return _json_clean(self.cvrmse_baseline)
 
     def cvrmse_reporting_clean(self):
-        return self._json_clean(self.cvrmse_reporting)
+        return _json_clean(self.cvrmse_reporting)
 
     @property
     def fuel_type(self):
@@ -515,6 +516,10 @@ class DailyUsageBaseline(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
+
+
 class DailyUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
@@ -526,6 +531,9 @@ class DailyUsageReporting(models.Model):
 
     class Meta:
         ordering = ['date']
+
+    def value_clean(self):
+        return _json_clean(self.value)
 
 class MonthlyAverageUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
@@ -539,6 +547,9 @@ class MonthlyAverageUsageBaseline(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
+
 class MonthlyAverageUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
@@ -550,6 +561,9 @@ class MonthlyAverageUsageReporting(models.Model):
 
     class Meta:
         ordering = ['date']
+
+    def value_clean(self):
+        return _json_clean(self.value)
 
 class FuelTypeSummary(models.Model):
     project_block = models.ForeignKey(ProjectBlock)

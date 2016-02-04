@@ -29,6 +29,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class DailyUsageBaselineSerializer(serializers.ModelSerializer):
+    value = serializers.FloatField(source='value_clean')
 
     class Meta:
         model = models.DailyUsageBaseline
@@ -36,6 +37,7 @@ class DailyUsageBaselineSerializer(serializers.ModelSerializer):
 
 
 class DailyUsageReportingSerializer(serializers.ModelSerializer):
+    value = serializers.FloatField(source='value_clean')
 
     class Meta:
         model = models.DailyUsageReporting
@@ -43,6 +45,7 @@ class DailyUsageReportingSerializer(serializers.ModelSerializer):
 
 
 class MonthlyAverageUsageBaselineSerializer(serializers.ModelSerializer):
+    value = serializers.FloatField(source='value_clean')
 
     class Meta:
         model = models.MonthlyAverageUsageBaseline
@@ -50,6 +53,7 @@ class MonthlyAverageUsageBaselineSerializer(serializers.ModelSerializer):
 
 
 class MonthlyAverageUsageReportingSerializer(serializers.ModelSerializer):
+    value = serializers.FloatField(source='value_clean')
 
     class Meta:
         model = models.MonthlyAverageUsageReporting
@@ -138,16 +142,10 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
         model = models.MeterRun
         fields = (
             'project',
-            'consumption_metadata',
             'annual_usage_baseline',
             'annual_usage_reporting',
             'gross_savings',
             'annual_savings',
-            'meter_type',
-            'model_parameter_json_baseline',
-            'model_parameter_json_reporting',
-            'cvrmse_baseline',
-            'cvrmse_reporting',
             'monthlyaverageusagebaseline_set',
             'monthlyaverageusagereporting_set',
             'fuel_type',
@@ -357,4 +355,21 @@ class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
             'longitude',
             'recent_meter_runs',
             'attributes',
+        )
+
+class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
+
+    recent_meter_runs = MeterRunMonthlySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Project
+        fields = (
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'recent_meter_runs',
         )

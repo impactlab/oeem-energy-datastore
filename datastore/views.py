@@ -89,7 +89,6 @@ class ProjectFilter(django_filters.FilterSet):
         return queryset.filter(pk__in=project_set)
 
 
-
 class ProjectViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
@@ -98,10 +97,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all().order_by('pk')
 
     def get_serializer_class(self):
+        if self.request.query_params.get(
+                "with_monthly_summary", "False") == "True":
+            return serializers.ProjectWithMonthlyMeterRunsSerializer
+
         with_attributes = self.request.query_params.get(
                 "with_attributes", "False") == "True"
         with_meter_runs = self.request.query_params.get(
                 "with_meter_runs", "False") == "True"
+
         if with_attributes:
             if with_meter_runs:
                 return serializers.ProjectWithAttributesAndMeterRunsSerializer
