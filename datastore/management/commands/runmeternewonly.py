@@ -7,7 +7,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         for project in Project.objects.all():
-            if project.meterrun_set.all() == []:
+            if len(project.meterrun_set.all()) == 0:
                 print("Running meter for {}".format(project))
                 project.run_meter()
             else:
