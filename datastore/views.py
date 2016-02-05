@@ -76,7 +76,15 @@ class ProjectFilter(django_filters.FilterSet):
 
     class Meta:
         model = models.Project
-        fields = ['zipcode', 'projectblock_and', 'projectblock_or', 'projects']
+        fields = [
+            'zipcode',
+            'projectblock_and',
+            'projectblock_or',
+            'projects',
+            'project_id',
+            'weather_station',
+            'project_owner',
+        ]
 
     def projects_filter(self, queryset, value):
         """
