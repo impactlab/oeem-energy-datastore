@@ -12,9 +12,7 @@ fi
 mkdir /srv/run/celery
 mkdir /srv/logs/celery
 
-exec celery multi start worker1 -A oeem_energy_datastore -l info --pidfile="/srv/run/celery/%n.pid" --logfile="/srv/logs/celery/%n.log"
-
-tail /srv/logs/celery/worker1.log
+# exec celery multi start worker1 -A oeem_energy_datastore -l info --pidfile="/srv/run/celery/%n.pid" --logfile="/srv/logs/celery/%n.log"
 
 touch /srv/logs/gunicorn.log
 touch /srv/logs/access.log
