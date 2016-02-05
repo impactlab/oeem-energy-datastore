@@ -61,6 +61,12 @@ class MonthlyAverageUsageReportingSerializer(serializers.ModelSerializer):
 
 
 class MeterRunSerializer(serializers.ModelSerializer):
+    annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
+    annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
+    annual_savings = serializers.FloatField(source='annual_savings_clean')
+    gross_savings = serializers.FloatField(source='gross_savings_clean')
+    cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
+    cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
 
     dailyusagebaseline_set = DailyUsageBaselineSerializer(many=True)
     dailyusagereporting_set = DailyUsageReportingSerializer(many=True)
@@ -109,6 +115,12 @@ class MeterRunSummarySerializer(serializers.ModelSerializer):
 
 
 class MeterRunDailySerializer(serializers.ModelSerializer):
+    annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
+    annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
+    annual_savings = serializers.FloatField(source='annual_savings_clean')
+    gross_savings = serializers.FloatField(source='gross_savings_clean')
+    cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
+    cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
 
     dailyusagebaseline_set = DailyUsageBaselineSerializer(many=True)
     dailyusagereporting_set = DailyUsageReportingSerializer(many=True)
@@ -134,6 +146,10 @@ class MeterRunDailySerializer(serializers.ModelSerializer):
 
 
 class MeterRunMonthlySerializer(serializers.ModelSerializer):
+    annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
+    annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
+    annual_savings = serializers.FloatField(source='annual_savings_clean')
+    gross_savings = serializers.FloatField(source='gross_savings_clean')
 
     monthlyaverageusagebaseline_set = MonthlyAverageUsageBaselineSerializer(many=True)
     monthlyaverageusagereporting_set = MonthlyAverageUsageReportingSerializer(many=True)
