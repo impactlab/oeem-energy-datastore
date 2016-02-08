@@ -32,7 +32,7 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^oauth2/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    url(r'^docs/', include('rest_framework_docs.urls')),
+    url(r'^docs/', include('rest_framework_swagger.urls')),
     url(r'^api/v1/', include(router.urls)),
     url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
 ]

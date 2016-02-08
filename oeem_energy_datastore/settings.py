@@ -22,7 +22,7 @@ INSTALLED_APPS = (
     'sslserver',
     'oauth2_provider',
     'rest_framework',
-    'rest_framework_docs',
+    'rest_framework_swagger',
     'datastore',
 )
 

@@ -54,6 +54,9 @@ class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
     filter_class = ConsumptionMetadataFilter
 
     def get_serializer_class(self):
+        if not hasattr(self.request, 'query_params'):
+            return serializers.ConsumptionMetadataSerializer
+
         if self.request.query_params.get("summary", "False") == "True":
             return serializers.ConsumptionMetadataSummarySerializer
         else:
@@ -105,6 +108,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all().order_by('pk')
 
     def get_serializer_class(self):
+        if not hasattr(self.request, 'query_params'):
+            return serializers.ProjectSerializer
+
         if self.request.query_params.get(
                 "with_monthly_summary", "False") == "True":
             return serializers.ProjectWithMonthlyMeterRunsSerializer
@@ -159,6 +165,9 @@ class MeterRunViewSet(viewsets.ModelViewSet):
     filter_class = MeterRunFilter
 
     def get_serializer_class(self):
+        if not hasattr(self.request, 'query_params'):
+            return serializers.MeterRunSerializer
+
         if self.request.query_params.get("summary", "False") == "True":
             return serializers.MeterRunSummarySerializer
         elif self.request.query_params.get("daily", "False") == "True":
@@ -175,6 +184,9 @@ class ProjectBlockViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectBlock.objects.all()
 
     def get_serializer_class(self):
+        if not hasattr(self.request, 'query_params'):
+            return serializers.ProjectBlockSerializer
+
         if self.request.query_params.get("monthly_timeseries", "false") == "True":
             return serializers.ProjectBlockMonthlyTimeseriesSerializer
         if self.request.query_params.get("name_only", "false") == "True":

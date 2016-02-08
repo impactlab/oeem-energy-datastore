@@ -18,4 +18,4 @@ sqlalchemy
 django-grappelli
 gunicorn
 django-pdb
-drfdocs
+django-rest-swagger
