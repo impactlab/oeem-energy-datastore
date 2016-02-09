@@ -23,6 +23,7 @@ INSTALLED_APPS = (
     'oauth2_provider',
     'rest_framework',
     'rest_framework_swagger',
+    'api_doc',
     'datastore',
 )
 
@@ -134,5 +135,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 SWAGGER_SETTINGS = {
-    'base_path': '{}/docs/'.format(os.environ["SERVER_NAME"]),
+    'base_path': '{}/docs'.format(os.environ["SERVER_NAME"]),
+    'protocol': os.environ["PROTOCOL"],
 }
