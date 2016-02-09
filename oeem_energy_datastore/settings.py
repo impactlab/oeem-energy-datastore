@@ -134,5 +134,5 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 SWAGGER_SETTINGS = {
-    'base_path': '{}/docs/'.format(os.environ["SERVER_NAME"],
+    'base_path': '{}/docs/'.format(os.environ["SERVER_NAME"]),
 }
