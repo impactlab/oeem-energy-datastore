@@ -57,7 +57,7 @@ class MySwaggerUIView(SwaggerUIView):
 
         return response
 
-class MySwaggerResourcesView(SwaggerUIView):
+class MySwaggerResourcesView(SwaggerResourcesView):
 
     def get_base_path(self):
         try:
