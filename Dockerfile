@@ -9,7 +9,7 @@ EXPOSE 8000
 ENV DJANGO_SETTINGS_MODULE oeem_energy_datastore.settings
 ENV STATIC_ROOT /srv/static
 
-RUN mkdir /srv/static /srv/logs
+RUN mkdir /srv/static /srv/logs /srv/run
 
 VOLUME /srv/static
 
