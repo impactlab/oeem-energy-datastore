@@ -20,15 +20,31 @@ import numpy as np
 import json
 from collections import defaultdict
 
-FUEL_TYPE_CHOICES = {
-    'E': 'electricity',
-    'NG': 'natural_gas',
-}
+FUEL_TYPE_CHOICES = [
+    ('E', 'electricity'),
+    ('NG', 'natural_gas'),
+]
 
-ENERGY_UNIT_CHOICES = {
-    'KWH': 'kWh',
-    'THM': 'therm',
-}
+ENERGY_UNIT_CHOICES = [
+    ('KWH', 'kWh'),
+    ('THM', 'therm'),
+]
+
+PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = [
+    ('BOOLEAN', 'boolean_value'),
+    ('CHAR', 'char_value'),
+    ('DATE', 'date_value'),
+    ('DATETIME', 'datetime_value'),
+    ('FLOAT', 'float_value'),
+    ('INTEGER', 'integer_value'),
+]
+
+def _json_clean(value):
+    if value is None or np.isnan(value) or np.isinf(value):
+        return None
+    else:
+        return value
+
 
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
@@ -238,23 +254,70 @@ class Project(models.Model):
         return meter_runs
 
     def recent_meter_runs(self):
-        return [c.meterrun_set.latest('added') for c in self.consumptionmetadata_set.all()]
+        consumption_metadatas = self.consumptionmetadata_set.all()
+        meter_runs = []
+        for cm in consumption_metadatas:
+            try:
+                meter_runs.append(cm.meterrun_set.latest('added'))
+            except MeterRun.DoesNotExist:
+                pass
+        return meter_runs
+
+    def attributes(self):
+        return self.projectattribute_set.all()
+
+class ProjectAttributeKey(models.Model):
+    name = models.CharField(max_length=100)
+    display_name = models.CharField(max_length=100)
+    data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'"{}" ({}, {})'.format(self.display_name, self.name, self.data_type)
+
+class ProjectAttribute(models.Model):
+    project = models.ForeignKey(Project)
+    key = models.ForeignKey(ProjectAttributeKey)
+    boolean_value = models.NullBooleanField(blank=True, null=True)
+    char_value = models.CharField(max_length=100, blank=True, null=True)
+    date_value = models.DateField(blank=True, null=True)
+    datetime_value = models.DateTimeField(blank=True, null=True)
+    float_value = models.FloatField(blank=True, null=True)
+    integer_value = models.IntegerField(blank=True, null=True)
+
+    def value(self):
+        if self.key.data_type == "BOOLEAN":
+            return self.boolean_value
+        elif self.key.data_type == "CHAR":
+            return self.char_value
+        elif self.key.data_type == "DATE":
+            return self.date_value
+        elif self.key.data_type == "DATETIME":
+            return self.datetime_value
+        elif self.key.data_type == "FLOAT":
+            return self.float_value
+        else:
+            return None
+
+    @python_2_unicode_compatible
+    def __str__(self):
+        return u'({}, {}, project:{})'.format(self.key.name, self.value(), self.project)
 
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
     project_owner = models.ForeignKey(ProjectOwner)
-    project = models.ManyToManyField(Project)
+    projects = models.ManyToManyField(Project)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     @python_2_unicode_compatible
     def __str__(self):
-        return u'(name={}, n_projects={})'.format(self.name, self.project.count())
+        return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
 
     def run_meters(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
         """ Run meter for each project in the project block.
         """
-        for project in self.project.all():
+        for project in self.projects.all():
             project.run_meter(meter_type, start_date, end_date, n_days)
 
     def compute_summary_timeseries(self):
@@ -270,7 +333,7 @@ class ProjectBlock(models.Model):
             "n_completed_projects_by_date": defaultdict(lambda: 0),
         })
 
-        for project in self.project.all():
+        for project in self.projects.all():
             for meter_run in project.recent_meter_runs():
 
                 fuel_type = meter_run.consumption_metadata.fuel_type
@@ -351,8 +414,8 @@ class ProjectBlock(models.Model):
         return [self.fueltypesummary_set.filter(fuel_type=fuel_type).latest('added') for fuel_type in fuel_types]
 
 class ConsumptionMetadata(models.Model):
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
-    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES.items())
+    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
+    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -360,8 +423,8 @@ class ConsumptionMetadata(models.Model):
     def eemeter_consumption_data(self):
         records = self.records.all()
         records = [r.eemeter_record() for r in records]
-        fuel_type = FUEL_TYPE_CHOICES[self.fuel_type]
-        unit_name = ENERGY_UNIT_CHOICES[self.energy_unit]
+        fuel_type = dict(FUEL_TYPE_CHOICES)[self.fuel_type]
+        unit_name = dict(ENERGY_UNIT_CHOICES)[self.energy_unit]
         consumption_data = EEMeterConsumptionData(records, fuel_type=fuel_type,
                 unit_name=unit_name, record_type="arbitrary_start")
         return consumption_data
@@ -414,6 +477,24 @@ class MeterRun(models.Model):
     def __str__(self):
         return u'MeterRun(project_id={}, valid={})'.format(self.project.project_id, self.valid_meter_run())
 
+    def annual_usage_baseline_clean(self):
+        return _json_clean(self.annual_usage_baseline)
+
+    def annual_usage_reporting_clean(self):
+        return _json_clean(self.annual_usage_reporting)
+
+    def gross_savings_clean(self):
+        return _json_clean(self.gross_savings)
+
+    def annual_savings_clean(self):
+        return _json_clean(self.annual_savings)
+
+    def cvrmse_baseline_clean(self):
+        return _json_clean(self.cvrmse_baseline)
+
+    def cvrmse_reporting_clean(self):
+        return _json_clean(self.cvrmse_reporting)
+
     @property
     def fuel_type(self):
         return self.consumption_metadata.fuel_type
@@ -435,6 +516,10 @@ class DailyUsageBaseline(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
+
+
 class DailyUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
@@ -446,6 +531,9 @@ class DailyUsageReporting(models.Model):
 
     class Meta:
         ordering = ['date']
+
+    def value_clean(self):
+        return _json_clean(self.value)
 
 class MonthlyAverageUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
@@ -459,6 +547,9 @@ class MonthlyAverageUsageBaseline(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
+
 class MonthlyAverageUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
@@ -471,9 +562,12 @@ class MonthlyAverageUsageReporting(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
+
 class FuelTypeSummary(models.Model):
     project_block = models.ForeignKey(ProjectBlock)
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES.items())
+    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -558,3 +652,7 @@ class MonthlyUsageSummaryReporting(models.Model):
 @receiver(post_save, sender=ProjectBlock)
 def project_block_compute_summary_timeseries(sender, instance, **kwargs):
     instance.compute_summary_timeseries()
+
+@receiver(post_save, sender=User)
+def create_project_owner(sender, instance, **kwargs):
+    project_owner, created = ProjectOwner.objects.get_or_create(user=instance)

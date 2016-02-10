@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
         project_block = ProjectBlock.objects.get(id=options["block_id"])
 
-        projects = project_block.project.all()
+        projects = project_block.projects.all()
 
         print("Running meter for {}".format(project_block, len(projects)))
 

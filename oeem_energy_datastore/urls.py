@@ -16,11 +16,23 @@ Including another URLconf
 from django.views.generic.base import RedirectView
 from django.conf.urls import include, url
 from django.contrib import admin
+from rest_framework.routers import DefaultRouter
+from datastore import views as datastore_views
+
+router = DefaultRouter()
+router.register(r'projects', datastore_views.ProjectViewSet, base_name='project')
+router.register(r'project_attribute_keys', datastore_views.ProjectAttributeKeyViewSet, base_name='project_attribute_key')
+router.register(r'project_attributes', datastore_views.ProjectAttributeViewSet, base_name='project_attribute')
+router.register(r'project_owners', datastore_views.ProjectOwnerViewSet, base_name='project_owner')
+router.register(r'project_blocks', datastore_views.ProjectBlockViewSet, base_name='project_block')
+router.register(r'consumption_metadatas', datastore_views.ConsumptionMetadataViewSet, base_name='consumption_metadata')
+router.register(r'meter_runs', datastore_views.MeterRunViewSet, base_name='meter_run')
 
 urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^oauth2/', include('oauth2_provider.urls', namespace='oauth2_provider')),
-    url(r'^datastore/', include('datastore.urls', namespace='datastore')),
+    url(r'^docs/', include('api_doc.urls')),
+    url(r'^api/v1/', include(router.urls)),
     url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
 ]
