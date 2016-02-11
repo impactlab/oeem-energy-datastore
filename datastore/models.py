@@ -125,7 +125,7 @@ class Project(models.Model):
                     earliest_date = consumption_data.data.index[0].to_datetime()
                     if earliest_date < start_date:
                         start_date = earliest_date
-                except KeyError:
+                except IndexError:
                     pass
 
         if end_date is None:
