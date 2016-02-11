@@ -121,9 +121,12 @@ class Project(models.Model):
         if start_date is None:
             start_date = now()
             for consumption_data in project.consumption:
-                earliest_date = consumption_data.data.index[0].to_datetime()
-                if earliest_date < start_date:
-                    start_date = earliest_date
+                try:
+                    earliest_date = consumption_data.data.index[0].to_datetime()
+                    if earliest_date < start_date:
+                        start_date = earliest_date
+                except KeyError:
+                    pass
 
         if end_date is None:
             end_date = now()
