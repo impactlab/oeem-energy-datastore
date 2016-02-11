@@ -73,9 +73,10 @@ class ProjectFilter(django_filters.FilterSet):
             name='projectblock',
             queryset=models.ProjectBlock.objects.all(),
             conjoined=False)
-
     projects = django_filters.MethodFilter(
             action="projects_filter")
+    baseline_period_end = django_filters.DateFromToRangeFilter()
+    reporting_period_start = django_filters.DateFromToRangeFilter()
 
     class Meta:
         model = models.Project
@@ -87,6 +88,8 @@ class ProjectFilter(django_filters.FilterSet):
             'project_id',
             'weather_station',
             'project_owner',
+            'baseline_period_end',
+            'reporting_period_start',
         ]
 
     def projects_filter(self, queryset, value):
