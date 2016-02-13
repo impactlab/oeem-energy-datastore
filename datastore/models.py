@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
 from django.utils.encoding import python_2_unicode_compatible
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_init
 from django.dispatch import receiver
 
 from eemeter.evaluation import Period
@@ -651,9 +651,18 @@ class MonthlyUsageSummaryReporting(models.Model):
     class Meta:
         ordering = ['date']
 
-@receiver(post_save, sender=ProjectBlock)
-def project_block_compute_summary_timeseries(sender, instance, **kwargs):
-    instance.compute_summary_timeseries()
+
+# # if project set changed, recompute the summary timeseries.
+# TODO if needed, uncomment when this can be moved into the background, otherwise too slow.
+# @receiver(post_init, sender=ProjectBlock)
+# def project_block_compute_summary_timeseries(sender, instance, **kwargs):
+#     instance.__projects = instance.projects
+#
+# @receiver(post_save, sender=ProjectBlock)
+# def project_block_compute_summary_timeseries(sender, instance, **kwargs):
+#     if instance.__projects != instance.projects:
+#         instance.compute_summary_timeseries()
+#         instance.__projects = instance.projects
 
 @receiver(post_save, sender=User)
 def create_project_owner(sender, instance, **kwargs):

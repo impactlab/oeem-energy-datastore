@@ -192,6 +192,7 @@ class ProjectBlockViewSet(viewsets.ModelViewSet):
 
         if self.request.query_params.get("monthly_timeseries", "false") == "True":
             return serializers.ProjectBlockMonthlyTimeseriesSerializer
+
         if self.request.query_params.get("name_only", "false") == "True":
             return serializers.ProjectBlockNameSerializer
         else:
