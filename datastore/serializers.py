@@ -265,7 +265,12 @@ class ProjectAttributeKeySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProjectAttributeKey
-        fields = ( 'id', 'name', 'display_name', 'data_type')
+        fields = (
+            'id',
+            'name',
+            'display_name',
+            'data_type'
+        )
 
 
 class ProjectAttributeSerializer(serializers.ModelSerializer):
