@@ -184,7 +184,7 @@ class MeterRunViewSet(viewsets.ModelViewSet):
 class ProjectBlockViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.ProjectBlock.objects.all()
+    queryset = models.ProjectBlock.objects.all().order_by('pk')
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
