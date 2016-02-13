@@ -236,7 +236,7 @@ class ProjectBlockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProjectBlock
-        fields = ( 'id', 'name', 'project_owner', 'projects')
+        fields = ( 'id', 'name', 'projects')
 
 
 class ProjectBlockNameSerializer(serializers.ModelSerializer):
@@ -255,7 +255,6 @@ class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
-            'project_owner',
             'projects',
             'recent_summaries',
         )
