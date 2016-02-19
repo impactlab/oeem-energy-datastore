@@ -57,7 +57,7 @@ class ProjectOwner(models.Model):
 
 class Project(models.Model):
     project_owner = models.ForeignKey(ProjectOwner)
-    project_id = models.CharField(max_length=255)
+    project_id = models.CharField(max_length=255, null=False, unique=True)
     baseline_period_start = models.DateTimeField(blank=True, null=True)
     baseline_period_end = models.DateTimeField(blank=True, null=True)
     reporting_period_start = models.DateTimeField(blank=True, null=True)
