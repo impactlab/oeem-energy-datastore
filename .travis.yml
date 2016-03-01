@@ -1,0 +1,14 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+before_install:
+  - docker build -t impactlab/oeem-energy-datastore .
+  - docker ps -a
+  - docker run impactlab /bin/sh -c "cd /home/ubuntu; source env.sh; python manage.py test"
+
+script:
+  - python manage.py test
