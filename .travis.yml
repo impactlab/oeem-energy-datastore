@@ -4,6 +4,10 @@ language: python
 
 services:
   - docker
+  - postgresql
+
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
 
 before_install:
   - docker build -t impactlab/oeem-energy-datastore .
