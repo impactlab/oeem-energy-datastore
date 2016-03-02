@@ -13,9 +13,10 @@ before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
 before_install:
+  - printenv | grep 'DATABASE_URL\|DJANGO_LOGFILE\|DJANGO_SETTINGS_MODULE\|SECRET_KEY\|DATASTORE_ACCESS_TOKEN\|DATABASE_URL\|TEST'
+  - printenv | grep 'DATABASE_URL\|DJANGO_LOGFILE\|DJANGO_SETTINGS_MODULE\|SECRET_KEY\|DATASTORE_ACCESS_TOKEN\|DATABASE_URL\|TEST' >> ./env.list
   - docker build -t impactlab/oeem-energy-datastore .
-  - docker ps -a
-  - docker run impactlab/oeem-energy-datastore -e DATABASE_URL=$DATABASE_URL -e DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE -e SECRET_KEY=$SECRET_KEY -e DATASTORE_ACCESS_TOKEN=$DATASTORE_ACCESS_TOKEN -e DATASTORE_URL=$DATASTORE_URL -e DJANGO_LOGFILE=$DJANGO_LOGFILE -e TEST=$TEST
+  - docker run impactlab/oeem-energy-datastore --env-file ./env-list
 
 script:
   - python manage.py test
