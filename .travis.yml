@@ -15,7 +15,7 @@ before_script:
 before_install:
   - docker build -t impactlab/oeem-energy-datastore .
   - docker ps -a
-  - docker run impactlab/oeem-energy-datastore -c "cd /code; source env.sh; python manage.py test"
+  - docker run impactlab/oeem-energy-datastore -e DATABASE_URL=$DATABASE_URL -e DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE -e SECRET_KEY=$SECRET_KEY -e DATASTORE_ACCESS_TOKEN=$DATASTORE_ACCESS_TOKEN -e DATASTORE_URL=$DATASTORE_URL -e DJANGO_LOGFILE=$DJANGO_LOGFILE -e TEST=$TEST
 
 script:
   - python manage.py test
