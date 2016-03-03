@@ -20,7 +20,7 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy dateutil pandas lxml
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy pandas lxml
   - pip install -r requirements.txt
 
 before_script:
