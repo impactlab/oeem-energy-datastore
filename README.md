@@ -1,6 +1,8 @@
 Open Energy Efficiency Meter Energy Datastore
 =============================================
 
+[![Build Status](https://travis-ci.org/impactlab/oeem-energy-datastore.svg?branch=master)](https://travis-ci.org/impactlab/oeem-energy-datastore)
+
 This datastore app provides an API for storing consumption data, project data,
 and reading meter run data. It is an OAuth 2 provider.
 
