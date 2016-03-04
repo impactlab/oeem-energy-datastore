@@ -46,15 +46,17 @@ def _json_clean(value):
         return value
 
 
+@python_2_unicode_compatible
 class ProjectOwner(models.Model):
     user = models.OneToOneField(User)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'ProjectOwner {}'.format(self.user.username)
 
+
+@python_2_unicode_compatible
 class Project(models.Model):
     project_owner = models.ForeignKey(ProjectOwner)
     project_id = models.CharField(max_length=255, null=False, unique=True)
@@ -69,7 +71,6 @@ class Project(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'Project {}'.format(self.project_id)
 
@@ -269,15 +270,18 @@ class Project(models.Model):
     def attributes(self):
         return self.projectattribute_set.all()
 
+
+@python_2_unicode_compatible
 class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100)
     display_name = models.CharField(max_length=100)
     data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'"{}" ({}, {})'.format(self.display_name, self.name, self.data_type)
 
+
+@python_2_unicode_compatible
 class ProjectAttribute(models.Model):
     project = models.ForeignKey(Project)
     key = models.ForeignKey(ProjectAttributeKey)
@@ -299,20 +303,22 @@ class ProjectAttribute(models.Model):
             return self.datetime_value
         elif self.key.data_type == "FLOAT":
             return self.float_value
+        elif self.key.data_type == "INTEGER":
+            return self.integer_value
         else:
             return None
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'({}, {}, project:{})'.format(self.key.name, self.value(), self.project)
 
+
+@python_2_unicode_compatible
 class ProjectBlock(models.Model):
     name = models.CharField(max_length=255)
     projects = models.ManyToManyField(Project)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
 
@@ -415,6 +421,8 @@ class ProjectBlock(models.Model):
         fuel_types = set([fts['fuel_type'] for fts in self.fueltypesummary_set.values('fuel_type')])
         return [self.fueltypesummary_set.filter(fuel_type=fuel_type).latest('added') for fuel_type in fuel_types]
 
+
+@python_2_unicode_compatible
 class ConsumptionMetadata(models.Model):
     fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
     energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES)
@@ -431,19 +439,18 @@ class ConsumptionMetadata(models.Model):
                 unit_name=unit_name, record_type="arbitrary_start")
         return consumption_data
 
-    @python_2_unicode_compatible
     def __str__(self):
         n = len(self.records.all())
         return u'ConsumptionMetadata(fuel_type={}, energy_unit={}, n={})'.format(self.fuel_type, self.energy_unit, n)
 
 
+@python_2_unicode_compatible
 class ConsumptionRecord(models.Model):
     metadata = models.ForeignKey(ConsumptionMetadata, related_name="records")
     start = models.DateTimeField()
     value = models.FloatField(blank=True, null=True)
     estimated = models.BooleanField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'Consumption(start={}, value={}, estimated={})'.format(self.start, self.value, self.estimated)
 
@@ -453,6 +460,8 @@ class ConsumptionRecord(models.Model):
     def eemeter_record(self):
         return {"start": self.start, "value": self.value, "estimated": self.estimated }
 
+
+@python_2_unicode_compatible
 class MeterRun(models.Model):
     METER_TYPE_CHOICES = (
         ('DFLT_RES_E', 'Default Residential Electricity'),
@@ -475,7 +484,6 @@ class MeterRun(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'MeterRun(project_id={}, valid={})'.format(self.project.project_id, self.valid_meter_run())
 
@@ -506,12 +514,13 @@ class MeterRun(models.Model):
             return False
         return self.cvrmse_baseline < threshold and self.cvrmse_reporting < threshold
 
+
+@python_2_unicode_compatible
 class DailyUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'DailyUsageBaseline(date={}, value={})'.format(self.date, self.value)
 
@@ -522,12 +531,12 @@ class DailyUsageBaseline(models.Model):
         return _json_clean(self.value)
 
 
+@python_2_unicode_compatible
 class DailyUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'DailyUsageReporting(date={}, value={})'.format(self.date, self.value)
 
@@ -537,12 +546,13 @@ class DailyUsageReporting(models.Model):
     def value_clean(self):
         return _json_clean(self.value)
 
+
+@python_2_unicode_compatible
 class MonthlyAverageUsageBaseline(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'MonthlyAverageUsageBaseline(date={}, value={})'.format(self.date, self.value)
 
@@ -552,12 +562,13 @@ class MonthlyAverageUsageBaseline(models.Model):
     def value_clean(self):
         return _json_clean(self.value)
 
+
+@python_2_unicode_compatible
 class MonthlyAverageUsageReporting(models.Model):
     meter_run = models.ForeignKey(MeterRun)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'MonthlyAverageUsageReporting(date={}, value={})'.format(self.date, self.value)
 
@@ -567,84 +578,91 @@ class MonthlyAverageUsageReporting(models.Model):
     def value_clean(self):
         return _json_clean(self.value)
 
+
+@python_2_unicode_compatible
 class FuelTypeSummary(models.Model):
     project_block = models.ForeignKey(ProjectBlock)
     fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'FuelTypeSummary(project_block={}, fuel_type={})'.format(self.project_block, self.fuel_type)
 
+
+@python_2_unicode_compatible
 class DailyUsageSummaryBaseline(models.Model):
     fuel_type_summary = models.ForeignKey(FuelTypeSummary)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'DailyUsageSummaryBaseline(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
 
+
+@python_2_unicode_compatible
 class DailyUsageSummaryActual(models.Model):
     fuel_type_summary = models.ForeignKey(FuelTypeSummary)
     value = models.FloatField()
     date = models.DateField()
     n_projects = models.IntegerField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'DailyUsageSummaryActual(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
 
+
+@python_2_unicode_compatible
 class DailyUsageSummaryReporting(models.Model):
     fuel_type_summary = models.ForeignKey(FuelTypeSummary)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'DailyUsageSummaryReporting(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
 
+
+@python_2_unicode_compatible
 class MonthlyUsageSummaryBaseline(models.Model):
     fuel_type_summary = models.ForeignKey(FuelTypeSummary)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'MonthlyUsageSummaryBaseline(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
 
+
+@python_2_unicode_compatible
 class MonthlyUsageSummaryActual(models.Model):
     fuel_type_summary = models.ForeignKey(FuelTypeSummary)
     value = models.FloatField()
     date = models.DateField()
     n_projects = models.IntegerField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'MonthlyUsageSummaryActual(date={}, value={})'.format(self.date, self.value)
 
     class Meta:
         ordering = ['date']
 
+
+@python_2_unicode_compatible
 class MonthlyUsageSummaryReporting(models.Model):
     fuel_type_summary = models.ForeignKey(FuelTypeSummary)
     value = models.FloatField()
     date = models.DateField()
 
-    @python_2_unicode_compatible
     def __str__(self):
         return u'MonthlyUsageSummaryReporting(date={}, value={})'.format(self.date, self.value)
 
