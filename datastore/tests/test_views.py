@@ -2,12 +2,7 @@ from django.test import Client, TestCase, RequestFactory
 from django.contrib.auth.models import User
 from django.utils.timezone import now, timedelta, make_aware
 
-from ..models import ProjectOwner
-from ..models import ProjectBlock
-from ..models import Project
-from ..models import MeterRun
-from ..models import ConsumptionMetadata
-from ..models import ConsumptionRecord
+from .. import models
 
 from oauth2_provider.models import AccessToken
 from oauth2_provider.models import get_application_model
@@ -36,8 +31,7 @@ class OAuthTestCase(TestCase):
         self.factory = RequestFactory()
         self.client = Client()
         self.user = User.objects.create_user("username", "user@example.com", "123456")
-        self.project_owner = ProjectOwner(user=self.user)
-        self.project_owner.save()
+        self.project_owner = self.user.projectowner
         self.app = ApplicationModel.objects.create(
                     name='app',
                     client_type=ApplicationModel.CLIENT_CONFIDENTIAL,
@@ -69,7 +63,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         API requires auth.
         """
         auth_headers = {"Authorization": "Bearer " + "badtoken" }
-        response = self.client.get('/datastore/consumption/', **auth_headers)
+        response = self.client.get('/api/v1/consumption_metadatas/', **auth_headers)
         assert response.status_code == 401
         assert response.data["detail"] == "Authentication credentials were not provided."
 
@@ -83,7 +77,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
                                                 application=self.app,
                                                 expires=now() + timedelta(days=365))
         auth_headers = {"Authorization": "Bearer " + "tokstr_no_scope" }
-        response = self.client.get('/datastore/consumption/', **auth_headers)
+        response = self.client.get('/api/v1/consumption_metadatas/', **auth_headers)
         assert response.status_code == 403
         assert response.data["detail"] == "You do not have permission to perform this action."
 
@@ -106,7 +100,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
                 }
 
         data = json.dumps(consumption_data)
-        response = self.client.post('/datastore/consumption/', data, content_type="application/json", **auth_headers)
+        response = self.client.post('/api/v1/consumption_metadatas/', data, content_type="application/json", **auth_headers)
 
         assert response.status_code == 201
 
@@ -117,7 +111,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert len(response.data['records']) == 1
 
         consumption_metadata_id = response.data['id']
-        response = self.client.get('/datastore/consumption/{}/'.format(consumption_metadata_id), **auth_headers)
+        response = self.client.get('/api/v1/consumption_metadatas/{}/'.format(consumption_metadata_id), **auth_headers)
 
         assert response.status_code == 200
 
@@ -134,11 +128,6 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 class ProjectAPITestCase(OAuthTestCase):
 
     def test_project_create_read(self):
-        """
-        Tests if a user with proper auth can
-        post and read back data for a project
-        endpoint under test: /datastore/project
-        """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
         project_data = {
@@ -155,7 +144,7 @@ class ProjectAPITestCase(OAuthTestCase):
                 }
 
         data = json.dumps(project_data)
-        response = self.client.post('/datastore/project/', data, content_type="application/json", **auth_headers)
+        response = self.client.post('/api/v1/projects/', data, content_type="application/json", **auth_headers)
         assert response.status_code == 201
 
         assert isinstance(response.data['id'], int)
@@ -172,7 +161,7 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['longitude'] == 0.0
 
         project_id = response.data['id']
-        response = self.client.get('/datastore/project/{}/'.format(project_id), **auth_headers)
+        response = self.client.get('/api/v1/projects/{}/'.format(project_id), **auth_headers)
         assert response.status_code == 200
 
         assert response.data['id'] == project_id
@@ -187,9 +176,6 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['weather_station'] == "STATION"
         assert response.data['latitude'] == 0.0
         assert response.data['longitude'] == 0.0
-        assert response.data['recent_meter_runs'] == []
-        assert response.data['consumptionmetadata_set'] == []
-        assert response.data['projectblock_set'] == []
 
 class MeterRunAPITestCase(OAuthTestCase):
 
@@ -203,7 +189,7 @@ class MeterRunAPITestCase(OAuthTestCase):
         zipcode = "91104"
         project = get_example_project(zipcode)
 
-        self.project = Project(
+        self.project = models.Project(
                 project_owner=self.project_owner,
                 project_id="TEST_PROJECT",
                 baseline_period_start=project.baseline_period.start,
@@ -222,7 +208,7 @@ class MeterRunAPITestCase(OAuthTestCase):
 
         self.consumption_metadatas = []
         for consumption_data in project.consumption:
-            consumption_metadata = ConsumptionMetadata(
+            consumption_metadata = models.ConsumptionMetadata(
                     project=self.project,
                     fuel_type=fuel_types[consumption_data.fuel_type],
                     energy_unit=energy_units[consumption_data.unit_name])
@@ -230,7 +216,7 @@ class MeterRunAPITestCase(OAuthTestCase):
             self.consumption_metadatas.append(consumption_metadata)
 
             for record in consumption_data.records(record_type="arbitrary_start"):
-                record = ConsumptionRecord(metadata=consumption_metadata,
+                record = models.ConsumptionRecord(metadata=consumption_metadata,
                     start=record["start"].isoformat(),
                     value=record["value"],
                     estimated=False)
@@ -238,19 +224,18 @@ class MeterRunAPITestCase(OAuthTestCase):
 
         ## Attempt to run the meter
         self.project.run_meter(start_date=make_aware(datetime(2011,1,1)), end_date=make_aware(datetime(2015,1,1)))
-        self.meter_runs = [MeterRun.objects.get(consumption_metadata=cm) for cm in self.consumption_metadatas]
+        self.meter_runs = [models.MeterRun.objects.get(consumption_metadata=cm) for cm in self.consumption_metadatas]
         assert len(self.meter_runs) == 2
 
     def test_meter_run_read(self):
         """
-        Tests reading a meter run data.
-        endpoint: /datastore/meter_run/{id}
+        Tests reading meter run data.
         """
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
         for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
 
-            response = self.client.get('/datastore/meter_run/{}/'.format(meter_run.id), **auth_headers)
+            response = self.client.get('/api/v1/meter_runs/{}/'.format(meter_run.id), **auth_headers)
             assert response.status_code == 200
             assert response.data["project"] == self.project.id
             assert response.data["consumption_metadata"] == consumption_metadata.id
@@ -275,43 +260,3 @@ class MeterRunAPITestCase(OAuthTestCase):
             assert type(response.data["annual_savings"]) == float
             assert type(response.data["cvrmse_baseline"]) == float
             assert type(response.data["cvrmse_reporting"]) == float
-
-class ProjectBlockAPITestCase(OAuthTestCase):
-
-    fixtures = ["testing.yaml"]
-
-    def setUp(self):
-        """
-        Setup methods for a eemeter run storage
-        engine.
-        """
-        super(ProjectBlockAPITestCase, self).setUp()
-
-        self.project_block = ProjectBlock.objects.all()[0]
-        self.project_block.run_meters()
-        self.project_block.compute_summary_timeseries()
-
-    def test_project_block_read(self):
-
-        auth_headers = { "Authorization": "Bearer " + "tokstr" }
-
-        response = self.client.get('/datastore/project_block/{}/'.format(self.project_block.id), **auth_headers)
-        assert response.status_code == 200
-        assert response.data['project'][0] == self.project_block.project.all()[0].id
-        assert response.data['project_owner'] == self.project_block.project_owner.id
-        assert response.data['id'] == self.project_block.id
-        assert response.data['name'] == 'TEST_PROJECT_BLOCK'
-        with pytest.raises(KeyError):
-            response.data['recent_summaries']
-
-    def test_project_block_monthly_timeseries(self):
-
-        auth_headers = { "Authorization": "Bearer " + "tokstr" }
-
-        response = self.client.get('/datastore/project_block_monthly_timeseries/{}/'.format(self.project_block.id), **auth_headers)
-        assert response.status_code == 200
-        assert response.data['project'][0] == self.project_block.project.all()[0].id
-        assert response.data['project_owner'] == self.project_block.project_owner.id
-        assert response.data['id'] == self.project_block.id
-        assert response.data['name'] == 'TEST_PROJECT_BLOCK'
-        assert len(response.data['recent_summaries']) == 2

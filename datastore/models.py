@@ -303,6 +303,8 @@ class ProjectAttribute(models.Model):
             return self.datetime_value
         elif self.key.data_type == "FLOAT":
             return self.float_value
+        elif self.key.data_type == "INTEGER":
+            return self.integer_value
         else:
             return None
 
