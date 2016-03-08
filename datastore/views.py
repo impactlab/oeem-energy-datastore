@@ -40,12 +40,10 @@ class ConsumptionMetadataFilter(django_filters.FilterSet):
             choices=models.FUEL_TYPE_CHOICES)
     energy_unit = django_filters.MultipleChoiceFilter(
             choices=models.ENERGY_UNIT_CHOICES)
-    projects = django_filters.MethodFilter(
-            action=projects_filter)
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['fuel_type', 'energy_unit', 'projects']
+        fields = ['fuel_type', 'energy_unit', 'project']
 
 
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
