@@ -1,6 +1,11 @@
 from rest_framework import serializers
+from rest_framework_bulk import (
+    BulkListSerializer,
+    BulkSerializerMixin,
+)
 
 from . import models
+
 
 class ProjectOwnerSerializer(serializers.ModelSerializer):
 
@@ -172,7 +177,7 @@ class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionRecord
-        fields = ('id', 'start', 'value', 'estimated')
+        fields = ('id', 'start', 'value', 'estimated', 'metadata',)
 
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):

@@ -19,3 +19,4 @@ django-grappelli
 gunicorn
 django-pdb
 django-rest-swagger
+djangorestframework-bulk
