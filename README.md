@@ -44,9 +44,11 @@ We recommend using virtualenv (or virtualenvwrapper) to manage python packages
     export SERVER_NAME=0.0.0.0:8000 # the IP or DNS name where datastore will be deployed
     export PROTOCOL=http
 
-You might consider adding these to your virtualenv activate script
+You might consider adding these to your virtualenv postactivate script
 
-    vim /path/to/virtualenvs/oeem-energy-datastore/bin/activate
+    vim /path/to/virtualenv/oeem-energy-datastore/bin/postactivate
+
+    # refresh environment
     workon oeem-energy-datastore
 
 #### Run migrations
