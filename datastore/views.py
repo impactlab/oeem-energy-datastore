@@ -3,6 +3,8 @@ from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import filters
+from rest_framework_bulk import BulkModelViewSet
+
 import django_filters
 
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
@@ -38,12 +40,10 @@ class ConsumptionMetadataFilter(django_filters.FilterSet):
             choices=models.FUEL_TYPE_CHOICES)
     energy_unit = django_filters.MultipleChoiceFilter(
             choices=models.ENERGY_UNIT_CHOICES)
-    projects = django_filters.MethodFilter(
-            action=projects_filter)
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['fuel_type', 'energy_unit', 'projects']
+        fields = ['fuel_type', 'energy_unit', 'project']
 
 
 class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
@@ -61,6 +61,26 @@ class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
             return serializers.ConsumptionMetadataSummarySerializer
         else:
             return serializers.ConsumptionMetadataSerializer
+
+
+class ConsumptionRecordFilter(django_filters.FilterSet):
+
+    start = django_filters.IsoDateTimeFilter()
+
+    class Meta:
+        model = models.ConsumptionRecord
+        fields = ['metadata', 'start']
+
+
+class ConsumptionRecordViewSet(BulkModelViewSet):
+
+    permission_classes = default_permissions_classes
+    queryset = models.ConsumptionRecord.objects.all().order_by('pk')
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ConsumptionRecordFilter
+
+    def get_serializer_class(self):
+        return serializers.ConsumptionRecordSerializer
 
 
 class ProjectFilter(django_filters.FilterSet):
