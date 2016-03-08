@@ -20,23 +20,29 @@ Setup
 
 #### Install required python packages
 
-We recommend using virtualenv to manage python packages
+We recommend using virtualenv (or virtualenvwrapper) to manage python packages
 
     mkvirtualenv oeem-energy-datastore
     pip install -r requirements.txt
 
-#### Create the database (and optionally the eemeter weather cache database)
+#### Create the database
 
     createdb oeem_energy_datastore
-    createdb eemeter_weather_cache # optional
 
 #### Define the following environment variables
 
     export DJANGO_SETTINGS_MODULE=oeem_energy_datastore.settings
     export DATABASE_URL=postgres://:@localhost:5432/oeem_energy_datastore
-    export DJANGO_DEBUG=true
-    export SECRET_KEY=############################
-    export EEMETER_WEATHER_CACHE_DATABASE_URL=postgres://:@localhost:5432/eemeter_weather_cache
+    export SECRET_KEY=<django-secret-key>
+    export DJANGO_LOGFILE=django.log
+    export BROKER_HOST=0.0.0.0:5672 # Placeholder (not currently used - can be any valid URI)
+
+    # For development only
+    export DEBUG=true
+
+    # for API docs
+    export SERVER_NAME=0.0.0.0:8000 # the IP or DNS name where datastore will be deployed
+    export PROTOCOL=http
 
 You might consider adding these to your virtualenv activate script
 
@@ -50,10 +56,6 @@ You might consider adding these to your virtualenv activate script
 #### Create a superuser (for admin access)
 
     python manage.py createsuperuser
-
-#### Run the setup script (optional)
-
-    python manage.py setup
 
 #### Run the tests
 
