@@ -90,17 +90,12 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         auth_headers = { "Authorization": "Bearer " + "tokstr" }
 
         consumption_data = {
-                "fuel_type": "E",
-                "energy_unit": "KWH",
-                "records": [{
-                    "start": "2014-01-01T00:00:00+00:00",
-                    "value": 0,
-                    "estimated": False,
-                }],
-                }
+            "fuel_type": "E",
+            "energy_unit": "KWH",
+        }
 
         data = json.dumps(consumption_data)
-        response = self.client.post('/api/v1/consumption_metadatas/', data, content_type="application/json", **auth_headers)
+        response = self.client.post('/api/v1/consumption_metadatas/?summary=True', data, content_type="application/json", **auth_headers)
 
         assert response.status_code == 201
 
@@ -108,7 +103,6 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['energy_unit'] == 'KWH'
         assert response.data['fuel_type'] == 'E'
         assert response.data['project'] == None
-        assert len(response.data['records']) == 1
 
         consumption_metadata_id = response.data['id']
         response = self.client.get('/api/v1/consumption_metadatas/{}/'.format(consumption_metadata_id), **auth_headers)
@@ -119,11 +113,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['energy_unit'] == 'KWH'
         assert response.data['fuel_type'] == 'E'
         assert response.data['project'] == None
-
-        assert len(response.data['records']) == 1
-        assert response.data['records'][0]['start'] == "2014-01-01T00:00:00Z"
-        assert response.data['records'][0]['value'] == 0
-        assert response.data['records'][0]['estimated'] == False
+        assert response.data['records'] == []
 
 class ProjectAPITestCase(OAuthTestCase):
 
