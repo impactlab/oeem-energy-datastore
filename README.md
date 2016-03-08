@@ -93,7 +93,7 @@ the following attributes.
     Expires: <some future date>
     Scope: "read write" (no quotes)
 
-The environment variable `DATASTORE\_ACCESS\_TOKEN` should be set to the value
+The environment variable `DATASTORE_ACCESS_TOKEN` should be set to the value
 of this access token in the _client_'s deployment environment. E.g.
 
     export DATASTORE_ACCESS_TOKEN=YOUR_TOKEN_GOES_HERE
