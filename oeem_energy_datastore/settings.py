@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import os
 import dj_database_url
 
@@ -20,6 +22,8 @@ INSTALLED_APPS = (
     'sslserver',
     'oauth2_provider',
     'rest_framework',
+    'rest_framework_swagger',
+    'api_doc',
     'datastore',
 )
 
@@ -71,6 +75,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get("STATIC_ROOT")
 
+STATICFILES_DIRS = ( os.path.join(BASE_DIR,'staticfiles'),)
+
 OAUTH2_PROVIDER = {
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
     'ACCESS_TOKEN_EXPIRE_SECONDS': 315360000, # 10 years
@@ -120,4 +126,15 @@ LOGGING = {
             'propagate': True,
         },
     }
+}
+
+BROKER_URL = 'amqp://guest:guest@{}:5672//'.format(os.environ["BROKER_HOST"])
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+SWAGGER_SETTINGS = {
+    'base_path': '{}/docs'.format(os.environ["SERVER_NAME"]),
+    'protocol': os.environ["PROTOCOL"],
 }

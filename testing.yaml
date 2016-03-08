@@ -1,19 +1,16 @@
 - model: auth.user
-  pk: 1
   fields:
     username: user
     email: test@user.com
     password: pbkdf2_sha256$20000$Vo3WnQGGDy4q$fYmh7994pZRrxNmiwYryJNjYVOnhRPD1xYnU6dxlzxM=
 
 - model: datastore.projectowner
-  pk: 1
   fields:
     user: 1
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
 
 - model: datastore.project
-  pk: 1
   fields:
     project_id: TEST_PROJECT_1
     project_owner: 1
@@ -26,7 +23,6 @@
     updated: 2015-01-01 00:00:00+00:00
 
 - model: datastore.project
-  pk: 2
   fields:
     project_id: TEST_PROJECT_2
     project_owner: 1
@@ -39,16 +35,13 @@
     updated: 2015-01-01 00:00:00+00:00
 
 - model: datastore.projectblock
-  pk: 1
   fields:
     name: TEST_PROJECT_BLOCK
-    project_owner: 1
-    project: [1, 2]
+    projects: [1, 2]
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
 
 - model: datastore.consumptionmetadata
-  pk: 1
   fields:
     energy_unit: KWH
     fuel_type: E
@@ -56,7 +49,6 @@
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
 - model: datastore.consumptionmetadata
-  pk: 2
   fields:
     energy_unit: THM
     fuel_type: NG
@@ -65,7 +57,6 @@
     updated: 2015-01-01 00:00:00+00:00
 
 - model: datastore.consumptionmetadata
-  pk: 3
   fields:
     energy_unit: KWH
     fuel_type: E
@@ -73,7 +64,6 @@
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
 - model: datastore.consumptionmetadata
-  pk: 4
   fields:
     energy_unit: THM
     fuel_type: NG
@@ -82,343 +72,294 @@
     updated: 2015-01-01 00:00:00+00:00
 
 - model: datastore.consumptionrecord
-  pk: 1
   fields:
     estimated: false
     metadata: 1
     start: 2011-01-01 00:00:00+00:00
     value: 1255.2
 - model: datastore.consumptionrecord
-  pk: 2
   fields:
     estimated: false
     metadata: 1
     start: 2011-01-31 00:00:00+00:00
     value: 1367.7
 - model: datastore.consumptionrecord
-  pk: 3
   fields:
     estimated: false
     metadata: 1
     start: 2011-03-02 00:00:00+00:00
     value: 1214.0
 - model: datastore.consumptionrecord
-  pk: 4
   fields:
     estimated: false
     metadata: 1
     start: 2011-04-01 00:00:00+00:00
     value: 1094.9
 - model: datastore.consumptionrecord
-  pk: 5
   fields:
     estimated: false
     metadata: 1
     start: 2011-05-01 00:00:00+00:00
     value: 1083.2
 - model: datastore.consumptionrecord
-  pk: 6
   fields:
     estimated: false
     metadata: 1
     start: 2011-05-31 00:00:00+00:00
     value: 998.3
 - model: datastore.consumptionrecord
-  pk: 7
   fields:
     estimated: false
     metadata: 1
     start: 2011-06-30 00:00:00+00:00
     value: 959.2
 - model: datastore.consumptionrecord
-  pk: 8
   fields:
     estimated: false
     metadata: 1
     start: 2011-07-30 00:00:00+00:00
     value: 978.9
 - model: datastore.consumptionrecord
-  pk: 9
   fields:
     estimated: false
     metadata: 1
     start: 2011-08-29 00:00:00+00:00
     value: 965.1
 - model: datastore.consumptionrecord
-  pk: 10
   fields:
     estimated: false
     metadata: 1
     start: 2011-09-28 00:00:00+00:00
     value: 1013.4
 - model: datastore.consumptionrecord
-  pk: 11
   fields:
     estimated: false
     metadata: 1
     start: 2011-10-28 00:00:00+00:00
     value: 1218.8
 - model: datastore.consumptionrecord
-  pk: 12
   fields:
     estimated: false
     metadata: 1
     start: 2011-11-27 00:00:00+00:00
     value: 1338.3
 - model: datastore.consumptionrecord
-  pk: 13
   fields:
     estimated: false
     metadata: 1
     start: 2011-12-27 00:00:00+00:00
     value: 1245.4
 - model: datastore.consumptionrecord
-  pk: 14
   fields:
     estimated: false
     metadata: 1
     start: 2012-01-26 00:00:00+00:00
     value: 1224.7
 - model: datastore.consumptionrecord
-  pk: 15
   fields:
     estimated: false
     metadata: 1
     start: 2012-02-25 00:00:00+00:00
     value: 1282.6
 - model: datastore.consumptionrecord
-  pk: 16
   fields:
     estimated: false
     metadata: 1
     start: 2012-03-26 00:00:00+00:00
     value: 1164.4
 - model: datastore.consumptionrecord
-  pk: 17
   fields:
     estimated: false
     metadata: 1
     start: 2012-04-25 00:00:00+00:00
     value: 1018.5
 - model: datastore.consumptionrecord
-  pk: 18
   fields:
     estimated: false
     metadata: 1
     start: 2012-05-25 00:00:00+00:00
     value: 969.8
 - model: datastore.consumptionrecord
-  pk: 19
   fields:
     estimated: false
     metadata: 1
     start: 2012-06-24 00:00:00+00:00
     value: 952.7
 - model: datastore.consumptionrecord
-  pk: 20
   fields:
     estimated: false
     metadata: 1
     start: 2012-07-24 00:00:00+00:00
     value: 1062.2
 - model: datastore.consumptionrecord
-  pk: 21
   fields:
     estimated: false
     metadata: 1
     start: 2012-08-23 00:00:00+00:00
     value: 1061.9
 - model: datastore.consumptionrecord
-  pk: 22
   fields:
     estimated: false
     metadata: 1
     start: 2012-09-22 00:00:00+00:00
     value: 1016.8
 - model: datastore.consumptionrecord
-  pk: 23
   fields:
     estimated: false
     metadata: 1
     start: 2012-10-22 00:00:00+00:00
     value: 1067.2
 - model: datastore.consumptionrecord
-  pk: 24
   fields:
     estimated: false
     metadata: 1
     start: 2012-11-21 00:00:00+00:00
     value: 1218.2
 - model: datastore.consumptionrecord
-  pk: 25
   fields:
     estimated: false
     metadata: 1
     start: 2012-12-21 00:00:00+00:00
     value: 1425.6
 - model: datastore.consumptionrecord
-  pk: 26
   fields:
     estimated: false
     metadata: 1
     start: 2013-01-20 00:00:00+00:00
     value: 619.0
 - model: datastore.consumptionrecord
-  pk: 27
   fields:
     estimated: false
     metadata: 1
     start: 2013-02-19 00:00:00+00:00
     value: 571.3
 - model: datastore.consumptionrecord
-  pk: 28
   fields:
     estimated: false
     metadata: 1
     start: 2013-03-21 00:00:00+00:00
     value: 513.9
 - model: datastore.consumptionrecord
-  pk: 29
   fields:
     estimated: false
     metadata: 1
     start: 2013-04-20 00:00:00+00:00
     value: 497.35
 - model: datastore.consumptionrecord
-  pk: 30
   fields:
     estimated: false
     metadata: 1
     start: 2013-05-20 00:00:00+00:00
     value: 457.75
 - model: datastore.consumptionrecord
-  pk: 31
   fields:
     estimated: false
     metadata: 1
     start: 2013-06-19 00:00:00+00:00
     value: 515.75
 - model: datastore.consumptionrecord
-  pk: 32
   fields:
     estimated: false
     metadata: 1
     start: 2013-07-19 00:00:00+00:00
     value: 468.05
 - model: datastore.consumptionrecord
-  pk: 33
   fields:
     estimated: false
     metadata: 1
     start: 2013-08-18 00:00:00+00:00
     value: 577.55
 - model: datastore.consumptionrecord
-  pk: 34
   fields:
     estimated: false
     metadata: 1
     start: 2013-09-17 00:00:00+00:00
     value: 477.6
 - model: datastore.consumptionrecord
-  pk: 35
   fields:
     estimated: false
     metadata: 1
     start: 2013-10-17 00:00:00+00:00
     value: 490.5
 - model: datastore.consumptionrecord
-  pk: 36
   fields:
     estimated: false
     metadata: 1
     start: 2013-11-16 00:00:00+00:00
     value: 610.3
 - model: datastore.consumptionrecord
-  pk: 37
   fields:
     estimated: false
     metadata: 1
     start: 2013-12-16 00:00:00+00:00
     value: 560.35
 - model: datastore.consumptionrecord
-  pk: 38
   fields:
     estimated: false
     metadata: 1
     start: 2014-01-15 00:00:00+00:00
     value: 541.65
 - model: datastore.consumptionrecord
-  pk: 39
   fields:
     estimated: false
     metadata: 1
     start: 2014-02-14 00:00:00+00:00
     value: 538.7
 - model: datastore.consumptionrecord
-  pk: 40
   fields:
     estimated: false
     metadata: 1
     start: 2014-03-16 00:00:00+00:00
     value: 550.6
 - model: datastore.consumptionrecord
-  pk: 41
   fields:
     estimated: false
     metadata: 1
     start: 2014-04-15 00:00:00+00:00
     value: 522.8
 - model: datastore.consumptionrecord
-  pk: 42
   fields:
     estimated: false
     metadata: 1
     start: 2014-05-15 00:00:00+00:00
     value: 481.7
 - model: datastore.consumptionrecord
-  pk: 43
   fields:
     estimated: false
     metadata: 1
     start: 2014-06-14 00:00:00+00:00
     value: 469.15
 - model: datastore.consumptionrecord
-  pk: 44
   fields:
     estimated: false
     metadata: 1
     start: 2014-07-14 00:00:00+00:00
     value: 493.95
 - model: datastore.consumptionrecord
-  pk: 45
   fields:
     estimated: false
     metadata: 1
     start: 2014-08-13 00:00:00+00:00
     value: 498.15
 - model: datastore.consumptionrecord
-  pk: 46
   fields:
     estimated: false
     metadata: 1
     start: 2014-09-12 00:00:00+00:00
     value: 519.9
 - model: datastore.consumptionrecord
-  pk: 47
   fields:
     estimated: false
     metadata: 1
     start: 2014-10-12 00:00:00+00:00
     value: 479.7
 - model: datastore.consumptionrecord
-  pk: 48
   fields:
     estimated: false
     metadata: 1
     start: 2014-11-11 00:00:00+00:00
     value: 537.05
 - model: datastore.consumptionrecord
-  pk: 49
   fields:
     estimated: false
     metadata: 1
@@ -426,343 +367,294 @@
     value: nan
 
 - model: datastore.consumptionrecord
-  pk: 50
   fields:
     estimated: false
     metadata: 2
     start: 2011-01-01 00:00:00+00:00
     value: 131.04
 - model: datastore.consumptionrecord
-  pk: 51
   fields:
     estimated: false
     metadata: 2
     start: 2011-01-31 00:00:00+00:00
     value: 153.54
 - model: datastore.consumptionrecord
-  pk: 52
   fields:
     estimated: false
     metadata: 2
     start: 2011-03-02 00:00:00+00:00
     value: 122.5
 - model: datastore.consumptionrecord
-  pk: 53
   fields:
     estimated: false
     metadata: 2
     start: 2011-04-01 00:00:00+00:00
     value: 98.0399999999999
 - model: datastore.consumptionrecord
-  pk: 54
   fields:
     estimated: false
     metadata: 2
     start: 2011-05-01 00:00:00+00:00
     value: 95.12
 - model: datastore.consumptionrecord
-  pk: 55
   fields:
     estimated: false
     metadata: 2
     start: 2011-05-31 00:00:00+00:00
     value: 79.5
 - model: datastore.consumptionrecord
-  pk: 56
   fields:
     estimated: false
     metadata: 2
     start: 2011-06-30 00:00:00+00:00
     value: 60.94
 - model: datastore.consumptionrecord
-  pk: 57
   fields:
     estimated: false
     metadata: 2
     start: 2011-07-30 00:00:00+00:00
     value: 60.14
 - model: datastore.consumptionrecord
-  pk: 58
   fields:
     estimated: false
     metadata: 2
     start: 2011-08-29 00:00:00+00:00
     value: 62.7799999999999
 - model: datastore.consumptionrecord
-  pk: 59
   fields:
     estimated: false
     metadata: 2
     start: 2011-09-28 00:00:00+00:00
     value: 77.88
 - model: datastore.consumptionrecord
-  pk: 60
   fields:
     estimated: false
     metadata: 2
     start: 2011-10-28 00:00:00+00:00
     value: 123.76
 - model: datastore.consumptionrecord
-  pk: 61
   fields:
     estimated: false
     metadata: 2
     start: 2011-11-27 00:00:00+00:00
     value: 147.66
 - model: datastore.consumptionrecord
-  pk: 62
   fields:
     estimated: false
     metadata: 2
     start: 2011-12-27 00:00:00+00:00
     value: 129.08
 - model: datastore.consumptionrecord
-  pk: 63
   fields:
     estimated: false
     metadata: 2
     start: 2012-01-26 00:00:00+00:00
     value: 124.94
 - model: datastore.consumptionrecord
-  pk: 64
   fields:
     estimated: false
     metadata: 2
     start: 2012-02-25 00:00:00+00:00
     value: 136.52
 - model: datastore.consumptionrecord
-  pk: 65
   fields:
     estimated: false
     metadata: 2
     start: 2012-03-26 00:00:00+00:00
     value: 112.88
 - model: datastore.consumptionrecord
-  pk: 66
   fields:
     estimated: false
     metadata: 2
     start: 2012-04-25 00:00:00+00:00
     value: 83.7000000000001
 - model: datastore.consumptionrecord
-  pk: 67
   fields:
     estimated: false
     metadata: 2
     start: 2012-05-25 00:00:00+00:00
     value: 73.96
 - model: datastore.consumptionrecord
-  pk: 68
   fields:
     estimated: false
     metadata: 2
     start: 2012-06-24 00:00:00+00:00
     value: 62.3
 - model: datastore.consumptionrecord
-  pk: 69
   fields:
     estimated: false
     metadata: 2
     start: 2012-07-24 00:00:00+00:00
     value: 60.7
 - model: datastore.consumptionrecord
-  pk: 70
   fields:
     estimated: false
     metadata: 2
     start: 2012-08-23 00:00:00+00:00
     value: 60.0
 - model: datastore.consumptionrecord
-  pk: 71
   fields:
     estimated: false
     metadata: 2
     start: 2012-09-22 00:00:00+00:00
     value: 66.1
 - model: datastore.consumptionrecord
-  pk: 72
   fields:
     estimated: false
     metadata: 2
     start: 2012-10-22 00:00:00+00:00
     value: 93.18
 - model: datastore.consumptionrecord
-  pk: 73
   fields:
     estimated: false
     metadata: 2
     start: 2012-11-21 00:00:00+00:00
     value: 123.64
 - model: datastore.consumptionrecord
-  pk: 74
   fields:
     estimated: false
     metadata: 2
     start: 2012-12-21 00:00:00+00:00
     value: 165.12
 - model: datastore.consumptionrecord
-  pk: 75
   fields:
     estimated: false
     metadata: 2
     start: 2013-01-20 00:00:00+00:00
     value: 63.8
 - model: datastore.consumptionrecord
-  pk: 76
   fields:
     estimated: false
     metadata: 2
     start: 2013-02-19 00:00:00+00:00
     value: 54.13
 - model: datastore.consumptionrecord
-  pk: 77
   fields:
     estimated: false
     metadata: 2
     start: 2013-03-21 00:00:00+00:00
     value: 42.78
 - model: datastore.consumptionrecord
-  pk: 78
   fields:
     estimated: false
     metadata: 2
     start: 2013-04-20 00:00:00+00:00
     value: 35.22
 - model: datastore.consumptionrecord
-  pk: 79
   fields:
     estimated: false
     metadata: 2
     start: 2013-05-20 00:00:00+00:00
     value: 31.11
 - model: datastore.consumptionrecord
-  pk: 80
   fields:
     estimated: false
     metadata: 2
     start: 2013-06-19 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 81
   fields:
     estimated: false
     metadata: 2
     start: 2013-07-19 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 82
   fields:
     estimated: false
     metadata: 2
     start: 2013-08-18 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 83
   fields:
     estimated: false
     metadata: 2
     start: 2013-09-17 00:00:00+00:00
     value: 33.12
 - model: datastore.consumptionrecord
-  pk: 84
   fields:
     estimated: false
     metadata: 2
     start: 2013-10-17 00:00:00+00:00
     value: 37.83
 - model: datastore.consumptionrecord
-  pk: 85
   fields:
     estimated: false
     metadata: 2
     start: 2013-11-16 00:00:00+00:00
     value: 62.06
 - model: datastore.consumptionrecord
-  pk: 86
   fields:
     estimated: false
     metadata: 2
     start: 2013-12-16 00:00:00+00:00
     value: 52.07
 - model: datastore.consumptionrecord
-  pk: 87
   fields:
     estimated: false
     metadata: 2
     start: 2014-01-15 00:00:00+00:00
     value: 48.32
 - model: datastore.consumptionrecord
-  pk: 88
   fields:
     estimated: false
     metadata: 2
     start: 2014-02-14 00:00:00+00:00
     value: 47.74
 - model: datastore.consumptionrecord
-  pk: 89
   fields:
     estimated: false
     metadata: 2
     start: 2014-03-16 00:00:00+00:00
     value: 49.86
 - model: datastore.consumptionrecord
-  pk: 90
   fields:
     estimated: false
     metadata: 2
     start: 2014-04-15 00:00:00+00:00
     value: 39.79
 - model: datastore.consumptionrecord
-  pk: 91
   fields:
     estimated: false
     metadata: 2
     start: 2014-05-15 00:00:00+00:00
     value: 33.52
 - model: datastore.consumptionrecord
-  pk: 92
   fields:
     estimated: false
     metadata: 2
     start: 2014-06-14 00:00:00+00:00
     value: 30.63
 - model: datastore.consumptionrecord
-  pk: 93
   fields:
     estimated: false
     metadata: 2
     start: 2014-07-14 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 94
   fields:
     estimated: false
     metadata: 2
     start: 2014-08-13 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 95
   fields:
     estimated: false
     metadata: 2
     start: 2014-09-12 00:00:00+00:00
     value: 30.23
 - model: datastore.consumptionrecord
-  pk: 96
   fields:
     estimated: false
     metadata: 2
     start: 2014-10-12 00:00:00+00:00
     value: 35.94
 - model: datastore.consumptionrecord
-  pk: 97
   fields:
     estimated: false
     metadata: 2
     start: 2014-11-11 00:00:00+00:00
     value: 47.41
 - model: datastore.consumptionrecord
-  pk: 98
   fields:
     estimated: false
     metadata: 2
@@ -770,343 +662,294 @@
     value: nan
 
 - model: datastore.consumptionrecord
-  pk: 99
   fields:
     estimated: false
     metadata: 3
     start: 2011-01-01 00:00:00+00:00
     value: 1255.2
 - model: datastore.consumptionrecord
-  pk: 100
   fields:
     estimated: false
     metadata: 3
     start: 2011-01-31 00:00:00+00:00
     value: 1367.7
 - model: datastore.consumptionrecord
-  pk: 101
   fields:
     estimated: false
     metadata: 3
     start: 2011-03-02 00:00:00+00:00
     value: 1214.0
 - model: datastore.consumptionrecord
-  pk: 102
   fields:
     estimated: false
     metadata: 3
     start: 2011-04-01 00:00:00+00:00
     value: 1094.9
 - model: datastore.consumptionrecord
-  pk: 103
   fields:
     estimated: false
     metadata: 3
     start: 2011-05-01 00:00:00+00:00
     value: 1083.2
 - model: datastore.consumptionrecord
-  pk: 104
   fields:
     estimated: false
     metadata: 3
     start: 2011-05-31 00:00:00+00:00
     value: 998.3
 - model: datastore.consumptionrecord
-  pk: 105
   fields:
     estimated: false
     metadata: 3
     start: 2011-06-30 00:00:00+00:00
     value: 959.2
 - model: datastore.consumptionrecord
-  pk: 106
   fields:
     estimated: false
     metadata: 3
     start: 2011-07-30 00:00:00+00:00
     value: 978.9
 - model: datastore.consumptionrecord
-  pk: 107
   fields:
     estimated: false
     metadata: 3
     start: 2011-08-29 00:00:00+00:00
     value: 965.1
 - model: datastore.consumptionrecord
-  pk: 108
   fields:
     estimated: false
     metadata: 3
     start: 2011-09-28 00:00:00+00:00
     value: 1013.4
 - model: datastore.consumptionrecord
-  pk: 109
   fields:
     estimated: false
     metadata: 3
     start: 2011-10-28 00:00:00+00:00
     value: 1218.8
 - model: datastore.consumptionrecord
-  pk: 110
   fields:
     estimated: false
     metadata: 3
     start: 2011-11-27 00:00:00+00:00
     value: 1338.3
 - model: datastore.consumptionrecord
-  pk: 111
   fields:
     estimated: false
     metadata: 3
     start: 2011-12-27 00:00:00+00:00
     value: 1245.4
 - model: datastore.consumptionrecord
-  pk: 112
   fields:
     estimated: false
     metadata: 3
     start: 2012-01-26 00:00:00+00:00
     value: 1224.7
 - model: datastore.consumptionrecord
-  pk: 113
   fields:
     estimated: false
     metadata: 3
     start: 2012-02-25 00:00:00+00:00
     value: 1282.6
 - model: datastore.consumptionrecord
-  pk: 114
   fields:
     estimated: false
     metadata: 3
     start: 2012-03-26 00:00:00+00:00
     value: 1164.4
 - model: datastore.consumptionrecord
-  pk: 115
   fields:
     estimated: false
     metadata: 3
     start: 2012-04-25 00:00:00+00:00
     value: 1018.5
 - model: datastore.consumptionrecord
-  pk: 116
   fields:
     estimated: false
     metadata: 3
     start: 2012-05-25 00:00:00+00:00
     value: 969.8
 - model: datastore.consumptionrecord
-  pk: 117
   fields:
     estimated: false
     metadata: 3
     start: 2012-06-24 00:00:00+00:00
     value: 952.7
 - model: datastore.consumptionrecord
-  pk: 118
   fields:
     estimated: false
     metadata: 3
     start: 2012-07-24 00:00:00+00:00
     value: 1062.2
 - model: datastore.consumptionrecord
-  pk: 119
   fields:
     estimated: false
     metadata: 3
     start: 2012-08-23 00:00:00+00:00
     value: 1061.9
 - model: datastore.consumptionrecord
-  pk: 120
   fields:
     estimated: false
     metadata: 3
     start: 2012-09-22 00:00:00+00:00
     value: 1016.8
 - model: datastore.consumptionrecord
-  pk: 121
   fields:
     estimated: false
     metadata: 3
     start: 2012-10-22 00:00:00+00:00
     value: 1067.2
 - model: datastore.consumptionrecord
-  pk: 122
   fields:
     estimated: false
     metadata: 3
     start: 2012-11-21 00:00:00+00:00
     value: 1218.2
 - model: datastore.consumptionrecord
-  pk: 123
   fields:
     estimated: false
     metadata: 3
     start: 2012-12-21 00:00:00+00:00
     value: 1425.6
 - model: datastore.consumptionrecord
-  pk: 124
   fields:
     estimated: false
     metadata: 3
     start: 2013-01-20 00:00:00+00:00
     value: 619.0
 - model: datastore.consumptionrecord
-  pk: 125
   fields:
     estimated: false
     metadata: 3
     start: 2013-02-19 00:00:00+00:00
     value: 571.3
 - model: datastore.consumptionrecord
-  pk: 126
   fields:
     estimated: false
     metadata: 3
     start: 2013-03-21 00:00:00+00:00
     value: 513.9
 - model: datastore.consumptionrecord
-  pk: 127
   fields:
     estimated: false
     metadata: 3
     start: 2013-04-20 00:00:00+00:00
     value: 497.35
 - model: datastore.consumptionrecord
-  pk: 128
   fields:
     estimated: false
     metadata: 3
     start: 2013-05-20 00:00:00+00:00
     value: 457.75
 - model: datastore.consumptionrecord
-  pk: 129
   fields:
     estimated: false
     metadata: 3
     start: 2013-06-19 00:00:00+00:00
     value: 515.75
 - model: datastore.consumptionrecord
-  pk: 130
   fields:
     estimated: false
     metadata: 3
     start: 2013-07-19 00:00:00+00:00
     value: 468.05
 - model: datastore.consumptionrecord
-  pk: 131
   fields:
     estimated: false
     metadata: 3
     start: 2013-08-18 00:00:00+00:00
     value: 577.55
 - model: datastore.consumptionrecord
-  pk: 132
   fields:
     estimated: false
     metadata: 3
     start: 2013-09-17 00:00:00+00:00
     value: 477.6
 - model: datastore.consumptionrecord
-  pk: 133
   fields:
     estimated: false
     metadata: 3
     start: 2013-10-17 00:00:00+00:00
     value: 490.5
 - model: datastore.consumptionrecord
-  pk: 134
   fields:
     estimated: false
     metadata: 3
     start: 2013-11-16 00:00:00+00:00
     value: 610.3
 - model: datastore.consumptionrecord
-  pk: 135
   fields:
     estimated: false
     metadata: 3
     start: 2013-12-16 00:00:00+00:00
     value: 560.35
 - model: datastore.consumptionrecord
-  pk: 136
   fields:
     estimated: false
     metadata: 3
     start: 2014-01-15 00:00:00+00:00
     value: 541.65
 - model: datastore.consumptionrecord
-  pk: 137
   fields:
     estimated: false
     metadata: 3
     start: 2014-02-14 00:00:00+00:00
     value: 538.7
 - model: datastore.consumptionrecord
-  pk: 138
   fields:
     estimated: false
     metadata: 3
     start: 2014-03-16 00:00:00+00:00
     value: 550.6
 - model: datastore.consumptionrecord
-  pk: 139
   fields:
     estimated: false
     metadata: 3
     start: 2014-04-15 00:00:00+00:00
     value: 522.8
 - model: datastore.consumptionrecord
-  pk: 140
   fields:
     estimated: false
     metadata: 3
     start: 2014-05-15 00:00:00+00:00
     value: 481.7
 - model: datastore.consumptionrecord
-  pk: 141
   fields:
     estimated: false
     metadata: 3
     start: 2014-06-14 00:00:00+00:00
     value: 469.15
 - model: datastore.consumptionrecord
-  pk: 142
   fields:
     estimated: false
     metadata: 3
     start: 2014-07-14 00:00:00+00:00
     value: 493.95
 - model: datastore.consumptionrecord
-  pk: 143
   fields:
     estimated: false
     metadata: 3
     start: 2014-08-13 00:00:00+00:00
     value: 498.15
 - model: datastore.consumptionrecord
-  pk: 144
   fields:
     estimated: false
     metadata: 3
     start: 2014-09-12 00:00:00+00:00
     value: 519.9
 - model: datastore.consumptionrecord
-  pk: 145
   fields:
     estimated: false
     metadata: 3
     start: 2014-10-12 00:00:00+00:00
     value: 479.7
 - model: datastore.consumptionrecord
-  pk: 146
   fields:
     estimated: false
     metadata: 3
     start: 2014-11-11 00:00:00+00:00
     value: 537.05
 - model: datastore.consumptionrecord
-  pk: 147
   fields:
     estimated: false
     metadata: 3
@@ -1114,343 +957,294 @@
     value: nan
 
 - model: datastore.consumptionrecord
-  pk: 148
   fields:
     estimated: false
     metadata: 4
     start: 2011-01-01 00:00:00+00:00
     value: 131.04
 - model: datastore.consumptionrecord
-  pk: 149
   fields:
     estimated: false
     metadata: 4
     start: 2011-01-31 00:00:00+00:00
     value: 153.54
 - model: datastore.consumptionrecord
-  pk: 150
   fields:
     estimated: false
     metadata: 4
     start: 2011-03-02 00:00:00+00:00
     value: 122.5
 - model: datastore.consumptionrecord
-  pk: 151
   fields:
     estimated: false
     metadata: 4
     start: 2011-04-01 00:00:00+00:00
     value: 98.0399999999999
 - model: datastore.consumptionrecord
-  pk: 152
   fields:
     estimated: false
     metadata: 4
     start: 2011-05-01 00:00:00+00:00
     value: 95.12
 - model: datastore.consumptionrecord
-  pk: 153
   fields:
     estimated: false
     metadata: 4
     start: 2011-05-31 00:00:00+00:00
     value: 79.5
 - model: datastore.consumptionrecord
-  pk: 154
   fields:
     estimated: false
     metadata: 4
     start: 2011-06-30 00:00:00+00:00
     value: 60.94
 - model: datastore.consumptionrecord
-  pk: 155
   fields:
     estimated: false
     metadata: 4
     start: 2011-07-30 00:00:00+00:00
     value: 60.14
 - model: datastore.consumptionrecord
-  pk: 156
   fields:
     estimated: false
     metadata: 4
     start: 2011-08-29 00:00:00+00:00
     value: 62.7799999999999
 - model: datastore.consumptionrecord
-  pk: 157
   fields:
     estimated: false
     metadata: 4
     start: 2011-09-28 00:00:00+00:00
     value: 77.88
 - model: datastore.consumptionrecord
-  pk: 158
   fields:
     estimated: false
     metadata: 4
     start: 2011-10-28 00:00:00+00:00
     value: 123.76
 - model: datastore.consumptionrecord
-  pk: 159
   fields:
     estimated: false
     metadata: 4
     start: 2011-11-27 00:00:00+00:00
     value: 147.66
 - model: datastore.consumptionrecord
-  pk: 160
   fields:
     estimated: false
     metadata: 4
     start: 2011-12-27 00:00:00+00:00
     value: 129.08
 - model: datastore.consumptionrecord
-  pk: 161
   fields:
     estimated: false
     metadata: 4
     start: 2012-01-26 00:00:00+00:00
     value: 124.94
 - model: datastore.consumptionrecord
-  pk: 162
   fields:
     estimated: false
     metadata: 4
     start: 2012-02-25 00:00:00+00:00
     value: 136.52
 - model: datastore.consumptionrecord
-  pk: 163
   fields:
     estimated: false
     metadata: 4
     start: 2012-03-26 00:00:00+00:00
     value: 112.88
 - model: datastore.consumptionrecord
-  pk: 164
   fields:
     estimated: false
     metadata: 4
     start: 2012-04-25 00:00:00+00:00
     value: 83.7000000000001
 - model: datastore.consumptionrecord
-  pk: 165
   fields:
     estimated: false
     metadata: 4
     start: 2012-05-25 00:00:00+00:00
     value: 73.96
 - model: datastore.consumptionrecord
-  pk: 166
   fields:
     estimated: false
     metadata: 4
     start: 2012-06-24 00:00:00+00:00
     value: 62.3
 - model: datastore.consumptionrecord
-  pk: 167
   fields:
     estimated: false
     metadata: 4
     start: 2012-07-24 00:00:00+00:00
     value: 60.7
 - model: datastore.consumptionrecord
-  pk: 168
   fields:
     estimated: false
     metadata: 4
     start: 2012-08-23 00:00:00+00:00
     value: 60.0
 - model: datastore.consumptionrecord
-  pk: 169
   fields:
     estimated: false
     metadata: 4
     start: 2012-09-22 00:00:00+00:00
     value: 66.1
 - model: datastore.consumptionrecord
-  pk: 170
   fields:
     estimated: false
     metadata: 4
     start: 2012-10-22 00:00:00+00:00
     value: 93.18
 - model: datastore.consumptionrecord
-  pk: 171
   fields:
     estimated: false
     metadata: 4
     start: 2012-11-21 00:00:00+00:00
     value: 123.64
 - model: datastore.consumptionrecord
-  pk: 172
   fields:
     estimated: false
     metadata: 4
     start: 2012-12-21 00:00:00+00:00
     value: 165.12
 - model: datastore.consumptionrecord
-  pk: 173
   fields:
     estimated: false
     metadata: 4
     start: 2013-01-20 00:00:00+00:00
     value: 63.8
 - model: datastore.consumptionrecord
-  pk: 174
   fields:
     estimated: false
     metadata: 4
     start: 2013-02-19 00:00:00+00:00
     value: 54.13
 - model: datastore.consumptionrecord
-  pk: 175
   fields:
     estimated: false
     metadata: 4
     start: 2013-03-21 00:00:00+00:00
     value: 42.78
 - model: datastore.consumptionrecord
-  pk: 176
   fields:
     estimated: false
     metadata: 4
     start: 2013-04-20 00:00:00+00:00
     value: 35.22
 - model: datastore.consumptionrecord
-  pk: 177
   fields:
     estimated: false
     metadata: 4
     start: 2013-05-20 00:00:00+00:00
     value: 31.11
 - model: datastore.consumptionrecord
-  pk: 178
   fields:
     estimated: false
     metadata: 4
     start: 2013-06-19 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 179
   fields:
     estimated: false
     metadata: 4
     start: 2013-07-19 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 180
   fields:
     estimated: false
     metadata: 4
     start: 2013-08-18 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 181
   fields:
     estimated: false
     metadata: 4
     start: 2013-09-17 00:00:00+00:00
     value: 33.12
 - model: datastore.consumptionrecord
-  pk: 182
   fields:
     estimated: false
     metadata: 4
     start: 2013-10-17 00:00:00+00:00
     value: 37.83
 - model: datastore.consumptionrecord
-  pk: 183
   fields:
     estimated: false
     metadata: 4
     start: 2013-11-16 00:00:00+00:00
     value: 62.06
 - model: datastore.consumptionrecord
-  pk: 184
   fields:
     estimated: false
     metadata: 4
     start: 2013-12-16 00:00:00+00:00
     value: 52.07
 - model: datastore.consumptionrecord
-  pk: 185
   fields:
     estimated: false
     metadata: 4
     start: 2014-01-15 00:00:00+00:00
     value: 48.32
 - model: datastore.consumptionrecord
-  pk: 186
   fields:
     estimated: false
     metadata: 4
     start: 2014-02-14 00:00:00+00:00
     value: 47.74
 - model: datastore.consumptionrecord
-  pk: 187
   fields:
     estimated: false
     metadata: 4
     start: 2014-03-16 00:00:00+00:00
     value: 49.86
 - model: datastore.consumptionrecord
-  pk: 188
   fields:
     estimated: false
     metadata: 4
     start: 2014-04-15 00:00:00+00:00
     value: 39.79
 - model: datastore.consumptionrecord
-  pk: 189
   fields:
     estimated: false
     metadata: 4
     start: 2014-05-15 00:00:00+00:00
     value: 33.52
 - model: datastore.consumptionrecord
-  pk: 190
   fields:
     estimated: false
     metadata: 4
     start: 2014-06-14 00:00:00+00:00
     value: 30.63
 - model: datastore.consumptionrecord
-  pk: 191
   fields:
     estimated: false
     metadata: 4
     start: 2014-07-14 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 192
   fields:
     estimated: false
     metadata: 4
     start: 2014-08-13 00:00:00+00:00
     value: 30.0
 - model: datastore.consumptionrecord
-  pk: 193
   fields:
     estimated: false
     metadata: 4
     start: 2014-09-12 00:00:00+00:00
     value: 30.23
 - model: datastore.consumptionrecord
-  pk: 194
   fields:
     estimated: false
     metadata: 4
     start: 2014-10-12 00:00:00+00:00
     value: 35.94
 - model: datastore.consumptionrecord
-  pk: 195
   fields:
     estimated: false
     metadata: 4
     start: 2014-11-11 00:00:00+00:00
     value: 47.41
 - model: datastore.consumptionrecord
-  pk: 196
   fields:
     estimated: false
     metadata: 4
