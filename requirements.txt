@@ -12,11 +12,9 @@ djangorestframework
 eemeter
 pandas
 psycopg2
-pytest-django
 requests
 sqlalchemy
 django-grappelli
 gunicorn
-django-pdb
 django-rest-swagger
 djangorestframework-bulk
