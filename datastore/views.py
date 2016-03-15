@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -13,8 +13,12 @@ from . import models
 from . import serializers
 from collections import defaultdict
 
-default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
+from django.conf import settings
 
+if settings.DEBUG:
+    default_permissions_classes = [DjangoModelPermissionsOrAnonReadOnly]
+else:
+    default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
 def projects_filter(queryset, value):
     """
