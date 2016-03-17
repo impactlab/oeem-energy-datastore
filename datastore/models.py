@@ -437,6 +437,9 @@ class ConsumptionMetadata(models.Model):
         unit_name = dict(ENERGY_UNIT_CHOICES)[self.energy_unit]
         consumption_data = EEMeterConsumptionData(records, fuel_type=fuel_type,
                 unit_name=unit_name, record_type="arbitrary_start")
+        if consumption_data.data.shape[0] > 2:
+            if consumption_data.data.index[1] - consumption_data.data.index[0] < timedelta(days=1):
+                consumption_data.data = consumption_data.resample('D').sum()
         return consumption_data
 
     def __str__(self):
