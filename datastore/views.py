@@ -4,6 +4,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
+from rest_framework.parsers import JSONParser
+from django.utils.six import BytesIO
 
 import django_filters
 
@@ -12,6 +14,7 @@ from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 from . import models
 from . import serializers
 from collections import defaultdict
+from datetime import datetime
 
 default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
@@ -82,6 +85,108 @@ class ConsumptionRecordViewSet(BulkModelViewSet):
     def get_serializer_class(self):
         return serializers.ConsumptionRecordSerializer
 
+    @list_route(methods=['post'])
+    def sync(self, request):
+        """
+        `POST /api/v1/consumption_records/sync/`
+
+        Expects records like the following::
+
+            [
+                {
+                     "start": "2016-03-15T00:00:00+0000",
+                     "end": "2016-03-15T00:15:00+0000",
+                     "value": 10.2,
+                     "project_id": "SOMEPROJECTID", # not the primary key - the project_id attribute.
+                     "fuel_type": "electricity",
+                     "unit_name": "kWh"
+                },
+                ...
+            ]
+
+        """
+
+        consumption_metadatas = models.ConsumptionMetadata.objects.all()
+        self.metadata_dict = {(cm.project.project_id, cm.fuel_type): cm
+                         for cm in consumption_metadatas}
+
+        response_data = [self._sync_record(record) for record in request.data]
+
+        return Response(response_data)
+
+    def _sync_record(self, record):
+        """ Get/Create/Update records as necessary, returing dict with data
+        (as stored in the db) and status.
+        If a record is new, add it. If it already exists, decide whether to
+        updated it.
+        """
+
+        record = self._parse_record(record)
+
+        cm = self.metadata_dict.get((record["project_id"], record["fuel_type"]))
+        if cm is None:
+            return {
+                "status": "error - no consumption metadata",
+                "start": record["start"],
+                "project_id": record["project_id"],
+                "fuel_type": record["fuel_type"],
+            }
+
+
+        try:
+            # assume metadata and start uniquely identify record.
+            # other fields might change and need to be updated.
+            consumption_record, created = self.queryset.get_or_create(
+                    metadata=cm,
+                    start=record["start"],
+                    defaults={
+                        "value": record["value"],
+                        "estimated": record["estimated"]
+                    })
+
+        except models.ConsumptionRecord.MultipleObjectsReturned:
+            return {
+                "status": "error - multiple records",
+                "start": record["start"],
+                "metadata": cm.pk
+            }
+
+        if created:
+            return self._serialize(consumption_record, status="created")
+
+        if self._is_different(consumption_record, record):
+            if self._should_update(consumption_record, record):
+                consumption_record.value = record["value"]
+                consumption_record.estimated = record["estimated"]
+                consumption_record.save()
+
+                return self._serialize(consumption_record, status="updated")
+            else:
+                return self._serialize(consumption_record, status="unchanged - update not valid")
+        else:
+            return self._serialize(consumption_record, status="unchanged - same record")
+
+    def _serialize(self, consumption_record, status):
+        """ Serialize consumption record and add sync status
+        """
+        data = self.get_serializer_class()(consumption_record).data
+        data["status"] = status
+        return data
+
+    def _is_different(self, existing_consumption_record, new_record_data):
+        value_different = existing_consumption_record.value != new_record_data["value"]
+        estimated_different = existing_consumption_record.estimated != new_record_data["estimated"]
+        return value_different or estimated_different
+
+    def _should_update(self, existing_consumption_record, new_record_data):
+        """ Returns True if existing_consumption_record should be updated with
+        value and estimated from new_record_data.
+        """
+        return True
+
+    def _parse_record(self, record):
+        record["start"] = datetime.strptime(record["start"], "%Y-%m-%dT%H:%M:%S%z")
+        return record
 
 class ProjectFilter(django_filters.FilterSet):
 
