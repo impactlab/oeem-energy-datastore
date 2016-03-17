@@ -181,6 +181,11 @@ class ConsumptionRecordSerializer(serializers.ModelSerializer):
         model = models.ConsumptionRecord
         fields = ('id', 'start', 'value', 'estimated', 'metadata',)
 
+    def create(self, validated_data):
+        value_clean = validated_data.pop('value_clean')
+        validated_data["value"] = value_clean
+        return models.ConsumptionRecord.objects.create(**validated_data)
+
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
 
