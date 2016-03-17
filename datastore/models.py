@@ -619,6 +619,8 @@ class DailyUsageSummaryActual(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
 
 @python_2_unicode_compatible
 class DailyUsageSummaryReporting(models.Model):

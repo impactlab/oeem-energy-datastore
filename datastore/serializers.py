@@ -175,6 +175,8 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
 
 class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
+    value = serializers.FloatField(source='value_clean')
+
     class Meta:
         model = models.ConsumptionRecord
         fields = ('id', 'start', 'value', 'estimated', 'metadata',)
