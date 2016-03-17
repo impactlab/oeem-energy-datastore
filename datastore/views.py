@@ -4,8 +4,6 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
-from rest_framework.parsers import JSONParser
-from django.utils.six import BytesIO
 
 import django_filters
 
