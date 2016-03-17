@@ -463,6 +463,9 @@ class ConsumptionRecord(models.Model):
     def eemeter_record(self):
         return {"start": self.start, "value": self.value, "estimated": self.estimated }
 
+    def value_clean(self):
+        return _json_clean(self.value)
+
 
 @python_2_unicode_compatible
 class MeterRun(models.Model):
