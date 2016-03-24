@@ -56,48 +56,6 @@ class ProjectOwner(models.Model):
     def __str__(self):
         return u'ProjectOwner {}'.format(self.user.username)
 
-class ProjectManager(models.Manager):
-
-    def recent_meter_runs(self, project_pks=[]):
-        from django.db import connection
-        cursor = connection.cursor()
-
-        meter_runs = ''' 
-          SELECT DISTINCT ON (meter.consumption_metadata_id)
-            meter.*
-          FROM datastore_meterrun AS meter
-          JOIN datastore_project AS project
-            ON meter.project_id = project.id
-        '''
-        
-        qargs = []
-
-        if project_pks:
-            meter_runs = ''' 
-              {}
-              WHERE project.id IN %s
-            '''.format(meter_runs)
-            qargs.append(tuple(project_pks))
-
-        meter_runs = ''' 
-          {}
-          ORDER BY meter.consumption_metadata_id,
-            meter.added DESC
-        '''.format(meter_runs)
-        
-        cursor.execute(meter_runs, qargs)
-        
-        columns = [col[0] for col in cursor.description]
-        
-        results = []
-        for row in cursor.fetchall():
-            results.append(MeterRun(**dict(zip(columns, row))))
-
-        return results
-
-    def attributes(self):
-        return self.projectattribute_set
-
 @python_2_unicode_compatible
 class Project(models.Model):
     project_owner = models.ForeignKey(ProjectOwner)
@@ -112,9 +70,6 @@ class Project(models.Model):
     longitude = models.FloatField(blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-
-    #objects = models.Manager()
-    objects = ProjectManager()
 
     def __str__(self):
         return u'Project {}'.format(self.project_id)
@@ -350,18 +305,9 @@ class Project(models.Model):
             } for row in grouped_rows]
 
         return results
-    # def recent_meter_runs(self):
-    #     consumption_metadatas = self.consumptionmetadata_set.all()
-    #     meter_runs = []
-    #     for cm in consumption_metadatas:
-    #         try:
-    #             meter_runs.append(cm.meterrun_set.latest('added'))
-    #         except MeterRun.DoesNotExist:
-    #             pass
-    #     return meter_runs
 
-    # def attributes(self):
-    #     return self.projectattribute_set.all()
+    def attributes(self):
+        return self.projectattribute_set.all()
 
 
 
