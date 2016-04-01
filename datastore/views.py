@@ -408,8 +408,13 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         }
 
     def _parse_record(self, record, foreign_objects):
-        record["baseline_period_end"] = parse_datetime(record["baseline_period_end"])
-        record["reporting_period_start"] = parse_datetime(record["reporting_period_start"])
+
+        if record["baseline_period_end"] is not None:
+            record["baseline_period_end"] = parse_datetime(record["baseline_period_end"])
+
+        if record["reporting_period_start"] is not None:
+            record["reporting_period_start"] = parse_datetime(record["reporting_period_start"])
+
         return record
 
 
