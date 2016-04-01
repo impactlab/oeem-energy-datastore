@@ -345,6 +345,7 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
             'attributes',
         )
 
+
 class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
 
     recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
@@ -365,6 +366,7 @@ class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
             'longitude',
             'recent_meter_runs',
         )
+
 
 class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
 
@@ -388,6 +390,7 @@ class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
             'recent_meter_runs',
             'attributes',
         )
+
 
 class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
 

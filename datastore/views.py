@@ -6,6 +6,8 @@ from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
 
 import django_filters
+from django.db import IntegrityError
+from django.utils.dateparse import parse_datetime
 
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
@@ -28,6 +30,97 @@ def projects_filter(queryset, value):
     return queryset.filter(project__in=project_set)
 
 
+class SyncMixin(object):
+
+    @list_route(methods=['post'])
+    def sync(self, request):
+        self._sync_route_docstring()
+
+        self._create_properties()
+
+        response_data = [self._sync_record(record) for record in request.data]
+
+        return Response(response_data)
+
+    def _sync_record(self, record):
+        """ Get/Create/Update records as necessary, returing dict with data
+        (as stored in the db) and status.
+        If a record is new, add it. If it already exists, decide whether to
+        updated it.
+        """
+
+        foreign_objects = self._find_foreign_objects(record)
+        if "status" in foreign_objects: # one or more not found
+            return foreign_objects
+
+        record = self._parse_record(record, foreign_objects)
+
+        try:
+            obj, created = self._get_or_create(record, foreign_objects)
+        except KeyError as e:
+            return self._serialize_error(record, "error - missing field", e, foreign_objects)
+        except models.Project.MultipleObjectsReturned as e:
+            return self._serialize_error(record, "error - multiple records", e, foreign_objects)
+        except ValueError as e:
+            return self._serialize_error(record, "error - bad field value - create", e, foreign_objects)
+        except IntegrityError as e:
+            return self._serialize_error(record, "error - integrity error - create", e.__cause__, foreign_objects)
+
+        if created:
+            return self._serialize(obj, status="created")
+
+        # (else not created)
+
+        if self._is_different(obj, record):
+            if self._should_update(obj, record):
+                # update every field
+                for attr in self.attributes:
+                    setattr(obj, attr, record[attr])
+
+                try:
+                    obj.save()
+                except ValueError as e:
+                    return self._serialize_error(record, "error - bad field value - update", e, foreign_objects)
+                except IntegrityError as e:
+                    return self._serialize_error(record, "error - integrity error - update", e.__cause__, foreign_objects)
+
+                return self._serialize(obj, status="updated")
+            else:
+                return self._serialize(obj, status="unchanged - update not valid")
+        else:
+            return self._serialize(obj, status="unchanged - same record")
+
+    def _is_different(self, existing_obj, new_record_data):
+        return any([getattr(existing_obj, attr) != new_record_data[attr]
+                    for attr in self.attributes])
+
+    def _should_update(self, existing_obj, new_record_data):
+        """ Returns True if existing_project should be updated with
+        value and estimated from new_record_data.
+        """
+        return True
+
+    def _serialize_error(self, record, status, exception, foreign_objects):
+        data = self._error_fields(record, foreign_objects)
+        data["status"] = status
+        data["message"] = str(exception)
+        return data
+
+
+    def _serialize(self, obj, status):
+        """ Serialize obj and add sync status
+        """
+        data = self.sync_serializer_class(obj).data
+        data["status"] = status
+        return data
+
+    def _get_or_create(self, record, foreign_objects):
+        fields = self._get_fields(record, foreign_objects)
+        fields["defaults"] = {attr: record[attr] for attr in self.attributes}
+        obj, created = self.queryset.get_or_create(**fields)
+        return obj, created
+
+
 class ProjectOwnerViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
@@ -47,12 +140,13 @@ class ConsumptionMetadataFilter(django_filters.FilterSet):
         fields = ['fuel_type', 'energy_unit', 'project']
 
 
-class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
+class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     queryset = models.ConsumptionMetadata.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ConsumptionMetadataFilter
+    sync_serializer_class = serializers.ConsumptionMetadataSummarySerializer
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
@@ -62,6 +156,56 @@ class ConsumptionMetadataViewSet(viewsets.ModelViewSet):
             return serializers.ConsumptionMetadataSummarySerializer
         else:
             return serializers.ConsumptionMetadataSerializer
+
+    def _sync_route_docstring(self):
+        return """
+        `POST /api/v1/consumption_metadatas/sync/`
+
+        Expects records like the following::
+
+            [
+                {
+                    "project_project_id": "PROJECT_A",
+                    "fuel_type": "E",
+                    "energy_unit": "KWH"
+                },
+                ...
+            ]
+
+        """
+
+    def _create_properties(self):
+        self.attributes = [
+            "energy_unit",
+        ]
+
+        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
+
+    def _find_foreign_objects(self, record):
+
+        project = self.project_dict.get(record["project_project_id"])
+        if project is None:
+            return {
+                "status": "error - no Project found",
+                "project_project_id": record["project_project_id"],
+            }
+
+        return {"project": project}
+
+    def _get_fields(self, record, foreign_objects):
+        return {
+            "project": foreign_objects["project"],
+            "fuel_type": record["fuel_type"],
+        }
+
+    def _error_fields(self, record, foreign_objects):
+        return {
+            "project": record["project_project_id"],
+            "fuel_type": record["fuel_type"],
+        }
+
+    def _parse_record(self, record, foreign_objects):
+        return record
 
 
 class ConsumptionRecordFilter(django_filters.FilterSet):
@@ -73,19 +217,19 @@ class ConsumptionRecordFilter(django_filters.FilterSet):
         fields = ['metadata', 'start']
 
 
-class ConsumptionRecordViewSet(BulkModelViewSet):
+class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
     permission_classes = default_permissions_classes
     queryset = models.ConsumptionRecord.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ConsumptionRecordFilter
+    sync_serializer_class = serializers.ConsumptionRecordSerializer
 
     def get_serializer_class(self):
         return serializers.ConsumptionRecordSerializer
 
-    @list_route(methods=['post'])
-    def sync(self, request):
-        """
+    def _sync_route_docstring(self):
+        return """
         `POST /api/v1/consumption_records/sync/`
 
         Expects records like the following::
@@ -104,22 +248,18 @@ class ConsumptionRecordViewSet(BulkModelViewSet):
 
         """
 
+
+    def _create_properties(self):
+        self.attributes = [
+            "value",
+            "estimated",
+        ]
+
         consumption_metadatas = models.ConsumptionMetadata.objects.all()
         self.metadata_dict = {(cm.project.project_id, cm.fuel_type): cm
                          for cm in consumption_metadatas}
 
-        response_data = [self._sync_record(record) for record in request.data]
-
-        return Response(response_data)
-
-    def _sync_record(self, record):
-        """ Get/Create/Update records as necessary, returing dict with data
-        (as stored in the db) and status.
-        If a record is new, add it. If it already exists, decide whether to
-        updated it.
-        """
-
-        record = self._parse_record(record)
+    def _find_foreign_objects(self, record):
 
         cm = self.metadata_dict.get((record["project_id"], record["fuel_type"]))
         if cm is None:
@@ -130,60 +270,22 @@ class ConsumptionRecordViewSet(BulkModelViewSet):
                 "fuel_type": record["fuel_type"],
             }
 
+        return {"metadata": cm}
 
-        try:
-            # assume metadata and start uniquely identify record.
-            # other fields might change and need to be updated.
-            consumption_record, created = self.queryset.get_or_create(
-                    metadata=cm,
-                    start=record["start"],
-                    defaults={
-                        "value": record["value"],
-                        "estimated": record["estimated"]
-                    })
+    def _get_fields(self, record, foreign_objects):
+        return {
+            "start": record["start"],
+            "metadata": foreign_objects["metadata"],
+        }
 
-        except models.ConsumptionRecord.MultipleObjectsReturned:
-            return {
-                "status": "error - multiple records",
-                "start": record["start"],
-                "metadata": cm.pk
-            }
+    def _error_fields(self, record, foreign_objects):
+        return {
+            "start": record["start"],
+            "metadata": foreign_objects["metadata"].pk
+        }
 
-        if created:
-            return self._serialize(consumption_record, status="created")
-
-        if self._is_different(consumption_record, record):
-            if self._should_update(consumption_record, record):
-                consumption_record.value = record["value"]
-                consumption_record.estimated = record["estimated"]
-                consumption_record.save()
-
-                return self._serialize(consumption_record, status="updated")
-            else:
-                return self._serialize(consumption_record, status="unchanged - update not valid")
-        else:
-            return self._serialize(consumption_record, status="unchanged - same record")
-
-    def _serialize(self, consumption_record, status):
-        """ Serialize consumption record and add sync status
-        """
-        data = self.get_serializer_class()(consumption_record).data
-        data["status"] = status
-        return data
-
-    def _is_different(self, existing_consumption_record, new_record_data):
-        value_different = existing_consumption_record.value != new_record_data["value"]
-        estimated_different = existing_consumption_record.estimated != new_record_data["estimated"]
-        return value_different or estimated_different
-
-    def _should_update(self, existing_consumption_record, new_record_data):
-        """ Returns True if existing_consumption_record should be updated with
-        value and estimated from new_record_data.
-        """
-        return True
-
-    def _parse_record(self, record):
-        record["start"] = datetime.strptime(record["start"], "%Y-%m-%dT%H:%M:%S%z")
+    def _parse_record(self, record, foreign_objects):
+        record["start"] = parse_datetime(record["start"])
         return record
 
 class ProjectFilter(django_filters.FilterSet):
@@ -226,12 +328,13 @@ class ProjectFilter(django_filters.FilterSet):
         return queryset.filter(pk__in=project_set)
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectFilter
     queryset = models.Project.objects.all().order_by('pk')
+    sync_serializer_class = serializers.ProjectSerializer
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
@@ -256,6 +359,58 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 return serializers.ProjectWithMeterRunsSerializer
             else:
                 return serializers.ProjectSerializer
+
+    def _sync_route_docstring(self):
+        return """
+        `POST /api/v1/projects/sync/`
+
+        Expects records like the following::
+
+            [
+                {
+                    "project_id": "ID_1",
+                    "project_owner_id": 1,
+                    "zipcode": "01234",
+                    "weather_station": "012345",
+                    "latitude": 89.0,
+                    "longitude": -42.0,
+                    "baseline_period_end": datetime(2015, 1, 1),
+                    "reporting_period_start": datetime(2015, 2, 1),
+                },
+                ...
+            ]
+
+        """
+
+
+    def _create_properties(self):
+        self.attributes = [
+            "project_owner_id",
+            "zipcode",
+            "latitude",
+            "longitude",
+            "weather_station",
+            "baseline_period_end",
+            "reporting_period_start",
+        ]
+
+    def _find_foreign_objects(self, record):
+        return {}
+
+    def _get_fields(self, record, foreign_objects):
+        return {
+            "project_id": record["project_id"],
+        }
+
+    def _error_fields(self, record, foreign_objects):
+        return {
+            "project_id": record["project_id"],
+        }
+
+    def _parse_record(self, record, foreign_objects):
+        record["baseline_period_end"] = parse_datetime(record["baseline_period_end"])
+        record["reporting_period_start"] = parse_datetime(record["reporting_period_start"])
+        return record
 
 
 class MeterRunFilter(django_filters.FilterSet):
@@ -329,13 +484,53 @@ class ProjectAttributeKeyFilter(django_filters.FilterSet):
         fields = ['name', 'data_type']
 
 
-class ProjectAttributeKeyViewSet(viewsets.ModelViewSet):
+class ProjectAttributeKeyViewSet(SyncMixin, viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     serializer_class = serializers.ProjectAttributeKeySerializer
     queryset = models.ProjectAttributeKey.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectAttributeKeyFilter
+    sync_serializer_class = serializers.ProjectAttributeKeySerializer
+
+    def _sync_route_docstring(self):
+        return """
+        `POST /api/v1/project_attribute_keys/sync/`
+
+        Expects records like the following::
+
+            [
+                {
+                    "name": "project_cost",
+                    "display_name": "Project Cost",
+                    "data_type": 100.0,
+                },
+                ...
+            ]
+
+        """
+
+    def _create_properties(self):
+        self.attributes = [
+            "display_name",
+            "data_type",
+        ]
+
+    def _find_foreign_objects(self, record):
+        return {}
+
+    def _get_fields(self, record, foreign_objects):
+        return {
+            "name": record["name"],
+        }
+
+    def _error_fields(self, record, foreign_objects):
+        return {
+            "name": record["name"],
+        }
+
+    def _parse_record(self, record, foreign_objects):
+        return record
 
 
 class ProjectAttributeFilter(django_filters.FilterSet):
@@ -345,15 +540,100 @@ class ProjectAttributeFilter(django_filters.FilterSet):
         fields = ['key', 'project']
 
 
-class ProjectAttributeViewSet(viewsets.ModelViewSet):
+class ProjectAttributeViewSet(SyncMixin, viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
     queryset = models.ProjectAttribute.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectAttributeFilter
+    sync_serializer_class = serializers.ProjectAttributeValueSerializer
 
     def get_serializer_class(self):
         if self.request.method == "GET":
             return serializers.ProjectAttributeValueSerializer
         else:
             return serializers.ProjectAttributeSerializer
+
+    def _sync_route_docstring(self):
+        return """
+        `POST /api/v1/project_attributes/sync/`
+
+        Expects records like the following::
+
+            [
+                {
+                    "project_project_id": "ID_1",
+                    "project_attribute_key_name": "project_cost",
+                    "value": 100.0,
+                },
+                ...
+            ]
+
+        """
+
+    def _create_properties(self):
+
+        self.attributes = [
+            "boolean_value",
+            "char_value",
+            "date_value",
+            "datetime_value",
+            "float_value",
+            "integer_value",
+        ]
+
+        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
+        self.project_attribute_key_dict = {pak.name: pak for pak in models.ProjectAttributeKey.objects.all()}
+
+    def _find_foreign_objects(self, record):
+
+        project = self.project_dict.get(record["project_project_id"])
+        if project is None:
+            return {
+                "status": "error - no Project found",
+                "project_project_id": record["project_project_id"],
+            }
+
+        key = self.project_attribute_key_dict.get(record["project_attribute_key_name"])
+        if key is None:
+            return {
+                "status": "error - no ProjectAttributeKey found",
+                "project_attribute_key_name": record["project_attribute_key_name"],
+            }
+
+        return {"key": key, "project": project}
+
+    def _get_fields(self, record, foreign_objects):
+        return {
+            "project": foreign_objects["project"],
+            "key": foreign_objects["key"],
+        }
+
+    def _error_fields(self, record, foreign_objects):
+        return {
+            "project_project_id": record["project_project_id"],
+            "project_attribute_key_name": record["project_attribute_key_name"],
+        }
+
+    def _parse_record(self, record, foreign_objects):
+        key = foreign_objects["key"]
+        value = record.pop("value")
+        record["boolean_value"] = None
+        record["char_value"] = None
+        record["date_value"] = None
+        record["datetime_value"] = None
+        record["float_value"] = None
+        record["integer_value"] = None
+        if key.data_type == "BOOLEAN":
+            record["boolean_value"] = value
+        elif key.data_type == "CHAR":
+            record["char_value"] = value
+        elif key.data_type == "DATE":
+            record["date_value"] = value
+        elif key.data_type == "DATETIME":
+            record["datetime_value"] = value
+        elif key.data_type == "FLOAT":
+            record["float_value"] = value
+        elif key.data_type == "INTEGER":
+            record["integer_value"] = value
+        return record

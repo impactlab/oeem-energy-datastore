@@ -273,7 +273,7 @@ class Project(models.Model):
 
 @python_2_unicode_compatible
 class ProjectAttributeKey(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     display_name = models.CharField(max_length=100)
     data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
