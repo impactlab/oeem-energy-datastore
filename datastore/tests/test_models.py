@@ -111,7 +111,7 @@ class ProjectAttributesTestCase(TestCase):
         )
 
         boolean_project_attribute_key = models.ProjectAttributeKey.objects.create(
-            name="NAME",
+            name="NAME1",
             display_name="DISPLAYNAME",
             data_type="BOOLEAN",
         )
@@ -122,7 +122,7 @@ class ProjectAttributesTestCase(TestCase):
         )
 
         char_project_attribute_key = models.ProjectAttributeKey.objects.create(
-            name="NAME",
+            name="NAME2",
             display_name="DISPLAYNAME",
             data_type="CHAR",
         )
@@ -133,7 +133,7 @@ class ProjectAttributesTestCase(TestCase):
         )
 
         date_project_attribute_key = models.ProjectAttributeKey.objects.create(
-            name="NAME",
+            name="NAME3",
             display_name="DISPLAYNAME",
             data_type="DATE",
         )
@@ -144,7 +144,7 @@ class ProjectAttributesTestCase(TestCase):
         )
 
         datetime_project_attribute_key = models.ProjectAttributeKey.objects.create(
-            name="NAME",
+            name="NAME4",
             display_name="DISPLAYNAME",
             data_type="DATETIME",
         )
@@ -155,7 +155,7 @@ class ProjectAttributesTestCase(TestCase):
         )
 
         float_project_attribute_key = models.ProjectAttributeKey.objects.create(
-            name="NAME",
+            name="NAME5",
             display_name="DISPLAYNAME",
             data_type="FLOAT",
         )
@@ -166,7 +166,7 @@ class ProjectAttributesTestCase(TestCase):
         )
 
         integer_project_attribute_key = models.ProjectAttributeKey.objects.create(
-            name="NAME",
+            name="NAME6",
             display_name="DISPLAYNAME",
             data_type="INTEGER",
         )
