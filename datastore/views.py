@@ -20,15 +20,30 @@ default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
 
 def projects_filter(queryset, value):
+    """Project filter for non-project views"""
+    return _filter_projects(queryset, value, "project__in")
+
+def _filter_projects(queryset, value, attr):
     """
     Restrict to '+' (http for <space>) separated list of projects.
     """
-    try:
-        project_set = set(int(p) for p in value.split())
-    except ValueError:
-        project_set = set()
-    return queryset.filter(project__in=project_set)
 
+    project_set = set()
+    for part in value.split():
+        part_set = _parse_part(part)
+        project_set |= part_set
+
+    return queryset.filter(**{attr: project_set})
+
+def _parse_part(part):
+    try:
+        return set([int(part)])
+    except ValueError:
+        parts = part.split("-")
+        if len(parts) == 2:
+            return set(range(int(parts[0]), int(parts[1]) + 1))
+        else:
+            return set()
 
 class SyncMixin(object):
 
@@ -321,12 +336,7 @@ class ProjectFilter(django_filters.FilterSet):
         """
         Restrict to '+' (http for <space>) separated list of projects.
         """
-        try:
-            project_set = set(int(p) for p in value.split())
-        except ValueError:
-            project_set = set()
-        return queryset.filter(pk__in=project_set)
-
+        return _filter_projects(queryset, value, "pk__in")
 
 class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
 
