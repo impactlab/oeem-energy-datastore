@@ -5,8 +5,6 @@ import json
 class ProjectAPITestCase(OAuthTestCase):
 
     def test_project_create_read(self):
-        auth_headers = { "Authorization": "Bearer " + "tokstr" }
-
         project_data = {
                 "project_owner": self.project_owner.id,
                 "project_id": "PROJECT_ID",
@@ -20,8 +18,7 @@ class ProjectAPITestCase(OAuthTestCase):
                 "longitude": 0.0,
                 }
 
-        data = json.dumps(project_data)
-        response = self.client.post('/api/v1/projects/', data, content_type="application/json", **auth_headers)
+        response = self.post('/api/v1/projects/', project_data)
         assert response.status_code == 201
 
         assert isinstance(response.data['id'], int)
@@ -38,7 +35,7 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['longitude'] == 0.0
 
         project_id = response.data['id']
-        response = self.client.get('/api/v1/projects/{}/'.format(project_id), **auth_headers)
+        response = self.get('/api/v1/projects/{}/'.format(project_id))
         assert response.status_code == 200
 
         assert response.data['id'] == project_id

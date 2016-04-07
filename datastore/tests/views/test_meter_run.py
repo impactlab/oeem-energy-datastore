@@ -26,17 +26,17 @@ class MeterRunAPITestCase(OAuthTestCase):
         project = get_example_project(zipcode)
 
         self.project = models.Project(
-                project_owner=self.project_owner,
-                project_id="TEST_PROJECT",
-                baseline_period_start=project.baseline_period.start,
-                baseline_period_end=project.baseline_period.end,
-                reporting_period_start=project.reporting_period.start,
-                reporting_period_end=project.reporting_period.end,
-                zipcode=None,
-                weather_station=project.location.station,
-                latitude=None,
-                longitude=None,
-                )
+            project_owner=self.project_owner,
+            project_id="TEST_PROJECT",
+            baseline_period_start=project.baseline_period.start,
+            baseline_period_end=project.baseline_period.end,
+            reporting_period_start=project.reporting_period.start,
+            reporting_period_end=project.reporting_period.end,
+            zipcode=None,
+            weather_station=project.location.station,
+            latitude=None,
+            longitude=None,
+        )
         self.project.save()
 
         fuel_types = {"electricity": "E", "natural_gas": "NG"}
@@ -67,11 +67,9 @@ class MeterRunAPITestCase(OAuthTestCase):
         """
         Tests reading meter run data.
         """
-        auth_headers = { "Authorization": "Bearer " + "tokstr" }
-
         for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
 
-            response = self.client.get('/api/v1/meter_runs/{}/'.format(meter_run.id), **auth_headers)
+            response = self.get('/api/v1/meter_runs/{}/'.format(meter_run.id))
             assert response.status_code == 200
             assert response.data["project"] == self.project.id
             assert response.data["consumption_metadata"] == consumption_metadata.id
