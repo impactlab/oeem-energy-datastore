@@ -19,6 +19,7 @@ from datetime import timedelta, datetime
 import numpy as np
 import json
 from collections import defaultdict
+import itertools
 
 FUEL_TYPE_CHOICES = [
     ('E', 'electricity'),
@@ -54,7 +55,6 @@ class ProjectOwner(models.Model):
 
     def __str__(self):
         return u'ProjectOwner {}'.format(self.user.username)
-
 
 @python_2_unicode_compatible
 class Project(models.Model):
@@ -256,19 +256,59 @@ class Project(models.Model):
                 monthly_average_usage_reporting.save()
 
         return meter_runs
+    
+    @staticmethod
+    def recent_meter_runs(project_pks=[]):
 
-    def recent_meter_runs(self):
-        consumption_metadatas = self.consumptionmetadata_set.all()
-        meter_runs = []
-        for cm in consumption_metadatas:
-            try:
-                meter_runs.append(cm.meterrun_set.latest('added'))
-            except MeterRun.DoesNotExist:
-                pass
-        return meter_runs
+        from django.db import connection
+        cursor = connection.cursor()
+
+        meter_runs = ''' 
+          SELECT DISTINCT ON (consumption.id)
+            project.id,
+            consumption.id,
+            meter.*,
+            consumption.fuel_type
+          FROM datastore_meterrun AS meter
+          JOIN datastore_consumptionmetadata AS consumption
+            ON meter.consumption_metadata_id = consumption.id
+          JOIN datastore_project AS project
+            ON meter.project_id = project.id
+        '''
+        
+        qargs = []
+
+        if project_pks:
+            meter_runs = ''' 
+              {}
+              WHERE project.id IN %s
+            '''.format(meter_runs)
+            qargs.append(tuple(project_pks))
+
+        meter_runs = ''' 
+          {}
+          ORDER BY consumption.id,
+            meter.added DESC
+        '''.format(meter_runs)
+        
+        cursor.execute(meter_runs, qargs)
+        
+        meterrun_columns = [col[0] for col in cursor.description[2:-1]]
+        
+        results = {}
+        for consumption_id, rows in itertools.groupby(cursor.fetchall(), key=lambda x: x[1]):
+            
+            grouped_rows = list(rows)
+            results[grouped_rows[0][0]] = [{
+                'meterrun': MeterRun(**dict(zip(meterrun_columns, row[2:-1]))),
+                'fuel_type': row[-1]
+            } for row in grouped_rows]
+
+        return results
 
     def attributes(self):
         return self.projectattribute_set.all()
+
 
 
 @python_2_unicode_compatible
