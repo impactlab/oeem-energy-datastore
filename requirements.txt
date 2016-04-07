@@ -9,8 +9,8 @@ django-filter
 django-oauth-toolkit
 django-sslserver
 djangorestframework
-eemeter
-pandas
+eemeter>=0.3.9
+pandas>=0.18
 psycopg2
 pytest-django
 requests

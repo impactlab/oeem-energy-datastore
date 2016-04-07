@@ -1,10 +1,9 @@
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissionsOrAnonReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
-from rest_framework.parsers import BaseParser
 
 import django_filters
 from django.db import IntegrityError
@@ -17,12 +16,8 @@ from . import serializers
 from collections import defaultdict
 from datetime import datetime
 
-from django.conf import settings
+default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
-if settings.DEBUG:
-    default_permissions_classes = [DjangoModelPermissionsOrAnonReadOnly]
-else:
-    default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
 
 def projects_filter(queryset, value):
     """Project filter for non-project views"""
@@ -345,32 +340,11 @@ class ProjectFilter(django_filters.FilterSet):
 
 class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
 
-    # parser_classes = (ProjectViewSetParser,)
     permission_classes = default_permissions_classes
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectFilter
     queryset = models.Project.objects.all().order_by('pk')
     sync_serializer_class = serializers.ProjectSerializer
-
-    def get_queryset(self):
-        return models.Project.objects.all()\
-                                     .prefetch_related('consumptionmetadata_set')\
-                                     .prefetch_related('projectattribute_set')\
-                                     .order_by('pk')
-
-
-    def get_serializer(self, *args, **kwargs):
-        context = {'project_ids': []}
-        queryset = self.get_queryset()
-
-        if hasattr(self.request, 'query_params'):
-
-            if self.request.query_params.get('projects'):
-                context['project_ids'] = self.request.query_params['projects'].split(' ')
-                queryset = queryset.filter(pk__in=context['project_ids'])
-
-        serializer_class = self.get_serializer_class()
-        return serializer_class(queryset, context=context, many=True)
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):

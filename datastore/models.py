@@ -313,7 +313,7 @@ class Project(models.Model):
 
 @python_2_unicode_compatible
 class ProjectAttributeKey(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     display_name = models.CharField(max_length=100)
     data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
@@ -477,6 +477,9 @@ class ConsumptionMetadata(models.Model):
         unit_name = dict(ENERGY_UNIT_CHOICES)[self.energy_unit]
         consumption_data = EEMeterConsumptionData(records, fuel_type=fuel_type,
                 unit_name=unit_name, record_type="arbitrary_start")
+        if consumption_data.data.shape[0] > 2:
+            if consumption_data.data.index[1] - consumption_data.data.index[0] < timedelta(days=1):
+                consumption_data.data = consumption_data.data.resample('D').sum()
         return consumption_data
 
     def __str__(self):
@@ -499,6 +502,9 @@ class ConsumptionRecord(models.Model):
 
     def eemeter_record(self):
         return {"start": self.start, "value": self.value, "estimated": self.estimated }
+
+    def value_clean(self):
+        return _json_clean(self.value)
 
 
 @python_2_unicode_compatible
@@ -656,6 +662,8 @@ class DailyUsageSummaryActual(models.Model):
     class Meta:
         ordering = ['date']
 
+    def value_clean(self):
+        return _json_clean(self.value)
 
 @python_2_unicode_compatible
 class DailyUsageSummaryReporting(models.Model):

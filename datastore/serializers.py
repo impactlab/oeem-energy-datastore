@@ -178,9 +178,16 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
 
 class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
+    value = serializers.FloatField(source='value_clean')
+
     class Meta:
         model = models.ConsumptionRecord
         fields = ('id', 'start', 'value', 'estimated', 'metadata',)
+
+    def create(self, validated_data):
+        value_clean = validated_data.pop('value_clean')
+        validated_data["value"] = value_clean
+        return models.ConsumptionRecord.objects.create(**validated_data)
 
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
@@ -341,6 +348,7 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
             'attributes',
         )
 
+
 class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
 
     recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
@@ -361,6 +369,7 @@ class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
             'longitude',
             'recent_meter_runs',
         )
+
 
 class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
 
@@ -424,6 +433,7 @@ class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
 
         
         return ret
+
 
 
 class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
