@@ -349,6 +349,8 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
 
 class ProjectMeterRunMixin(object):
 
+    include_monthly = False
+
     def to_representation(self, instance):
 
         # get fields in the usual way.
@@ -368,7 +370,10 @@ class ProjectMeterRunMixin(object):
         except KeyError:
             ret['recent_meter_runs'] = []
         else:
-            serializer = MeterRunSummarySerializer(read_only=True)
+            if self.include_monthly:
+                serializer = MeterRunMonthlySerializer(read_only=True)
+            else:
+                serializer = MeterRunSummarySerializer(read_only=True)
 
             recent_meter_runs = []
 
@@ -426,9 +431,10 @@ class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,
         )
 
 
-class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
+class ProjectWithMonthlyMeterRunsSerializer(ProjectMeterRunMixin, serializers.ModelSerializer):
 
-    recent_meter_runs = MeterRunMonthlySerializer(many=True, read_only=True)
+    # recent_meter_runs = MeterRunMonthlySerializer(many=True, read_only=True)
+    include_monthly = True
 
     class Meta:
         model = models.Project
@@ -440,5 +446,5 @@ class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
             'baseline_period_end',
             'reporting_period_start',
             'reporting_period_end',
-            'recent_meter_runs',
+            #'recent_meter_runs',
         )
