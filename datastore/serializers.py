@@ -433,7 +433,6 @@ class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,
 
 class ProjectWithMonthlyMeterRunsSerializer(ProjectMeterRunMixin, serializers.ModelSerializer):
 
-    # recent_meter_runs = MeterRunMonthlySerializer(many=True, read_only=True)
     include_monthly = True
 
     class Meta:
@@ -446,5 +445,4 @@ class ProjectWithMonthlyMeterRunsSerializer(ProjectMeterRunMixin, serializers.Mo
             'baseline_period_end',
             'reporting_period_start',
             'reporting_period_end',
-            #'recent_meter_runs',
         )
