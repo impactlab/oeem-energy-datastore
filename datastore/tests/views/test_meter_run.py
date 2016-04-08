@@ -12,6 +12,7 @@ from eemeter.evaluation import Period
 from datetime import datetime
 
 import json
+import pytz
 
 class MeterRunAPITestCase(OAuthTestCase):
 
@@ -22,41 +23,47 @@ class MeterRunAPITestCase(OAuthTestCase):
         """
         super(MeterRunAPITestCase,self).setUp()
 
-        zipcode = "91104"
-        project = get_example_project(zipcode)
-
-        self.project = models.Project(
-            project_owner=self.project_owner,
-            project_id="TEST_PROJECT",
-            baseline_period_start=project.baseline_period.start,
-            baseline_period_end=project.baseline_period.end,
-            reporting_period_start=project.reporting_period.start,
-            reporting_period_end=project.reporting_period.end,
-            zipcode=None,
-            weather_station=project.location.station,
-            latitude=None,
-            longitude=None,
+        self.project = models.Project.objects.create(
+            project_owner=self.user.projectowner,
+            project_id="PROJECT_ID",
+            baseline_period_start=None,
+            baseline_period_end=datetime(2012, 1, 1, tzinfo=pytz.UTC),
+            reporting_period_start=datetime(2012, 2, 1, tzinfo=pytz.UTC),
+            reporting_period_end=None,
+            zipcode="91104",
+            weather_station="722880",
+            latitude=0,
+            longitude=0,
         )
-        self.project.save()
 
-        fuel_types = {"electricity": "E", "natural_gas": "NG"}
-        energy_units = {"kWh": "KWH", "therm": "THM"}
+        elec = models.ConsumptionMetadata.objects.create(
+            project=self.project,
+            fuel_type="E",
+            energy_unit="KWH",
+        )
 
-        self.consumption_metadatas = []
-        for consumption_data in project.consumption:
-            consumption_metadata = models.ConsumptionMetadata(
-                    project=self.project,
-                    fuel_type=fuel_types[consumption_data.fuel_type],
-                    energy_unit=energy_units[consumption_data.unit_name])
-            consumption_metadata.save()
-            self.consumption_metadatas.append(consumption_metadata)
+        gas = models.ConsumptionMetadata.objects.create(
+            project=self.project,
+            fuel_type="NG",
+            energy_unit="THM",
+        )
 
-            for record in consumption_data.records(record_type="arbitrary_start"):
-                record = models.ConsumptionRecord(metadata=consumption_metadata,
-                    start=record["start"].isoformat(),
-                    value=record["value"],
-                    estimated=False)
-                record.save()
+        self.consumption_metadatas = [elec, gas]
+
+        for i in range(0, 1000, 30):
+            models.ConsumptionRecord.objects.create(
+                metadata=elec,
+                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                value=1.0,
+                estimated=False,
+            )
+
+            models.ConsumptionRecord.objects.create(
+                metadata=gas,
+                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                value=1.0,
+                estimated=False,
+            )
 
         ## Attempt to run the meter
         self.project.run_meter(start_date=make_aware(datetime(2011,1,1)), end_date=make_aware(datetime(2015,1,1)))

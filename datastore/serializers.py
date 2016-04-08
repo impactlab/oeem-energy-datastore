@@ -5,8 +5,6 @@ from rest_framework_bulk import (
     BulkListSerializer,
     BulkSerializerMixin,
 )
-from rest_framework.relations import PKOnlyObject
-from rest_framework.fields import SkipField
 
 from . import models
 
@@ -349,9 +347,43 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
         )
 
 
-class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
+class ProjectMeterRunMixin(object):
 
-    recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
+    def to_representation(self, instance):
+
+        # get fields in the usual way.
+        ret = serializers.Serializer.to_representation(self, instance)
+
+        # get meter runs
+        if not hasattr(self, 'meterruns'):
+            kwargs = {
+                'project_pks' : self.context.get('project_ids')
+            }
+
+            self.meterruns = instance.recent_meter_runs(**kwargs)
+
+        # create recent_meter_run field on each instance
+        try:
+            instance_meter_runs = self.meterruns[instance.id]
+        except KeyError:
+            ret['recent_meter_runs'] = []
+        else:
+            serializer = MeterRunSummarySerializer(read_only=True)
+
+            recent_meter_runs = []
+
+            for data in instance_meter_runs:
+                meterrun = serializer.to_representation(data['meterrun'])
+                meterrun.update({'fuel_type': data['fuel_type']})
+                recent_meter_runs.append(meterrun)
+
+            ret['recent_meter_runs'] = recent_meter_runs
+
+        return ret
+
+
+class ProjectWithMeterRunsSerializer(ProjectMeterRunMixin,
+        serializers.ModelSerializer):
 
     class Meta:
         model = models.Project
@@ -367,14 +399,15 @@ class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
             'weather_station',
             'latitude',
             'longitude',
-            'recent_meter_runs',
         )
 
 
-class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
+class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,
+        serializers.ModelSerializer):
 
-    attributes = ProjectAttributeValueEmbeddedSerializer(many=True, read_only=True)
-    
+    attributes = ProjectAttributeValueEmbeddedSerializer(many=True,
+                                                         read_only=True)
+
     class Meta:
         model = models.Project
         fields = (
@@ -391,49 +424,6 @@ class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
             'longitude',
             'attributes',
         )
-    
-    def to_representation(self, instance):
-        
-        if not hasattr(self, 'meterruns'):
-            kwargs = {
-                'project_pks' : self.context.get('project_ids')
-            }
-            
-            self.meterruns = instance.recent_meter_runs(**kwargs)
-        
-        ret = OrderedDict()
-        
-        fields = self._readable_fields
-
-        for field in fields:
-            try:
-                attribute = field.get_attribute(instance)
-            except SkipField:
-                continue
-
-            check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
-            if check_for_none is None:
-                ret[field.field_name] = None
-            else:
-                ret[field.field_name] = field.to_representation(attribute)
-        
-        try:
-            serializer = MeterRunSummarySerializer(read_only=True)
-            
-            recent_meter_runs = []
-            
-            for data in self.meterruns[instance.id]:
-                meterrun = serializer.to_representation(data['meterrun'])
-                meterrun.update({'fuel_type': data['fuel_type']})
-                recent_meter_runs.append(meterrun)
-
-            ret['recent_meter_runs'] = recent_meter_runs
-        except KeyError:
-            ret['recent_meter_runs'] = []
-
-        
-        return ret
-
 
 
 class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):

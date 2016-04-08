@@ -1,4 +1,8 @@
-from rest_framework.permissions import IsAuthenticated, DjangoModelPermissionsOrAnonReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated,
+    DjangoModelPermissionsOrAnonReadOnly,
+    BasePermission
+)
 from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -360,17 +364,21 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
 
 
     def get_serializer(self, *args, **kwargs):
-        context = {'project_ids': []}
         queryset = self.get_queryset()
+
+        serializer_class = self.get_serializer_class()
+        kwargs['context'] = self.get_serializer_context()
 
         if hasattr(self.request, 'query_params'):
 
             if self.request.query_params.get('projects'):
-                context['project_ids'] = self.request.query_params['projects'].split(' ')
-                queryset = queryset.filter(pk__in=context['project_ids'])
+                projects = self.request.query_params['projects']
+                queryset = _filter_projects(queryset, projects, "pk__in")
+                kwargs['context']['project_ids'] = [p.pk for p in queryset]
+        else:
+            kwargs['context']['project_ids'] = []
 
-        serializer_class = self.get_serializer_class()
-        return serializer_class(queryset, context=context, many=True)
+        return serializer_class(*args, **kwargs) #data=queryset, context=context, many=True)
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):

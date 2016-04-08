@@ -14,8 +14,9 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.views.generic.base import RedirectView
-from django.conf.urls import include, url
+from django.conf.urls import include, url, patterns
 from django.contrib import admin
+from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from datastore import views as datastore_views
 
@@ -37,3 +38,9 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
     url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += patterns('',
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    )

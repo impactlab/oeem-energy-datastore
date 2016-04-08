@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from datastore import models
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import eemeter.project
 import eemeter.evaluation
@@ -23,15 +23,30 @@ class ProjectTestCase(TestCase):
         self.complete_project = models.Project.objects.create(
             project_owner=self.user.projectowner,
             project_id="PROJECTID_2",
-            baseline_period_start=datetime(2000, 1, 1, tzinfo=pytz.UTC),
-            baseline_period_end=datetime(2001, 1, 1, tzinfo=pytz.UTC),
-            reporting_period_start=datetime(2002, 1, 1, tzinfo=pytz.UTC),
-            reporting_period_end=datetime(2003, 1, 1, tzinfo=pytz.UTC),
-            zipcode="ZIPCODE",
-            weather_station="WEATHERSTA",
+            baseline_period_start=None,
+            baseline_period_end=datetime(2012, 1, 1, tzinfo=pytz.UTC),
+            reporting_period_start=datetime(2012, 2, 1, tzinfo=pytz.UTC),
+            reporting_period_end=None,
+            zipcode="91104",
+            weather_station="722880",
             latitude=0,
             longitude=0,
         )
+
+        consumptionmetadata = models.ConsumptionMetadata.objects.create(
+            project=self.complete_project,
+            fuel_type="E",
+            energy_unit="KWH",
+        )
+
+        for i in range(0, 700, 30):
+            models.ConsumptionRecord.objects.create(
+                metadata=consumptionmetadata,
+                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                value=1.0,
+                estimated=False,
+            )
+
 
     def test_attributes(self):
         attributes = [
@@ -77,16 +92,27 @@ class ProjectTestCase(TestCase):
 
         complete_eemeter_project, cm_ids = self.complete_project.eemeter_project()
         assert isinstance(complete_eemeter_project, eemeter.project.Project)
-        assert cm_ids == []
+        assert len(cm_ids) == 1
 
-    def test_run_meter(self):
+    def test_run_meter_recent_meter_runs(self):
+
+        meter_runs = models.Project.recent_meter_runs()
+        assert meter_runs == {}
 
         self.empty_project.run_meter()
         self.complete_project.run_meter()
 
-    def test_recent_meter_runs(self):
-        meter_runs = self.empty_project.recent_meter_runs()
-        assert meter_runs == []
+        meter_runs = list(models.Project.recent_meter_runs().items())
+        assert len(meter_runs) == 1
 
-        meter_runs = self.complete_project.recent_meter_runs()
-        assert meter_runs == []
+        meter_run = meter_runs[0]
+        assert isinstance(meter_run[0], int)
+        assert meter_run[1][0]["fuel_type"] == "E"
+        assert meter_run[1][0]["meterrun"] is not None
+
+        self.complete_project.run_meter()
+
+        meter_runs = list(models.Project.recent_meter_runs().items())
+        assert len(meter_runs) == 1
+
+        self.complete_project.meterrun_set.all().delete()

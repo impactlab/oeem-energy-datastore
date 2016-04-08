@@ -40,6 +40,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django_pdb.middleware.PdbMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 )
 
 ROOT_URLCONF = 'oeem_energy_datastore.urls'
@@ -141,3 +142,6 @@ SWAGGER_SETTINGS = {
     'base_path': '{}/docs'.format(os.environ["SERVER_NAME"]),
     'protocol': os.environ["PROTOCOL"],
 }
+
+DEBUG_TOOLBAR_PATCH_SETTINGS = False
+INTERNAL_IPS = ['0.0.0.0', '127.0.0.1', 'localhost']

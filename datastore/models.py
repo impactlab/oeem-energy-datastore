@@ -256,14 +256,14 @@ class Project(models.Model):
                 monthly_average_usage_reporting.save()
 
         return meter_runs
-    
+
     @staticmethod
     def recent_meter_runs(project_pks=[]):
 
         from django.db import connection
         cursor = connection.cursor()
 
-        meter_runs = ''' 
+        meter_runs = '''
           SELECT DISTINCT ON (consumption.id)
             project.id,
             consumption.id,
@@ -275,29 +275,29 @@ class Project(models.Model):
           JOIN datastore_project AS project
             ON meter.project_id = project.id
         '''
-        
+
         qargs = []
 
         if project_pks:
-            meter_runs = ''' 
+            meter_runs = '''
               {}
               WHERE project.id IN %s
             '''.format(meter_runs)
             qargs.append(tuple(project_pks))
 
-        meter_runs = ''' 
+        meter_runs = '''
           {}
           ORDER BY consumption.id,
             meter.added DESC
         '''.format(meter_runs)
-        
+
         cursor.execute(meter_runs, qargs)
-        
+
         meterrun_columns = [col[0] for col in cursor.description[2:-1]]
-        
+
         results = {}
         for consumption_id, rows in itertools.groupby(cursor.fetchall(), key=lambda x: x[1]):
-            
+
             grouped_rows = list(rows)
             results[grouped_rows[0][0]] = [{
                 'meterrun': MeterRun(**dict(zip(meterrun_columns, row[2:-1]))),

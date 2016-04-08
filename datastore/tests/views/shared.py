@@ -1,5 +1,5 @@
 from django.utils.timezone import now, timedelta
-from django.test import Client, TestCase, RequestFactory
+from django.test import Client, TestCase
 from django.contrib.auth.models import User
 from oauth2_provider.models import AccessToken, get_application_model
 
@@ -12,11 +12,9 @@ class OAuthTestCase(TestCase):
 
     def setUp(self):
         """
-        Sets up the test cases. Includes a client,
-        factory, a demo user, project owners, an application model
-        and finally, a Oauth token.
+        Includes a client, a demo user/project_owner, an application model
+        and an Oauth token.
         """
-        self.factory = RequestFactory()
         self.client = Client()
         self.user = User.objects.create_user("username", "user@example.com", "123456")
         self.project_owner = self.user.projectowner
@@ -49,9 +47,9 @@ class OAuthTestCase(TestCase):
         """
         self.user.delete()
         self.project_owner.delete()
+        self.project.delete()
         self.app.delete()
         self.token.delete()
-        self.project.delete()
 
     def post(self, url, data):
         return self.client.post(url, json.dumps(data),
