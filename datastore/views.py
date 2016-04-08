@@ -360,6 +360,7 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         return models.Project.objects.all()\
                                      .prefetch_related('consumptionmetadata_set')\
                                      .prefetch_related('projectattribute_set')\
+                                     .prefetch_related('projectattribute_set__key')\
                                      .order_by('pk')
 
 
@@ -490,9 +491,13 @@ class MeterRunFilter(django_filters.FilterSet):
 class MeterRunViewSet(viewsets.ModelViewSet):
 
     permission_classes = default_permissions_classes
-    queryset = models.MeterRun.objects.all().order_by('pk')
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = MeterRunFilter
+
+    def get_queryset(self):
+        return models.MeterRun.objects.all()\
+                                     .prefetch_related('consumption_metadata')\
+                                     .order_by('pk')
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
