@@ -24,6 +24,7 @@ We recommend using virtualenv (or virtualenvwrapper) to manage python packages
 
     mkvirtualenv oeem-energy-datastore
     pip install -r requirements.txt
+    pip install -r dev-requirements.txt
 
 #### Create the database
 

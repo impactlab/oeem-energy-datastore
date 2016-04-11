@@ -27,9 +27,6 @@ INSTALLED_APPS = (
     'datastore',
 )
 
-if DEBUG:
-    INSTALLED_APPS += ('debug_toolbar',)
-
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -141,3 +138,12 @@ SWAGGER_SETTINGS = {
     'base_path': '{}/docs'.format(os.environ["SERVER_NAME"]),
     'protocol': os.environ["PROTOCOL"],
 }
+
+
+# DJANGO DEBUG TOOLBAR
+if DEBUG:
+    INSTALLED_APPS += ('debug_toolbar',)
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',) 
+    DEBUG_TOOLBAR_PATCH_SETTINGS = False
+    INTERNAL_IPS = ['0.0.0.0', '127.0.0.1', 'localhost']
+

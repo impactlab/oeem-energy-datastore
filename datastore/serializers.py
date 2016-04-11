@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from rest_framework import serializers
 from rest_framework_bulk import (
     BulkListSerializer,
@@ -115,7 +117,6 @@ class MeterRunSummarySerializer(serializers.ModelSerializer):
             'annual_savings',
             'cvrmse_baseline',
             'cvrmse_reporting',
-            'fuel_type',
         )
 
 
@@ -175,9 +176,16 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
 
 class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
+    value = serializers.FloatField(source='value_clean')
+
     class Meta:
         model = models.ConsumptionRecord
         fields = ('id', 'start', 'value', 'estimated', 'metadata',)
+
+    def create(self, validated_data):
+        value_clean = validated_data.pop('value_clean')
+        validated_data["value"] = value_clean
+        return models.ConsumptionRecord.objects.create(**validated_data)
 
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
@@ -338,9 +346,49 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
             'attributes',
         )
 
-class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
 
-    recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
+class ProjectMeterRunMixin(object):
+
+    include_monthly = False
+
+    def to_representation(self, instance):
+
+        # get fields in the usual way.
+        ret = serializers.Serializer.to_representation(self, instance)
+
+        # get meter runs
+        if not hasattr(self, 'meterruns'):
+            kwargs = {
+                'project_pks' : self.context.get('project_ids')
+            }
+
+            self.meterruns = instance.recent_meter_runs(**kwargs)
+
+        # create recent_meter_run field on each instance
+        try:
+            instance_meter_runs = self.meterruns[instance.id]
+        except KeyError:
+            ret['recent_meter_runs'] = []
+        else:
+            if self.include_monthly:
+                serializer = MeterRunMonthlySerializer(read_only=True)
+            else:
+                serializer = MeterRunSummarySerializer(read_only=True)
+
+            recent_meter_runs = []
+
+            for data in instance_meter_runs:
+                meterrun = serializer.to_representation(data['meterrun'])
+                meterrun.update({'fuel_type': data['fuel_type']})
+                recent_meter_runs.append(meterrun)
+
+            ret['recent_meter_runs'] = recent_meter_runs
+
+        return ret
+
+
+class ProjectWithMeterRunsSerializer(ProjectMeterRunMixin,
+        serializers.ModelSerializer):
 
     class Meta:
         model = models.Project
@@ -356,13 +404,14 @@ class ProjectWithMeterRunsSerializer(serializers.ModelSerializer):
             'weather_station',
             'latitude',
             'longitude',
-            'recent_meter_runs',
         )
 
-class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
 
-    recent_meter_runs = MeterRunSummarySerializer(many=True, read_only=True)
-    attributes = ProjectAttributeValueEmbeddedSerializer(many=True, read_only=True)
+class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,
+        serializers.ModelSerializer):
+
+    attributes = ProjectAttributeValueEmbeddedSerializer(many=True,
+                                                         read_only=True)
 
     class Meta:
         model = models.Project
@@ -378,13 +427,13 @@ class ProjectWithAttributesAndMeterRunsSerializer(serializers.ModelSerializer):
             'weather_station',
             'latitude',
             'longitude',
-            'recent_meter_runs',
             'attributes',
         )
 
-class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
 
-    recent_meter_runs = MeterRunMonthlySerializer(many=True, read_only=True)
+class ProjectWithMonthlyMeterRunsSerializer(ProjectMeterRunMixin, serializers.ModelSerializer):
+
+    include_monthly = True
 
     class Meta:
         model = models.Project
@@ -396,5 +445,4 @@ class ProjectWithMonthlyMeterRunsSerializer(serializers.ModelSerializer):
             'baseline_period_end',
             'reporting_period_start',
             'reporting_period_end',
-            'recent_meter_runs',
         )
