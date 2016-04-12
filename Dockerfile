@@ -16,7 +16,6 @@ VOLUME /srv/static
 RUN mkdir /code
 WORKDIR /code
 ADD requirements.txt /code/
-RUN conda install pandas=0.18.0
 RUN pip install -r requirements.txt
 ADD . /code/
 
