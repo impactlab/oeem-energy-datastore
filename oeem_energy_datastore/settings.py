@@ -35,8 +35,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django_pdb.middleware.PdbMiddleware',
 )
+
+if DEBUG:
+    MIDDLEWARE_CLASSES += 'django_pdb.middleware.PdbMiddleware'
 
 ROOT_URLCONF = 'oeem_energy_datastore.urls'
 
