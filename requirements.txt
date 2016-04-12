@@ -11,7 +11,6 @@ djangorestframework
 eemeter>=0.3.13
 pandas>=0.18
 psycopg2
-pytest-django
 requests
 sqlalchemy
 django-grappelli
