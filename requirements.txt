@@ -8,7 +8,7 @@ Django
 django-filter
 django-oauth-toolkit
 djangorestframework
-eemeter>=0.3.14
+eemeter>=0.3.15
 pandas>=0.18
 psycopg2
 requests
