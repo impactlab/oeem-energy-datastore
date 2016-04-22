@@ -38,7 +38,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 if DEBUG:
-    MIDDLEWARE_CLASSES += 'django_pdb.middleware.PdbMiddleware'
+    MIDDLEWARE_CLASSES += ('django_pdb.middleware.PdbMiddleware',)
 
 ROOT_URLCONF = 'oeem_energy_datastore.urls'
 
