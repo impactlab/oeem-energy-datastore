@@ -3,3 +3,6 @@
 venv
 *.log
 local_settings
+.cache/
+__pycache__/
+.ipynb_checkpoints/
