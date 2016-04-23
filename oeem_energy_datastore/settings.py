@@ -24,6 +24,7 @@ INSTALLED_APPS = (
     'rest_framework_swagger',
     'api_doc',
     'datastore',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -129,7 +130,7 @@ LOGGING = {
     }
 }
 
-BROKER_URL = 'amqp://guest:guest@{}:5672//'.format(os.environ["BROKER_HOST"])
+BROKER_URL = 'amqp://guest:guest@{}/'.format(os.environ["BROKER_HOST"])
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'

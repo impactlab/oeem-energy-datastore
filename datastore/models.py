@@ -74,12 +74,10 @@ class Project(models.Model):
     def __str__(self):
         return u'Project {}'.format(self.project_id)
 
-    @property
-    def baseline_period(self):
+    def eemeter_baseline_period(self):
         return Period(self.baseline_period_start, self.baseline_period_end)
 
-    @property
-    def reporting_period(self):
+    def eemeter_reporting_period(self):
         return Period(self.reporting_period_start, self.reporting_period_end)
 
     @property
@@ -89,17 +87,25 @@ class Project(models.Model):
         else:
             return None
 
-    def eemeter_project(self):
+    def eemeter_location(self):
         if self.lat_lng is not None:
             location = Location(lat_lng=self.lat_lng)
         elif self.weather_station is not None:
             location = Location(station=self.weather_station)
         else:
             location = Location(zipcode=self.zipcode)
-        consumption = [cm.eemeter_consumption_data() for cm in self.consumptionmetadata_set.all()]
-        consumption_metadata_ids = [cm.id for cm in self.consumptionmetadata_set.all()]
+        return location
 
-        project = EEMeterProject(location, consumption, self.baseline_period, self.reporting_period)
+    def eemeter_project(self):
+        location = self.eemeter_location()
+        cm_set = self.consumptionmetadata_set.all()
+        consumption = [cm.eemeter_consumption_data() for cm in cm_set]
+        consumption_metadata_ids = [cm.id for cm in cm_set]
+
+        baseline_period = self.eemeter_baseline_period()
+        reporting_period = self.eemeter_reporting_period()
+
+        project = EEMeterProject(location, consumption, baseline_period, reporting_period)
         return project, consumption_metadata_ids
 
     def run_meter(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
