@@ -11,7 +11,7 @@ from rest_framework_bulk import BulkModelViewSet
 from rest_framework.parsers import BaseParser
 
 import django_filters
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils.dateparse import parse_datetime
 
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
@@ -80,7 +80,8 @@ class SyncMixin(object):
         record = self._parse_record(record, foreign_objects)
 
         try:
-            obj, created = self._get_or_create(record, foreign_objects)
+            with transaction.atomic():
+                obj, created = self._get_or_create(record, foreign_objects)
         except KeyError as e:
             return self._serialize_error(record, "error - missing field", e, foreign_objects)
         except models.Project.MultipleObjectsReturned as e:
@@ -102,7 +103,8 @@ class SyncMixin(object):
                     setattr(obj, attr, record[attr])
 
                 try:
-                    obj.save()
+                    with transaction.atomic():
+                        obj.save()
                 except ValueError as e:
                     return self._serialize_error(record, "error - bad field value - update", e, foreign_objects)
                 except IntegrityError as e:
