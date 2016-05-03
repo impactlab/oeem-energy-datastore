@@ -5,11 +5,7 @@ from datastore import models
 class ProjectAttributeAPITestCase(OAuthTestCase):
 
     def setUp(self):
-        """
-        Setup methods for a eemeter run storage
-        engine.
-        """
-        super(ProjectAttributeAPITestCase,self).setUp()
+        super(ProjectAttributeAPITestCase, self).setUp()
 
         self.project_attribute_key = models.ProjectAttributeKey(
             name="project_cost",

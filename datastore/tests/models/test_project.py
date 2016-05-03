@@ -66,18 +66,18 @@ class ProjectTestCase(TestCase):
         for attribute in attributes:
             assert hasattr(self.empty_project, attribute)
 
-    def test_baseline_period(self):
-        empty_period = self.empty_project.baseline_period
+    def test_eemeter_baseline_period(self):
+        empty_period = self.empty_project.eemeter_baseline_period()
         assert isinstance(empty_period, eemeter.evaluation.Period)
 
-        complete_period = self.complete_project.baseline_period
+        complete_period = self.complete_project.eemeter_baseline_period()
         assert isinstance(complete_period, eemeter.evaluation.Period)
 
-    def test_reporting_period(self):
-        empty_period = self.empty_project.reporting_period
+    def test_eemeter_reporting_period(self):
+        empty_period = self.empty_project.eemeter_reporting_period()
         assert isinstance(empty_period, eemeter.evaluation.Period)
 
-        complete_period = self.complete_project.reporting_period
+        complete_period = self.complete_project.eemeter_reporting_period()
         assert isinstance(complete_period, eemeter.evaluation.Period)
 
     def test_lat_lng(self):
@@ -85,6 +85,13 @@ class ProjectTestCase(TestCase):
 
         lat_lng = self.complete_project.lat_lng
         assert len(lat_lng) == 2
+
+    def test_eemeter_location(self):
+        with self.assertRaises(ValueError):
+            self.empty_project.eemeter_location()
+
+        location = self.complete_project.eemeter_location()
+        assert isinstance(location, eemeter.location.Location)
 
     def test_eemeter_project(self):
         with self.assertRaises(ValueError):

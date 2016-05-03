@@ -19,12 +19,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'sslserver',
     'oauth2_provider',
     'rest_framework',
     'rest_framework_swagger',
     'api_doc',
     'datastore',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -36,8 +36,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django_pdb.middleware.PdbMiddleware',
 )
+
+if DEBUG:
+    MIDDLEWARE_CLASSES += ('django_pdb.middleware.PdbMiddleware',)
 
 ROOT_URLCONF = 'oeem_energy_datastore.urls'
 
@@ -128,7 +130,7 @@ LOGGING = {
     }
 }
 
-BROKER_URL = 'amqp://guest:guest@{}:5672//'.format(os.environ["BROKER_HOST"])
+BROKER_URL = 'amqp://guest:guest@{}/'.format(os.environ["BROKER_HOST"])
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
