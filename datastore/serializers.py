@@ -174,6 +174,23 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
         )
 
 
+class MeterRunJobSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.MeterRunJob
+        fields = (
+            'project',
+            'status',
+            'status_text',
+            'added',
+        )
+        read_only_fields = (
+            'status',
+            'status_text',
+            'added',
+        )
+
+
 class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
     value = serializers.FloatField(source='value_clean')

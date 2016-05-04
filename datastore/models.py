@@ -612,6 +612,28 @@ class MeterRun(models.Model):
             return False
         return self.cvrmse_baseline < threshold and self.cvrmse_reporting < threshold
 
+@python_2_unicode_compatible
+class MeterRunJob(models.Model):
+    # Status Enum
+    SUBMITTED_STATUS = 1
+    RUNNING_STATUS = 2
+    SUCCESS_STATUS = 3
+    FAILURE_STATUS = 4
+    STATUS_CHOICES = (
+        (SUBMITTED_STATUS, 'submitted'),
+        (RUNNING_STATUS, 'running'),
+        (SUCCESS_STATUS, 'success'),
+        (FAILURE_STATUS, 'failure')
+    )
+
+    project = models.ForeignKey(Project)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=SUBMITTED_STATUS)
+    status_text = models.TextField(null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return u'MeterRunJob(project_id={}, status={})'.format(self.project.project_id, self.status)
 
 @python_2_unicode_compatible
 class DailyUsageBaseline(models.Model):

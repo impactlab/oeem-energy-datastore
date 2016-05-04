@@ -29,6 +29,7 @@ router.register(r'project_blocks', datastore_views.ProjectBlockViewSet, base_nam
 router.register(r'consumption_metadatas', datastore_views.ConsumptionMetadataViewSet, base_name='consumption_metadata')
 router.register(r'consumption_records', datastore_views.ConsumptionRecordViewSet, base_name='consumption_record')
 router.register(r'meter_runs', datastore_views.MeterRunViewSet, base_name='meter_run')
+router.register(r'meter_run_jobs', datastore_views.MeterRunJobViewSet, base_name='meter_run_job')
 
 urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
