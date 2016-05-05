@@ -465,12 +465,22 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         return record
 
 
+class ProjectRunFilter(django_filters.FilterSet):
+    projects = django_filters.MethodFilter(action=projects_filter)
+
+    class Meta:
+        model = models.ProjectRun
+        fields = ['projects']
+
+
 class ProjectRunViewSet(mixins.CreateModelMixin,
                         mixins.ListModelMixin,
                         mixins.RetrieveModelMixin,
                         viewsets.GenericViewSet):
 
     permission_classes = default_permissions_classes
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ProjectRunFilter
 
     def get_queryset(self):
         return (models.ProjectRun.objects
