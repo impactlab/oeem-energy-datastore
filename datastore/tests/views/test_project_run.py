@@ -16,6 +16,18 @@ class ProjectRunAPITestCase(OAuthTestCase):
         response = self.post('/api/v1/project_runs/', data)
         assert response.status_code == 201
 
+        # TODO: test retrieval
+
+        data = {
+            'projects': self.project.pk
+        }
+
+        response = self.get('/api/v1/project_runs', data=data)
+
+        print response
+
+        assert False
+
         # TODO: test unauth'd project id
 
         # TODO: test invalid project id

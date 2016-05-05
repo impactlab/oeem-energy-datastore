@@ -56,5 +56,5 @@ class OAuthTestCase(TestCase):
                                 content_type="application/json",
                                 Authorization="Bearer " + "tokstr")
 
-    def get(self, url):
-        return self.client.get(url, Authorization="Bearer " + "tokstr")
+    def get(self, url, data=None):
+        return self.client.get(url, Authorization="Bearer " + "tokstr", data=data)
