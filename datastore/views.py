@@ -491,6 +491,20 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
         return serializers.ProjectRunSerializer
 
 
+class ProjectMeterResultViewSet(mixins.ListModelMixin,
+                                mixins.RetrieveModelMixin,
+                                viewsets.GenericViewSet):
+
+    permission_classes = default_permissions_classes
+
+    def get_queryset(self):
+        return (models.ProjectMeterResult.objects
+                                         .all()
+                                         .order_by('pk'))
+
+    def get_serializer_class(self):
+        return serializers.ProjectMeterResultSerializer
+
 
 class MeterRunFilter(django_filters.FilterSet):
     fuel_type = django_filters.MultipleChoiceFilter(

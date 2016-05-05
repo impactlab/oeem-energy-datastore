@@ -52,6 +52,16 @@ class ProjectRunSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectMeterResultSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectMeterResult
+        fields = (
+            'project_run',
+            'added',
+        )
+
+
 class DailyUsageBaselineSerializer(serializers.ModelSerializer):
     value = serializers.FloatField(source='value_clean')
 
