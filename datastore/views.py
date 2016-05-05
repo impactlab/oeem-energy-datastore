@@ -465,6 +465,23 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         return record
 
 
+class ProjectRunViewSet(mixins.CreateModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.RetrieveModelMixin,
+                        viewsets.GenericViewSet):
+
+    permission_classes = default_permissions_classes
+
+    def get_queryset(self):
+        return (models.ProjectRun.objects
+                                 .all()
+                                 .order_by('pk'))
+
+    def get_serializer_class(self):
+        return serializers.ProjectRunSerializer
+
+
+
 class MeterRunFilter(django_filters.FilterSet):
     fuel_type = django_filters.MultipleChoiceFilter(
             name="consumption_metadata__fuel_type",
@@ -513,22 +530,6 @@ class MeterRunViewSet(viewsets.ModelViewSet):
             return serializers.MeterRunMonthlySerializer
         else:
             return serializers.MeterRunSerializer
-
-class MeterRunJobViewSet(mixins.CreateModelMixin,
-                         mixins.ListModelMixin,
-                         mixins.RetrieveModelMixin,
-                         viewsets.GenericViewSet):
-
-    permission_classes = default_permissions_classes
-
-    def get_queryset(self):
-        return (models.MeterRunJob.objects
-                                  .all()
-                                  .order_by('pk'))
-
-    def get_serializer_class(self):
-        return serializers.MeterRunJobSerializer
-
 
 
 class ProjectBlockViewSet(viewsets.ModelViewSet):

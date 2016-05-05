@@ -362,6 +362,37 @@ class Project(models.Model):
         return self.projectattribute_set.all()
 
 
+@python_2_unicode_compatible
+class ProjectRun(models.Model):
+    """Encapsulates the request to run a Project's meters, pointing to Celery objects and Meter results."""
+    METER_TYPE_CHOICES = (
+        ('RESIDENTIAL', 'Residential'),
+        ('COMMERICAL', 'Commercial'),
+    )
+    project = models.ForeignKey(Project)
+    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, null=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    n_days = models.IntegerField(null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    # TODO: foreign keys to celery Tasks, Results
+
+    def __str__(self):
+        return u'ProjectRun(project_id={})'.format(self.project.project_id)
+
+
+@python_2_unicode_compatible
+class ProjectMeterResult(models.Model):
+    """Container for the results output from running a Project's Meters."""
+    project_run = models.ForeignKey(ProjectRun)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return u'ProjectMeterResults(project_run_id={})'.format(self.project_run.project_run_id)
+
 
 @python_2_unicode_compatible
 class ProjectAttributeKey(models.Model):
@@ -568,6 +599,7 @@ class MeterRun(models.Model):
         ('DFLT_COM_NG', 'Default Commercial Natural Gas'),
     )
     project = models.ForeignKey(Project)
+    project_meter_result = models.ForeignKey(ProjectMeterResult, null=True)
     consumption_metadata = models.ForeignKey(ConsumptionMetadata)
     serialization = models.CharField(max_length=100000, blank=True, null=True)
     annual_usage_baseline = models.FloatField(blank=True, null=True)
@@ -612,28 +644,6 @@ class MeterRun(models.Model):
             return False
         return self.cvrmse_baseline < threshold and self.cvrmse_reporting < threshold
 
-@python_2_unicode_compatible
-class MeterRunJob(models.Model):
-    # Status Enum
-    SUBMITTED_STATUS = 1
-    RUNNING_STATUS = 2
-    SUCCESS_STATUS = 3
-    FAILURE_STATUS = 4
-    STATUS_CHOICES = (
-        (SUBMITTED_STATUS, 'submitted'),
-        (RUNNING_STATUS, 'running'),
-        (SUCCESS_STATUS, 'success'),
-        (FAILURE_STATUS, 'failure')
-    )
-
-    project = models.ForeignKey(Project)
-    status = models.IntegerField(choices=STATUS_CHOICES, default=SUBMITTED_STATUS)
-    status_text = models.TextField(null=True)
-    added = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return u'MeterRunJob(project_id={}, status={})'.format(self.project.project_id, self.status)
 
 @python_2_unicode_compatible
 class DailyUsageBaseline(models.Model):

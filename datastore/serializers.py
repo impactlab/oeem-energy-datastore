@@ -35,6 +35,23 @@ class ProjectSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectRunSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectRun
+        fields = (
+            'project',
+            'meter_type',
+            'start_date',
+            'end_date',
+            'n_days',
+            'added',
+        )
+        read_only_fields = (
+            'added',
+        )
+
+
 class DailyUsageBaselineSerializer(serializers.ModelSerializer):
     value = serializers.FloatField(source='value_clean')
 
@@ -171,23 +188,6 @@ class MeterRunMonthlySerializer(serializers.ModelSerializer):
             'monthlyaverageusagebaseline_set',
             'monthlyaverageusagereporting_set',
             'fuel_type',
-        )
-
-
-class MeterRunJobSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.MeterRunJob
-        fields = (
-            'project',
-            'status',
-            'status_text',
-            'added',
-        )
-        read_only_fields = (
-            'status',
-            'status_text',
-            'added',
         )
 
 

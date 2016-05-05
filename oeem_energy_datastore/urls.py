@@ -22,6 +22,7 @@ from datastore import views as datastore_views
 
 router = DefaultRouter()
 router.register(r'projects', datastore_views.ProjectViewSet, base_name='project')
+router.register(r'project_runs', datastore_views.ProjectRunViewSet, base_name='project_run')
 router.register(r'project_attribute_keys', datastore_views.ProjectAttributeKeyViewSet, base_name='project_attribute_key')
 router.register(r'project_attributes', datastore_views.ProjectAttributeViewSet, base_name='project_attribute')
 router.register(r'project_owners', datastore_views.ProjectOwnerViewSet, base_name='project_owner')
@@ -29,7 +30,6 @@ router.register(r'project_blocks', datastore_views.ProjectBlockViewSet, base_nam
 router.register(r'consumption_metadatas', datastore_views.ConsumptionMetadataViewSet, base_name='consumption_metadata')
 router.register(r'consumption_records', datastore_views.ConsumptionRecordViewSet, base_name='consumption_record')
 router.register(r'meter_runs', datastore_views.MeterRunViewSet, base_name='meter_run')
-router.register(r'meter_run_jobs', datastore_views.MeterRunJobViewSet, base_name='meter_run_job')
 
 urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
