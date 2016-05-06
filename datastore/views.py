@@ -490,7 +490,10 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
       project_run = serializer.instance
 
       # ...and also push a celery job
-      tasks.run_meter.delay(project_run.project.pk)
+      resp = tasks.run_meter.delay(project_run.project.pk)
+
+      project_run.task_meta_id = resp.id
+      project_run.save()
 
     def get_queryset(self):
         return (models.ProjectRun.objects
