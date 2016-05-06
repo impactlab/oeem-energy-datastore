@@ -15,20 +15,22 @@ import pytz
 
 class ProjectTestCase(TestCase):
 
-    def setUp(self):
-        self.user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+    @classmethod
+    def setUpTestData(cls):
 
-        self.empty_project = models.Project.objects.create(
-            project_owner=self.user.projectowner,
+        cls.user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+
+        cls.empty_project = models.Project.objects.create(
+            project_owner=cls.user.projectowner,
             project_id="PROJECTID_1",
         )
 
-        self.complete_project = models.Project.objects.create(
-            project_owner=self.user.projectowner,
+        cls.complete_project = models.Project.objects.create(
+            project_owner=cls.user.projectowner,
             project_id="PROJECTID_2",
             baseline_period_start=None,
             baseline_period_end=datetime(2012, 1, 1, tzinfo=pytz.UTC),
-            reporting_period_start=datetime(2012, 2, 1, tzinfo=pytz.UTC),
+            reporting_period_start=datetime(2012, 1, 2, tzinfo=pytz.UTC),
             reporting_period_end=None,
             zipcode="91104",
             weather_station="722880",
@@ -36,41 +38,46 @@ class ProjectTestCase(TestCase):
             longitude=0,
         )
 
-        cm_ng = models.ConsumptionMetadata.objects.create(
-            project=self.complete_project,
+        cls.cm_ng = models.ConsumptionMetadata.objects.create(
+            project=cls.complete_project,
             fuel_type="NG",
             energy_unit="THM",
         )
 
-        cm_e = models.ConsumptionMetadata.objects.create(
-            project=self.complete_project,
+        cls.cm_e = models.ConsumptionMetadata.objects.create(
+            project=cls.complete_project,
             fuel_type="E",
             energy_unit="KWH",
         )
+
+        records = []
 
         for i in range(0, 700, 30):
             if i % 120 == 0:
                 value = np.nan
             else:
                 value = 1.0
-            models.ConsumptionRecord.objects.create(
-                metadata=cm_ng,
+            records.append(models.ConsumptionRecord(
+                metadata=cls.cm_ng,
                 start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
                 value=value,
                 estimated=False,
-            )
+            ))
 
-        for i in range(0, 700, 1):
+        for i in range(0, 6000):
             if i % 4 == 0:
                 value = np.nan
             else:
                 value = 1
-            models.ConsumptionRecord.objects.create(
-                metadata=cm_e,
-                start=datetime(2012, 1, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
+            records.append(models.ConsumptionRecord(
+                metadata=cls.cm_e,
+                start=datetime(2011, 12, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
                 value=value,
                 estimated=False,
-            )
+            ))
+
+        models.ConsumptionRecord.objects.bulk_create(records)
+
 
     def test_attributes(self):
         attributes = [
@@ -133,17 +140,23 @@ class ProjectTestCase(TestCase):
         self.empty_project.run_meter()
         self.complete_project.run_meter()
 
-        meter_runs = list(models.Project.recent_meter_runs().items())
+        meter_runs = models.Project.recent_meter_runs()
         assert len(meter_runs) == 1
 
-        meter_run = meter_runs[0]
-        assert isinstance(meter_run[0], int)
-        assert meter_run[1][0]["fuel_type"] == "NG"
-        assert meter_run[1][0]["meterrun"] is not None
+        project_meter_runs = meter_runs[self.complete_project.pk]
+
+        gas_meter_run = project_meter_runs[self.cm_ng.pk]
+        elec_meter_run = project_meter_runs[self.cm_e.pk]
+
+        assert gas_meter_run["fuel_type"] == "NG"
+        assert elec_meter_run["fuel_type"] == "E"
+
+        assert isinstance(gas_meter_run["meter_run"], models.MeterRun)
+        assert isinstance(elec_meter_run["meter_run"], models.MeterRun)
 
         self.complete_project.run_meter()
 
-        meter_runs = list(models.Project.recent_meter_runs().items())
+        meter_runs = models.Project.recent_meter_runs()
         assert len(meter_runs) == 1
 
         self.complete_project.meterrun_set.all().delete()
@@ -154,11 +167,20 @@ class ProjectTestCase(TestCase):
 
         self.complete_project.run_meter()
 
-        meter_runs = list(models.Project.recent_meter_runs().items())
-        assert len(meter_runs) == 2
+        recent_meter_runs = models.Project.recent_meter_runs()
+        assert len(recent_meter_runs) == 1
 
-        meter_run = meter_runs[0][1][0]["meterrun"]
-        assert_allclose(meter_run.annual_savings, 0, rtol=1e-3, atol=1e-3)
-        assert_allclose(meter_run.gross_savings, 0, rtol=1e-3, atol=1e-3)
-        assert_allclose(meter_run.cvrmse_baseline, 0, rtol=1e-3, atol=1e-3)
-        assert_allclose(meter_run.cvrmse_reporting, 0, rtol=1e-3, atol=1e-3)
+        project_meter_runs = recent_meter_runs[self.complete_project.pk]
+        assert len(project_meter_runs) == 2
+
+        gas_meter_run = project_meter_runs[self.cm_ng.pk]["meter_run"]
+        assert_allclose(gas_meter_run.annual_savings, 0, rtol=1e-3, atol=1e-3)
+        assert_allclose(gas_meter_run.gross_savings, 0, rtol=1e-3, atol=1e-3)
+        assert_allclose(gas_meter_run.cvrmse_baseline, 0, rtol=1e-3, atol=1e-3)
+        assert_allclose(gas_meter_run.cvrmse_reporting, 0, rtol=1e-3, atol=1e-3)
+
+        elec_meter_run = project_meter_runs[self.cm_e.pk]["meter_run"]
+        assert_allclose(elec_meter_run.annual_savings, 0, rtol=1e-3, atol=1e-3)
+        assert_allclose(elec_meter_run.gross_savings, 0, rtol=1e-3, atol=1e-3)
+        assert_allclose(elec_meter_run.cvrmse_baseline, 0, rtol=1e-3, atol=1e-3)
+        assert_allclose(elec_meter_run.cvrmse_reporting, 0, rtol=1e-3, atol=1e-3)

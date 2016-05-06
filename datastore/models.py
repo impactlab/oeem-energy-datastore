@@ -311,16 +311,15 @@ class Project(models.Model):
 
     @staticmethod
     def recent_meter_runs(project_pks=[]):
+        """
+        Returns most recent meter run for each consumption metadata object
+        associated with the project.
+        """
 
-        from django.db import connection
-        cursor = connection.cursor()
-
-        meter_runs = '''
+        meter_run_query = '''
           SELECT DISTINCT ON (consumption.id)
-            project.id,
-            consumption.id,
             meter.*,
-            consumption.fuel_type
+            consumption.fuel_type AS fuel_type_
           FROM datastore_meterrun AS meter
           JOIN datastore_consumptionmetadata AS consumption
             ON meter.consumption_metadata_id = consumption.id
@@ -331,30 +330,29 @@ class Project(models.Model):
         qargs = []
 
         if project_pks:
-            meter_runs = '''
+            meter_run_query = '''
               {}
               WHERE project.id IN %s
-            '''.format(meter_runs)
+            '''.format(meter_run_query)
             qargs.append(tuple(project_pks))
 
-        meter_runs = '''
+        meter_run_query = '''
           {}
           ORDER BY consumption.id,
             meter.added DESC
-        '''.format(meter_runs)
+        '''.format(meter_run_query)
 
-        cursor.execute(meter_runs, qargs)
+        meter_runs = MeterRun.objects.raw(meter_run_query, qargs)
 
-        meterrun_columns = [col[0] for col in cursor.description[2:-1]]
+        # initialize with empty list for each project.
+        results = defaultdict(dict)
 
-        results = {}
-        for consumption_id, rows in itertools.groupby(cursor.fetchall(), key=lambda x: x[1]):
+        for meter_run in meter_runs:
 
-            grouped_rows = list(rows)
-            results[grouped_rows[0][0]] = [{
-                'meterrun': MeterRun(**dict(zip(meterrun_columns, row[2:-1]))),
-                'fuel_type': row[-1]
-            } for row in grouped_rows]
+            results[meter_run.project_id][meter_run.consumption_metadata_id] = {
+                'meter_run': meter_run,
+                'fuel_type': meter_run.fuel_type_,
+            }
 
         return results
 
