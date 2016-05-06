@@ -32,6 +32,7 @@ def projects_filter(queryset, value):
     """Project filter for non-project views"""
     return _filter_projects(queryset, value, "project__in")
 
+
 def _filter_projects(queryset, value, attr):
     """
     Restrict to '+' (http for <space>) separated list of projects.
@@ -496,6 +497,8 @@ class ProjectMeterResultViewSet(mixins.ListModelMixin,
                                 viewsets.GenericViewSet):
 
     permission_classes = default_permissions_classes
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = ('project_run', 'added')
 
     def get_queryset(self):
         return (models.ProjectMeterResult.objects
