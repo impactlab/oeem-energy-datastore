@@ -14,6 +14,8 @@ from eemeter.meter import DefaultResidentialMeter
 from eemeter.config.yaml_parser import dump
 from eemeter.models.temperature_sensitivity import AverageDailyTemperatureSensitivityModel
 
+import djcelery.models
+
 from warnings import warn
 from datetime import timedelta, datetime
 import numpy as np
@@ -377,7 +379,7 @@ class ProjectRun(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    # TODO: foreign keys to celery Tasks, Results
+    task_meta = models.ForeignKey(djcelery.models.TaskMeta, null=True)
 
     def __str__(self):
         return u'ProjectRun(project_id={})'.format(self.project.project_id)

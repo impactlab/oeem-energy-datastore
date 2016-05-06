@@ -492,7 +492,6 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
       # ...and also push a celery job
       tasks.run_meter.delay(project_run.project.pk)
 
-
     def get_queryset(self):
         return (models.ProjectRun.objects
                                  .all()
