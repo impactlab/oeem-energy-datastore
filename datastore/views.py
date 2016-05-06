@@ -490,7 +490,7 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
       project_run = serializer.instance
 
       # ...and also push a celery job
-      tasks.run_meter.delay(project_run.project.pk)
+      tasks.run_meter.delay(project_run.pk)
 
     def get_queryset(self):
         return (models.ProjectRun.objects
@@ -507,7 +507,7 @@ class ProjectMeterResultViewSet(mixins.ListModelMixin,
 
     permission_classes = default_permissions_classes
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('project_run', 'added')
+    filter_fields = ('project_run', 'added'))
 
     def get_queryset(self):
         return (models.ProjectMeterResult.objects
