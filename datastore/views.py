@@ -18,6 +18,7 @@ from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
 from . import models
 from . import serializers
+from . import tasks
 from collections import defaultdict
 from datetime import datetime
 
@@ -482,6 +483,15 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
     permission_classes = default_permissions_classes
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = ProjectRunFilter
+
+    def perform_create(self, serializer):
+      # Create the object normally
+      mixins.CreateModelMixin.perform_create(self, serializer)
+      project_run = serializer.instance
+
+      # ...and also push a celery job
+      tasks.run_meter.delay(project_run.project.pk)
+
 
     def get_queryset(self):
         return (models.ProjectRun.objects

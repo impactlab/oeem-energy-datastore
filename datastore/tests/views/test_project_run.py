@@ -33,7 +33,7 @@ class ProjectRunAPITestCase(OAuthTestCase):
         project_run = response.data[0]
         assert project_run['project'] == 1
 
-
+        assert False
         # TODO: test unauth'd project id
 
         # TODO: test invalid project id

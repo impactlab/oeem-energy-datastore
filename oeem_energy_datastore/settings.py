@@ -130,7 +130,9 @@ LOGGING = {
     }
 }
 
-BROKER_URL = 'amqp://guest:guest@{}/'.format(os.environ["BROKER_HOST"])
+# BROKER_URL = 'amqp://guest:guest@{}/'.format(os.environ["BROKER_HOST"])
+BROKER_BACKEND = 'memory'
+CELERY_ALWAYS_EAGER = True
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -145,7 +147,7 @@ SWAGGER_SETTINGS = {
 # DJANGO DEBUG TOOLBAR
 if DEBUG:
     INSTALLED_APPS += ('debug_toolbar',)
-    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',) 
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     DEBUG_TOOLBAR_PATCH_SETTINGS = False
     INTERNAL_IPS = ['0.0.0.0', '127.0.0.1', 'localhost']
 

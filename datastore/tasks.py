@@ -7,5 +7,6 @@ from datastore.models import Project
 
 @shared_task
 def run_meter(project_pk):
-    project = Project.objects.get(pk=project_pk)
-    project.run_meter()
+    print "Going to run meter %s" % project_pk
+    # project = Project.objects.get(pk=project_pk)
+    # project.run_meter()
