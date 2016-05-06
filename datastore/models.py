@@ -14,8 +14,6 @@ from eemeter.meter import DefaultResidentialMeter
 from eemeter.config.yaml_parser import dump
 from eemeter.models.temperature_sensitivity import AverageDailyTemperatureSensitivityModel
 
-import djcelery.models
-
 from warnings import warn
 from datetime import timedelta, datetime
 import numpy as np
