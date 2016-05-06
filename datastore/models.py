@@ -379,8 +379,6 @@ class ProjectRun(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    task_meta = models.ForeignKey(djcelery.models.TaskMeta, to_field='task_id', db_column='task_id', null=True)
-
     def __str__(self):
         return u'ProjectRun(project_id={})'.format(self.project.project_id)
 
