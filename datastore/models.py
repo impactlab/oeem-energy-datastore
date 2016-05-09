@@ -18,7 +18,7 @@ from warnings import warn
 from datetime import timedelta, datetime
 import numpy as np
 import json
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import itertools
 
 FUEL_TYPE_CHOICES = [
@@ -344,8 +344,8 @@ class Project(models.Model):
 
         meter_runs = MeterRun.objects.raw(meter_run_query, qargs)
 
-        # initialize with empty list for each project.
-        results = defaultdict(dict)
+        # initialize with ordereddict for each project.
+        results = defaultdict(OrderedDict)
 
         for meter_run in meter_runs:
 
