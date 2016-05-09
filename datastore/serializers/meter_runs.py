@@ -118,7 +118,6 @@ class MonthlyAverageUsageReportingSerializer(serializers.ModelSerializer):
         model = models.MonthlyAverageUsageReporting
         fields = ('date', 'value',)
 
-
 class MeterRunMonthlySerializer(serializers.ModelSerializer):
     annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
     annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
