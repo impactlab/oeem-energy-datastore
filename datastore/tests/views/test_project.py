@@ -9,11 +9,12 @@ from numpy.testing import assert_allclose
 
 class ProjectAPITestCase(OAuthTestCase):
 
-    def setUp(self):
-        super(ProjectAPITestCase, self).setUp()
+    @classmethod
+    def setUpTestData(cls):
+        super(ProjectAPITestCase, cls).setUpTestData()
 
-        self.project_data = {
-            "project_owner": self.project_owner.id,
+        cls.project_data = {
+            "project_owner": cls.project_owner.id,
             "project_id": "PROJECT_ID",
             "baseline_period_start": "2014-01-01T00:00:00+00:00",
             "baseline_period_end": "2014-01-01T00:00:00+00:00",
@@ -24,6 +25,64 @@ class ProjectAPITestCase(OAuthTestCase):
             "latitude": 0.0,
             "longitude": 0.0,
         }
+
+        cls.empty_project = models.Project.objects.create(
+            project_owner=cls.user.projectowner,
+            project_id="PROJECTID_1",
+        )
+
+        cls.complete_project = models.Project.objects.create(
+            project_owner=cls.user.projectowner,
+            project_id="PROJECTID_2",
+            baseline_period_start=None,
+            baseline_period_end=datetime(2012, 1, 1, tzinfo=pytz.UTC),
+            reporting_period_start=datetime(2012, 1, 2, tzinfo=pytz.UTC),
+            reporting_period_end=None,
+            zipcode="91104",
+            weather_station="722880",
+            latitude=0,
+            longitude=0,
+        )
+
+        cls.cm_ng = models.ConsumptionMetadata.objects.create(
+            project=cls.complete_project,
+            fuel_type="NG",
+            energy_unit="THM",
+        )
+
+        cls.cm_e = models.ConsumptionMetadata.objects.create(
+            project=cls.complete_project,
+            fuel_type="E",
+            energy_unit="KWH",
+        )
+
+        records = []
+
+        for i in range(0, 700, 30):
+            if i % 120 == 0:
+                value = np.nan
+            else:
+                value = 1.0
+            records.append(models.ConsumptionRecord(
+                metadata=cls.cm_ng,
+                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                value=value,
+                estimated=False,
+            ))
+
+        for i in range(0, 6000):
+            if i % 4 == 0:
+                value = np.nan
+            else:
+                value = 1
+            records.append(models.ConsumptionRecord(
+                metadata=cls.cm_e,
+                start=datetime(2011, 12, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
+                value=value,
+                estimated=False,
+            ))
+
+        models.ConsumptionRecord.objects.bulk_create(records)
 
     def test_project_create_read(self):
 
@@ -198,69 +257,7 @@ class ProjectAPITestCase(OAuthTestCase):
         response.data[0]['project_id'] == 'PROJECT_ID'
         response.data[0]['status'] == 'error - bad field value - update'
 
-    def _create_project_fixture(self):
-        self.user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
-
-        self.empty_project = models.Project.objects.create(
-            project_owner=self.user.projectowner,
-            project_id="PROJECTID_1",
-        )
-
-        self.complete_project = models.Project.objects.create(
-            project_owner=self.user.projectowner,
-            project_id="PROJECTID_2",
-            baseline_period_start=None,
-            baseline_period_end=datetime(2012, 1, 1, tzinfo=pytz.UTC),
-            reporting_period_start=datetime(2012, 1, 2, tzinfo=pytz.UTC),
-            reporting_period_end=None,
-            zipcode="91104",
-            weather_station="722880",
-            latitude=0,
-            longitude=0,
-        )
-
-        self.cm_ng = models.ConsumptionMetadata.objects.create(
-            project=self.complete_project,
-            fuel_type="NG",
-            energy_unit="THM",
-        )
-
-        self.cm_e = models.ConsumptionMetadata.objects.create(
-            project=self.complete_project,
-            fuel_type="E",
-            energy_unit="KWH",
-        )
-
-        records = []
-
-        for i in range(0, 700, 30):
-            if i % 120 == 0:
-                value = np.nan
-            else:
-                value = 1.0
-            records.append(models.ConsumptionRecord(
-                metadata=self.cm_ng,
-                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
-                value=value,
-                estimated=False,
-            ))
-
-        for i in range(0, 6000):
-            if i % 4 == 0:
-                value = np.nan
-            else:
-                value = 1
-            records.append(models.ConsumptionRecord(
-                metadata=self.cm_e,
-                start=datetime(2011, 12, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
-                value=value,
-                estimated=False,
-            ))
-
-        models.ConsumptionRecord.objects.bulk_create(records)
-
     def test_project_with_meter_runs(self):
-        self._create_project_fixture()
 
         complete_project_data = self.get(
             '/api/v1/projects/{}/?with_meter_runs=True'
@@ -307,3 +304,143 @@ class ProjectAPITestCase(OAuthTestCase):
         assert len(all_project_data[1]["recent_meter_runs"]) == 0
         assert len(all_project_data[2]["recent_meter_runs"]) == 2
 
+    def test_project_read_no_query_params(self):
+        data = self.get(
+            '/api/v1/projects/{}/'
+            .format(self.complete_project.pk)
+        ).json()
+
+        fields = set([
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+        ])
+
+        assert fields == set(data.keys())
+
+    def test_project_read_with_attributes(self):
+        data = self.get(
+            '/api/v1/projects/{}/?with_attributes=True'
+            .format(self.complete_project.pk)
+        ).json()
+
+        fields = set([
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'attributes',
+        ])
+
+        assert fields == set(data.keys())
+
+    def test_project_read_with_attributes_and_meter_runs(self):
+
+        self.complete_project.run_meter()
+
+        data = self.get(
+            '/api/v1/projects/{}/?with_attributes=True&with_meter_runs=True'
+            .format(self.complete_project.pk)
+        ).json()
+
+        fields = set([
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'attributes',
+            'recent_meter_runs',
+        ])
+
+        assert fields == set(data.keys())
+
+        meter_run_fields = set([
+            'id',
+            'project',
+            'consumption_metadata',
+            'annual_savings',
+            'gross_savings',
+            'annual_usage_baseline',
+            'annual_usage_reporting',
+            'cvrmse_baseline',
+            'cvrmse_reporting',
+            'valid_meter_run',
+            'meter_type',
+            'fuel_type',
+            'added',
+            'updated',
+        ])
+
+        assert meter_run_fields == set(data['recent_meter_runs'][0].keys())
+
+
+    def test_project_read_with_monthly_summary_meter_runs(self):
+
+        self.complete_project.run_meter()
+
+        data = self.get(
+            '/api/v1/projects/{}/?with_monthly_summary=True'
+            .format(self.complete_project.pk)
+        ).json()
+
+        fields = set([
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'recent_meter_runs',
+        ])
+
+        assert fields == set(data.keys())
+
+        meter_run_fields = set([
+            'id',
+            'project',
+            'consumption_metadata',
+            'annual_savings',
+            'gross_savings',
+            'annual_usage_baseline',
+            'annual_usage_reporting',
+            'cvrmse_baseline',
+            'cvrmse_reporting',
+            'model_parameter_json_baseline',
+            'model_parameter_json_reporting',
+            'valid_meter_run',
+            'meter_type',
+            'fuel_type',
+            'added',
+            'updated',
+            'monthlyaverageusagebaseline_set',
+            'monthlyaverageusagereporting_set',
+        ])
+
+        assert meter_run_fields == set(data['recent_meter_runs'][0].keys())

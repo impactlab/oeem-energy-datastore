@@ -312,8 +312,46 @@ class Project(models.Model):
     @staticmethod
     def recent_meter_runs(project_pks=[]):
         """
-        Returns most recent meter run for each consumption metadata object
-        associated with the project.
+        Returns most recently create MeterRun objects for each
+        ConsumptionMetadata object associated with the set of projects.
+        NOTE: not an instance method!!
+
+        Parameters
+        ----------
+        project_pks : list of int, default []
+            Primary keys of projects for which to get recent meter runs. If
+            an empty list, will get recent meter runs for every project in
+            the database.
+
+        Returns
+        -------
+        out : dict of dict
+            Dictionary in which project primary keys are keys and associated
+            meter runs are values. E.g.::
+
+            { # keys are primary keys of Project objects
+                1: { # keys are primary keys of ConsumptionMetadata objects
+                    1: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "E"
+                    },
+                    2: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "NG"
+                    }
+                },
+                2: {
+                    3: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "E"
+                    },
+                    4: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "NG"
+                    }
+                }
+            }
+
         """
 
         meter_run_query = '''
@@ -330,17 +368,15 @@ class Project(models.Model):
         qargs = []
 
         if project_pks:
-            meter_run_query = '''
-              {}
+            meter_run_query += '''
               WHERE project.id IN %s
-            '''.format(meter_run_query)
+            '''
             qargs.append(tuple(project_pks))
 
-        meter_run_query = '''
-          {}
+        meter_run_query += '''
           ORDER BY consumption.id,
             meter.added DESC
-        '''.format(meter_run_query)
+        '''
 
         meter_runs = MeterRun.objects.raw(meter_run_query, qargs)
 
@@ -358,7 +394,6 @@ class Project(models.Model):
 
     def attributes(self):
         return self.projectattribute_set.all()
-
 
 
 @python_2_unicode_compatible

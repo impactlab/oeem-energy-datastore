@@ -132,10 +132,13 @@ class ProjectTestCase(TestCase):
         assert isinstance(complete_eemeter_project, eemeter.project.Project)
         assert len(cm_ids) == 2
 
-    def test_run_meter_recent_meter_runs(self):
+    def test_recent_meter_runs_emtpy(self):
 
+        # empty because no meter runs yet.
         meter_runs = models.Project.recent_meter_runs()
         assert meter_runs == {}
+
+    def test_recent_meter_runs_run_once(self):
 
         self.empty_project.run_meter()
         self.complete_project.run_meter()
@@ -143,7 +146,9 @@ class ProjectTestCase(TestCase):
         meter_runs = models.Project.recent_meter_runs()
         assert len(meter_runs) == 1
 
+        # get the one for the complete project
         project_meter_runs = meter_runs[self.complete_project.pk]
+        assert len(project_meter_runs) == 2
 
         gas_meter_run = project_meter_runs[self.cm_ng.pk]
         elec_meter_run = project_meter_runs[self.cm_e.pk]
@@ -154,12 +159,51 @@ class ProjectTestCase(TestCase):
         assert isinstance(gas_meter_run["meter_run"], models.MeterRun)
         assert isinstance(elec_meter_run["meter_run"], models.MeterRun)
 
+    def test_recent_meter_runs_run_twice(self):
+
+        # run twice
+        self.complete_project.run_meter()
         self.complete_project.run_meter()
 
         meter_runs = models.Project.recent_meter_runs()
         assert len(meter_runs) == 1
 
-        self.complete_project.meterrun_set.all().delete()
+        # get the one for the complete project
+        project_meter_runs = meter_runs[self.complete_project.pk]
+        assert len(project_meter_runs) == 2
+
+        gas_meter_run = project_meter_runs[self.cm_ng.pk]
+        elec_meter_run = project_meter_runs[self.cm_e.pk]
+
+        assert gas_meter_run["fuel_type"] == "NG"
+        assert elec_meter_run["fuel_type"] == "E"
+
+        assert isinstance(gas_meter_run["meter_run"], models.MeterRun)
+        assert isinstance(elec_meter_run["meter_run"], models.MeterRun)
+
+    def test_recent_meter_runs_with_parameters(self):
+        self.complete_project.run_meter()
+
+        meter_runs = models.Project.recent_meter_runs()
+        assert len(meter_runs) == 1
+
+        # gets all
+        meter_runs = models.Project.recent_meter_runs(project_pks=[])
+        assert len(meter_runs) == 1
+
+        # none for empty_project
+        meter_runs = models.Project.recent_meter_runs(project_pks=[self.empty_project.pk])
+        assert len(meter_runs) == 0
+
+        # one for complete_project
+        meter_runs = models.Project.recent_meter_runs(project_pks=[self.complete_project.pk])
+        assert self.complete_project.pk in meter_runs
+
+        # call from instances, same result
+        meter_runs = self.empty_project.recent_meter_runs(project_pks=[self.complete_project.pk])
+        assert self.complete_project.pk in meter_runs
+        meter_runs = self.complete_project.recent_meter_runs(project_pks=[self.complete_project.pk])
+        assert self.complete_project.pk in meter_runs
 
     def test_run_meter(self):
         meter_runs = models.Project.recent_meter_runs()

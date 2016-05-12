@@ -10,46 +10,53 @@ ApplicationModel = get_application_model()
 
 class OAuthTestCase(TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """
         Includes a client, a demo user/project_owner, an application model
         and an Oauth token.
         """
-        self.client = Client()
-        self.user = User.objects.create_user("username", "user@example.com", "123456")
-        self.project_owner = self.user.projectowner
+        super(OAuthTestCase, cls).setUpTestData()
 
-        self.project = models.Project.objects.create(
-            project_owner=self.project_owner,
+        cls.client = Client()
+        cls.user = User.objects.create_user("username", "user@example.com", "123456")
+        cls.project_owner = cls.user.projectowner
+
+        cls.project = models.Project.objects.create(
+            project_owner=cls.project_owner,
             project_id="ABC",
         )
 
-        self.app = ApplicationModel.objects.create(
+        cls.app = ApplicationModel.objects.create(
             name='app',
             client_type=ApplicationModel.CLIENT_CONFIDENTIAL,
             authorization_grant_type=ApplicationModel.GRANT_CLIENT_CREDENTIALS,
-            user=self.user
+            user=cls.user
         )
 
-        self.token = AccessToken.objects.create(
-            user=self.user,
+        cls.token = AccessToken.objects.create(
+            user=cls.user,
             token='tokstr',
-            application=self.app,
+            application=cls.app,
             expires=now() + timedelta(days=365),
             scope="read write"
         )
 
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """
         Removes persistent data from the datastore
         after running tests.
         """
-        self.user.delete()
-        self.project_owner.delete()
-        self.project.delete()
-        self.app.delete()
-        self.token.delete()
+
+        cls.user.delete()
+        cls.project_owner.delete()
+        cls.project.delete()
+        cls.app.delete()
+        cls.token.delete()
+
+        super(OAuthTestCase, cls).tearDownClass()
 
     def post(self, url, data):
         return self.client.post(url, json.dumps(data),
