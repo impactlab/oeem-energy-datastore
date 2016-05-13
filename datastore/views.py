@@ -18,7 +18,6 @@ from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
 from . import models
 from . import serializers
-from collections import defaultdict
 from datetime import datetime
 
 from django.conf import settings

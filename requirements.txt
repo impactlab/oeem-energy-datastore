@@ -9,7 +9,7 @@ django-celery
 django-filter
 django-oauth-toolkit
 djangorestframework
-eemeter>=0.3.15
+eemeter>=0.3.19
 pandas>=0.18
 psycopg2
 requests

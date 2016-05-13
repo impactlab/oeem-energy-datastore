@@ -18,7 +18,7 @@ from warnings import warn
 from datetime import timedelta, datetime
 import numpy as np
 import json
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import itertools
 
 FUEL_TYPE_CHOICES = [
@@ -311,16 +311,53 @@ class Project(models.Model):
 
     @staticmethod
     def recent_meter_runs(project_pks=[]):
+        """
+        Returns most recently create MeterRun objects for each
+        ConsumptionMetadata object associated with the set of projects.
+        NOTE: not an instance method!!
 
-        from django.db import connection
-        cursor = connection.cursor()
+        Parameters
+        ----------
+        project_pks : list of int, default []
+            Primary keys of projects for which to get recent meter runs. If
+            an empty list, will get recent meter runs for every project in
+            the database.
 
-        meter_runs = '''
+        Returns
+        -------
+        out : dict of dict
+            Dictionary in which project primary keys are keys and associated
+            meter runs are values. E.g.::
+
+            { # keys are primary keys of Project objects
+                1: { # keys are primary keys of ConsumptionMetadata objects
+                    1: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "E"
+                    },
+                    2: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "NG"
+                    }
+                },
+                2: {
+                    3: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "E"
+                    },
+                    4: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "NG"
+                    }
+                }
+            }
+
+        """
+
+        meter_run_query = '''
           SELECT DISTINCT ON (consumption.id)
-            project.id,
-            consumption.id,
             meter.*,
-            consumption.fuel_type
+            consumption.fuel_type AS fuel_type_
           FROM datastore_meterrun AS meter
           JOIN datastore_consumptionmetadata AS consumption
             ON meter.consumption_metadata_id = consumption.id
@@ -331,36 +368,32 @@ class Project(models.Model):
         qargs = []
 
         if project_pks:
-            meter_runs = '''
-              {}
+            meter_run_query += '''
               WHERE project.id IN %s
-            '''.format(meter_runs)
+            '''
             qargs.append(tuple(project_pks))
 
-        meter_runs = '''
-          {}
+        meter_run_query += '''
           ORDER BY consumption.id,
             meter.added DESC
-        '''.format(meter_runs)
+        '''
 
-        cursor.execute(meter_runs, qargs)
+        meter_runs = MeterRun.objects.raw(meter_run_query, qargs)
 
-        meterrun_columns = [col[0] for col in cursor.description[2:-1]]
+        # initialize with ordereddict for each project.
+        results = defaultdict(OrderedDict)
 
-        results = {}
-        for consumption_id, rows in itertools.groupby(cursor.fetchall(), key=lambda x: x[1]):
+        for meter_run in meter_runs:
 
-            grouped_rows = list(rows)
-            results[grouped_rows[0][0]] = [{
-                'meterrun': MeterRun(**dict(zip(meterrun_columns, row[2:-1]))),
-                'fuel_type': row[-1]
-            } for row in grouped_rows]
+            results[meter_run.project_id][meter_run.consumption_metadata_id] = {
+                'meter_run': meter_run,
+                'fuel_type': meter_run.fuel_type_,
+            }
 
         return results
 
     def attributes(self):
         return self.projectattribute_set.all()
-
 
 
 @python_2_unicode_compatible
