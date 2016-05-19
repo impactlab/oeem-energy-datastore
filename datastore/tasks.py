@@ -1,20 +1,20 @@
 from __future__ import absolute_import
+import logging
 
 from celery import shared_task
 
 from datastore.models import Project, ProjectRun
 
-
 @shared_task
 def execute_project_run(project_run_pk):
     project_run = ProjectRun.objects.get(pk=project_run_pk)
     if not project_run:
-        print "Received an invalid project_run_pk %s" % project_run_pk
+        logging.info("Received an invalid project_run_pk %s" % project_run_pk)
         return
 
     project = project_run.project
     if not project:
-        print "Asked to run a ProjectRun with no Project %s" % project_run_pk
+        logging.info("Asked to run a ProjectRun with no Project %s" % project_run_pk)
         return
 
     try:
