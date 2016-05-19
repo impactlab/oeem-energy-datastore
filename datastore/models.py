@@ -290,10 +290,20 @@ class Project(models.Model):
             warn(message)
             return
 
+        print project
+        print project.__dict__
+
         meter = self._get_meter(meter_type)
 
+        print meter
+
         meter_results = meter.evaluate(DataCollection(project=project))
+
+        print meter_results
+
         timeseries_period = self._get_timeseries_period(project, start_date, end_date)
+
+        print timeseries_period
 
         meter_runs = []
         for consumption_data, cm_id in zip(project.consumption, cm_ids):

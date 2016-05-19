@@ -7,5 +7,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         for project in Project.objects.all():
+            if project.project_id != 'CF-00000203':
+                continue
             print("Running meter for {}".format(project))
             project.run_meter()

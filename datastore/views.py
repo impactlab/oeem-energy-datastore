@@ -507,7 +507,7 @@ class ProjectMeterResultViewSet(mixins.ListModelMixin,
 
     permission_classes = default_permissions_classes
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('project_run', 'added'))
+    filter_fields = ('project_run', 'added')
 
     def get_queryset(self):
         return (models.ProjectMeterResult.objects
