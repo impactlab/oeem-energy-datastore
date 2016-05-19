@@ -46,6 +46,7 @@ class ProjectRunSerializer(serializers.ModelSerializer):
             'end_date',
             'n_days',
             'added',
+            'status',
         )
         read_only_fields = (
             'added',
