@@ -367,7 +367,7 @@ class ProjectRun(models.Model):
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('FAILED', 'Failed'),
-        ('SUCCESS', 'Sucess')
+        ('SUCCESS', 'Success')
     )
     METER_TYPE_CHOICES = (
         ('RESIDENTIAL', 'Residential'),
