@@ -31,7 +31,8 @@ class ProjectRunAPITestCase(OAuthTestCase):
         response = self.get('/api/v1/project_runs/', data=data)
         assert len(response.data) == 1
         project_run = response.data[0]
-        assert project_run['project'] == 1
+
+        assert project_run['project'] == self.project.pk
 
         assert project_run['status'] == 'SUCCESS'
 
