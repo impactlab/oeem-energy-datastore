@@ -64,6 +64,10 @@ You might consider adding these to your virtualenv postactivate script
 
     py.test
 
+Run a single test:
+
+    py.test datastore/tests/views/test_project_run.py
+
 #### Start a server
 
     python manage.py runserver

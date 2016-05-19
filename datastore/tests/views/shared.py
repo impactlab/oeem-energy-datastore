@@ -27,7 +27,12 @@ class OAuthTestCase(TestCase):
             project_id="ABC",
         )
 
-        cls.app = ApplicationModel.objects.create(
+        self.project2 = models.Project.objects.create(
+            project_owner=self.project_owner,
+            project_id="DEF",
+        )
+
+        self.app = ApplicationModel.objects.create(
             name='app',
             client_type=ApplicationModel.CLIENT_CONFIDENTIAL,
             authorization_grant_type=ApplicationModel.GRANT_CLIENT_CREDENTIALS,
@@ -63,5 +68,5 @@ class OAuthTestCase(TestCase):
                                 content_type="application/json",
                                 Authorization="Bearer " + "tokstr")
 
-    def get(self, url):
-        return self.client.get(url, Authorization="Bearer " + "tokstr")
+    def get(self, url, data=None):
+        return self.client.get(url, Authorization="Bearer " + "tokstr", data=data)

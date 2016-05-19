@@ -168,3 +168,21 @@ class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,
             'attributes',
         )
         list_serializer_class = ProjectWithMeterRunsListSerializer
+
+
+class ProjectRunSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectRun
+        fields = (
+            'project',
+            'meter_type',
+            'start_date',
+            'end_date',
+            'n_days',
+            'added',
+            'status',
+        )
+        read_only_fields = (
+            'added',
+        )

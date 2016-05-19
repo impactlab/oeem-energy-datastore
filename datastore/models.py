@@ -291,7 +291,6 @@ class Project(models.Model):
             return
 
         meter = self._get_meter(meter_type)
-
         meter_results = meter.evaluate(DataCollection(project=project))
         timeseries_period = self._get_timeseries_period(project, start_date, end_date)
 
@@ -394,6 +393,31 @@ class Project(models.Model):
 
     def attributes(self):
         return self.projectattribute_set.all()
+
+
+@python_2_unicode_compatible
+class ProjectRun(models.Model):
+    """Encapsulates the request to run a Project's meters, pointing to Celery objects and Meter results."""
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('FAILED', 'Failed'),
+        ('SUCCESS', 'Success')
+    )
+    METER_TYPE_CHOICES = (
+        ('RESIDENTIAL', 'Residential'),
+        ('COMMERICAL', 'Commercial'),
+    )
+    project = models.ForeignKey(Project)
+    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, null=True)
+    status = models.CharField(max_length=250, choices=STATUS_CHOICES, null=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    n_days = models.IntegerField(null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return u'ProjectRun(project_id={}, status={})'.format(self.project.project_id, self.status)
 
 
 @python_2_unicode_compatible

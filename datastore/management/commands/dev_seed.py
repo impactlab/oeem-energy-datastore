@@ -29,3 +29,15 @@ class Command(BaseCommand):
             expires=now() + timedelta(days=365),
             scope="read write"
         )
+
+        project_owner = user.projectowner
+
+        project = Project.objects.create(
+            project_owner=project_owner,
+            project_id="ABC",
+        )
+
+        project2 = Project.objects.create(
+            project_owner=project_owner,
+            project_id="DEF",
+        )
