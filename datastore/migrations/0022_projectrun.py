@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('meter_type', models.CharField(choices=[(b'RESIDENTIAL', b'Residential'), (b'COMMERICAL', b'Commercial')], max_length=250, null=True)),
-                ('status', models.CharField(choices=[(b'PENDING', b'Pending'), (b'FAILED', b'Failed'), (b'SUCCESS', b'Sucess')], max_length=250, null=True)),
+                ('status', models.CharField(choices=[(b'PENDING', b'Pending'), (b'FAILED', b'Failed'), (b'SUCCESS', b'Success')], max_length=250, null=True)),
                 ('start_date', models.DateTimeField(null=True)),
                 ('end_date', models.DateTimeField(null=True)),
                 ('n_days', models.IntegerField(null=True)),
