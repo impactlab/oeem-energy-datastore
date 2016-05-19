@@ -398,17 +398,6 @@ class ProjectRun(models.Model):
 
 
 @python_2_unicode_compatible
-class ProjectMeterResult(models.Model):
-    """Container for the results output from running a Project's Meters."""
-    project_run = models.ForeignKey(ProjectRun)
-    added = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return u'ProjectMeterResults(project_run_id={})'.format(self.project_run.project_run_id)
-
-
-@python_2_unicode_compatible
 class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100, unique=True)
     display_name = models.CharField(max_length=100)
@@ -613,7 +602,6 @@ class MeterRun(models.Model):
         ('DFLT_COM_NG', 'Default Commercial Natural Gas'),
     )
     project = models.ForeignKey(Project)
-    project_meter_result = models.ForeignKey(ProjectMeterResult, null=True)
     consumption_metadata = models.ForeignKey(ConsumptionMetadata)
     serialization = models.CharField(max_length=100000, blank=True, null=True)
     annual_usage_baseline = models.FloatField(blank=True, null=True)

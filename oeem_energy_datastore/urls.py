@@ -23,7 +23,6 @@ from datastore import views as datastore_views
 router = DefaultRouter()
 router.register(r'projects', datastore_views.ProjectViewSet, base_name='project')
 router.register(r'project_runs', datastore_views.ProjectRunViewSet, base_name='project_run')
-router.register(r'project_meter_results', datastore_views.ProjectMeterResultViewSet, base_name='project_meter_result')
 router.register(r'project_attribute_keys', datastore_views.ProjectAttributeKeyViewSet, base_name='project_attribute_key')
 router.register(r'project_attributes', datastore_views.ProjectAttributeViewSet, base_name='project_attribute')
 router.register(r'project_owners', datastore_views.ProjectOwnerViewSet, base_name='project_owner')
