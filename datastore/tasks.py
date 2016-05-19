@@ -6,7 +6,7 @@ from datastore.models import Project, ProjectRun
 
 
 @shared_task
-def run_meter(project_run_pk):
+def execute_project_run(project_run_pk):
     project_run = ProjectRun.objects.get(pk=project_run_pk)
     if not project_run:
         print "Received an invalid project_run_pk %s" % project_run_pk
