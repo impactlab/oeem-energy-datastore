@@ -18,7 +18,10 @@ def run_meter(project_run_pk):
         return
 
     try:
-        project.run_meter()
+        project.run_meter(meter_type=project_run.meter_type,
+                          start_date=project_run.start_date,
+                          end_date=project_run.end_date,
+                          n_days=project_run.n_days)
         project_run.status = 'SUCCESS'
     except:
         project_run.status = 'FAILED'
