@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from datastore import views as datastore_views
+from portal import views as portal_views
 
 router = DefaultRouter()
 router.register(r'projects', datastore_views.ProjectViewSet, base_name='project')
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^oauth2/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     url(r'^docs/', include('api_doc.urls')),
     url(r'^api/v1/', include(router.urls)),
+    url(r'^portal/$', portal_views.index, name='index'),
     url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
 ]
 
