@@ -131,6 +131,8 @@ LOGGING = {
 }
 
 BROKER_URL = 'amqp://guest:guest@{}/'.format(os.environ["BROKER_HOST"])
+BROKER_BACKEND = os.environ.get("BROKER_BACKEND", "memory")
+CELERY_ALWAYS_EAGER = os.environ.get("CELERY_ALWAYS_EAGER", "true").lower() == "true"
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -144,9 +146,6 @@ SWAGGER_SETTINGS = {
 
 # DJANGO DEBUG TOOLBAR
 if DEBUG:
-    BROKER_BACKEND = 'memory'
-    CELERY_ALWAYS_EAGER = True
-
     INSTALLED_APPS += ('debug_toolbar',)
     MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     DEBUG_TOOLBAR_PATCH_SETTINGS = False
