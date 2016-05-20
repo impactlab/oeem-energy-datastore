@@ -1,1 +1,51 @@
-<h1>Hello Customer Portal World</h1>
+{% extends 'base.html' %}
+
+{% block title %}Customer Portal{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="row-md-12">
+
+    <div class="col-md-12">
+      <h1>OEEM Customer Portal</h1>
+      <hr />
+    </div>
+
+    <div class="col-md-4">
+
+      <h3>Customer Information</h3>
+      <p>Customer Name</p>
+
+      <hr />
+
+      <h3>Project and Consumption Data</h3>
+
+      <p>Last Updated: 5 days ago</p>
+      <p>5,234 projects found</p>
+      <p>123,837 consumption data points</p>
+      <p class="bg-success">Zero import errors</p>
+    </div>
+    <div class="col-md-8">
+      <h3>Recent Project Runs</h3>
+
+      <div>ID 48</div>
+      <div>Project Count: 5,234</div>
+      <div class="bg-success">No errors</div>
+
+      <div>
+        <a href="" class="btn btn-primary">Download CSV</a>
+      </div>
+
+      <hr />
+
+      <div>ID 47</div>
+      <div>Project Count: 5,234</div>
+      <div class="bg-danger">Failed</div>
+
+    </div>
+
+  </div>
+</div>
+
+{% endblock body %}
