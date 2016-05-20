@@ -130,8 +130,10 @@ LOGGING = {
     }
 }
 
-BROKER_URL = 'amqp://guest:guest@{}/'.format(os.environ["BROKER_HOST"])
-BROKER_BACKEND = os.environ.get("BROKER_BACKEND", "memory")
+BROKER_URL = os.environ["BROKER_URL"]
+
+# defaults for development, should be overriden in production.
+BROKER_TRANSPORT = os.environ.get("BROKER_TRANSPORT", "memory")
 CELERY_ALWAYS_EAGER = os.environ.get("CELERY_ALWAYS_EAGER", "true").lower() == "true"
 
 CELERY_ACCEPT_CONTENT = ['json']
