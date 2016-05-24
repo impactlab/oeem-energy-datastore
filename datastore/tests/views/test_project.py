@@ -299,10 +299,11 @@ class ProjectAPITestCase(OAuthTestCase):
             '/api/v1/projects/?with_meter_runs=True'
         ).json()
 
-        assert len(all_project_data) == 3
+        assert len(all_project_data) == 4
         assert len(all_project_data[0]["recent_meter_runs"]) == 0
         assert len(all_project_data[1]["recent_meter_runs"]) == 0
-        assert len(all_project_data[2]["recent_meter_runs"]) == 2
+        assert len(all_project_data[2]["recent_meter_runs"]) == 0
+        assert len(all_project_data[3]["recent_meter_runs"]) == 2
 
     def test_project_read_no_query_params(self):
         data = self.get(
