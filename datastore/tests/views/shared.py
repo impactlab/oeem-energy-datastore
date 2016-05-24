@@ -27,12 +27,12 @@ class OAuthTestCase(TestCase):
             project_id="ABC",
         )
 
-        self.project2 = models.Project.objects.create(
-            project_owner=self.project_owner,
+        cls.project2 = models.Project.objects.create(
+            project_owner=cls.project_owner,
             project_id="DEF",
         )
 
-        self.app = ApplicationModel.objects.create(
+        cls.app = ApplicationModel.objects.create(
             name='app',
             client_type=ApplicationModel.CLIENT_CONFIDENTIAL,
             authorization_grant_type=ApplicationModel.GRANT_CLIENT_CREDENTIALS,
