@@ -126,7 +126,7 @@ class Project(models.Model):
             raise NotImplementedError
         return model
 
-    def _save_meter_run(self, meter, meter_results, meter_class, consumption_data, cm_id):
+    def _save_meter_run(self, meter, meter_results, meter_class, meter_settings, consumption_data, cm_id):
 
         model = self._get_model(consumption_data)
 
@@ -180,6 +180,7 @@ class Project(models.Model):
                 gross_savings=gross_savings,
                 annual_savings=annual_savings,
                 meter_class=meter_class,
+                meter_settings=meter_settings,
                 model_parameter_json_baseline=model_parameter_json_baseline,
                 model_parameter_json_reporting=model_parameter_json_reporting,
                 cvrmse_baseline=cvrmse_baseline,
@@ -295,7 +296,7 @@ class Project(models.Model):
         for consumption_data, cm_id in zip(project.consumption, cm_ids):
 
             meter_run, model_parameters_baseline, model_parameters_reporting = \
-                    self._save_meter_run(meter, meter_results, meter_class, consumption_data, cm_id)
+                    self._save_meter_run(meter, meter_results, meter_class, meter_settings, consumption_data, cm_id)
             meter_runs.append(meter_run)
 
             model = self._get_model(consumption_data)
@@ -625,6 +626,7 @@ class MeterRun(models.Model):
     gross_savings = models.FloatField(blank=True, null=True)
     annual_savings = models.FloatField(blank=True, null=True)
     meter_class = models.CharField(max_length=250, blank=True, null=True)
+    meter_settings = JSONField(null=True)
     model_parameter_json_baseline = models.CharField(max_length=10000, blank=True, null=True)
     model_parameter_json_reporting = models.CharField(max_length=10000, blank=True, null=True)
     cvrmse_baseline = models.FloatField(blank=True, null=True)
