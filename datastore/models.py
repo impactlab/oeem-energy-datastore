@@ -238,6 +238,8 @@ class Project(models.Model):
         MeterClass = METER_CLASS_CHOICES.get(meter_type, None)
         if MeterClass is None:
             raise ValueError("Received an invald meter_type %s" % meter_type)
+        if settings is None:
+            settings = {}
         meter = MeterClass(settings=settings)
         return meter
 
