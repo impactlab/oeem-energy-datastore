@@ -28,7 +28,7 @@ import itertools
 #
 # Also: this could live in a separate settings file
 METER_CLASS_CHOICES = {
-    'residential': DefaultResidentialMeter,
+    'DefaultResidentialMeter': DefaultResidentialMeter,
 }
 
 FUEL_TYPE_CHOICES = [
@@ -132,12 +132,7 @@ class Project(models.Model):
         return model
 
     def _get_meter_type_str(self, meter_type, meter_type_suffix):
-
-        if meter_type == "residential":
-            meter_type_str = "DFLT_RES_" + meter_type_suffix
-        elif model_type == "commercial":
-            meter_type_str = "DFLT_COM_" + meter_type_suffix
-        return meter_type_str
+        return meter_type + "_"  + meter_type_suffix
 
     def _get_meter_type_suffix(self, consumption_data):
 
@@ -289,7 +284,7 @@ class Project(models.Model):
             monthly_average_usage_reporting.save()
 
 
-    def run_meter(self, meter_type='residential', start_date=None, end_date=None, n_days=None, meter_settings=None):
+    def run_meter(self, meter_type='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None, meter_settings=None):
         """
         If possible, run the meter specified by meter_type.
 
