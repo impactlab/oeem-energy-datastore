@@ -409,7 +409,7 @@ class ProjectRun(models.Model):
     )
     project = models.ForeignKey(Project)
     meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, null=True)
-    status = models.CharField(max_length=250, choices=STATUS_CHOICES, null=True)
+    status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     n_days = models.IntegerField(null=True)

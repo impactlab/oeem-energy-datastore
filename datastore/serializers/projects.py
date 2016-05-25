@@ -176,14 +176,18 @@ class ProjectRunSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ProjectRun
         fields = (
+            'id',
             'project',
             'meter_type',
             'start_date',
             'end_date',
             'n_days',
-            'added',
             'status',
+            'added',
+            'updated',
         )
         read_only_fields = (
+            'status',
             'added',
+            'updated',
         )

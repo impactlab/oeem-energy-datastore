@@ -107,27 +107,41 @@ LOGGING = {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
         },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
         'logfile': {
             'level': 'DEBUG',
             'filters': ['require_debug_false'],
             'class': 'logging.handlers.WatchedFileHandler',
             'formatter': 'verbose',
-            'filename': os.environ.get("DJANGO_LOGFILE"),
-        }
+            'filename': os.environ.get("DJANGO_LOGFILE", "django.log"),
+        },
+        'celery': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.handlers.WatchedFileHandler',
+            'filename': os.environ.get("CELERY_LOGFILE", "celery.log"),
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['logfile'],
+            'handlers': ['console', 'logfile'],
             'level': 'DEBUG',
         },
-        'customer_registry.views': {
-            'handlers': ['logfile'],
+        'celery': {
+            'handlers': ['console', 'celery'],
             'level': 'DEBUG',
-            'propagate': True,
         },
-    }
+    },
 }
 
 BROKER_URL = os.environ["BROKER_URL"]
