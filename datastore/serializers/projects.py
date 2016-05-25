@@ -15,6 +15,7 @@ __all__ = (
     'ProjectWithMeterRunsSerializer',
     'ProjectWithMonthlyMeterRunsSerializer',
     'ProjectWithAttributesAndMeterRunsSerializer',
+    'ProjectRunSerializer',
 )
 
 BASIC_PROJECT_FIELDS = (
