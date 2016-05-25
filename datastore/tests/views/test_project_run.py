@@ -22,6 +22,17 @@ class ProjectRunAPITestCase(OAuthTestCase):
         }
         response = self.post('/api/v1/project_runs/', data)
         assert response.status_code == 201
+        # Test the default for meter_type
+        assert response.data['meter_type'] == 'DefaultResidentialMeter'
+
+
+        # Test failing meter_type validation
+        data = {
+            'project': self.project2.pk,
+            'meter_type': 'foo'
+        }
+        response = self.post('/api/v1/project_runs/', data)
+        assert response.status_code == 400
 
 
         # Test filtered retrieval for the first project
