@@ -22,11 +22,6 @@ import json
 from collections import defaultdict, OrderedDict
 import itertools
 
-# This is perhaps unneccessary...callers of `run_meter` could just
-# pass the class name directly. For now, though, the existing code
-# depends on being about to pass 'residential' as a meter type.
-#
-# Also: this could live in a separate settings file
 METER_CLASS_CHOICES = {
     'DefaultResidentialMeter': DefaultResidentialMeter,
 }
