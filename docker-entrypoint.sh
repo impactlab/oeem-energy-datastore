@@ -12,12 +12,13 @@ fi
 mkdir /srv/run/celery
 mkdir /srv/logs/celery
 
-celery multi start 3 -A oeem_energy_datastore -l info --pidfile="/srv/run/celery/%n.pid" --logfile="/srv/logs/celery/%n.log"
+celery multi start 1 -A oeem_energy_datastore -l info --pidfile="/srv/run/celery/%n.pid" --logfile="/srv/logs/celery/%n.log"
 
 touch /srv/logs/gunicorn.log
 touch /srv/logs/access.log
 touch /srv/logs/django.log
-tail -n 0 -f /srv/logs/*.log /srv/logs/**/.log &
+touch /srv/logs/celery.log
+tail -n 0 -f /srv/logs/*.log /srv/logs/**/*.log &
 
 exec gunicorn oeem_energy_datastore.wsgi \
     --bind 0.0.0.0:8000 \

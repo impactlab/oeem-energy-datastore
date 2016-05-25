@@ -34,8 +34,43 @@ class ProjectRunAPITestCase(OAuthTestCase):
 
         assert project_run['project'] == self.project.pk
 
+        assert list(project_run.keys()) == [
+            "id",
+            "project",
+            "meter_type",
+            "start_date",
+            "end_date",
+            "n_days",
+            "status",
+            "traceback",
+            "added",
+            "updated",
+        ]
+
+    def test_project_run_status_success(self):
+
+        # bad meter type
+        data = {
+            'project': self.project.pk,
+            'meter_type': 'residential',
+        }
+        response = self.post('/api/v1/project_runs/', data)
+        project_run = response.data
+
+        assert project_run['status'] == 'PENDING'
+
+        response = self.get('/api/v1/project_runs/{}/'.format(project_run['id']))
+        project_run = response.data
+
         assert project_run['status'] == 'SUCCESS'
+        assert project_run['traceback'] is None
 
-        # TODO: test unauth'd project id
+    def test_project_run_bad_project_id(self):
 
-        # TODO: test invalid project id
+        # bad project id
+        data = {
+            'project': 99999999,
+        }
+        response = self.post('/api/v1/project_runs/', data)
+        project_run = response.data
+        assert 'Invalid pk "99999999"' in project_run['project'][0]

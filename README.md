@@ -36,6 +36,7 @@ We recommend using virtualenv (or virtualenvwrapper) to manage python packages
     export DATABASE_URL=postgres://:@localhost:5432/oeem_energy_datastore
     export SECRET_KEY=<django-secret-key>
     export DJANGO_LOGFILE=django.log
+    export CELERY_LOGFILE=celery.log
     export BROKER_HOST=0.0.0.0:5672 # Placeholder (not currently used - can be any valid URI)
 
     # For development only

@@ -400,19 +400,21 @@ class ProjectRun(models.Model):
     """Encapsulates the request to run a Project's meters, pointing to Celery objects and Meter results."""
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
+        ('RUNNING', 'Running'),
         ('FAILED', 'Failed'),
         ('SUCCESS', 'Success')
     )
     METER_TYPE_CHOICES = (
-        ('RESIDENTIAL', 'Residential'),
-        ('COMMERICAL', 'Commercial'),
+        ('residential', 'Residential'),
+        ('commercial', 'Commercial'),
     )
     project = models.ForeignKey(Project)
-    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, null=True)
-    status = models.CharField(max_length=250, choices=STATUS_CHOICES, null=True)
+    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, default="RESIDENTIAL")
+    status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     n_days = models.IntegerField(null=True)
+    traceback = models.CharField(max_length=10000, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
