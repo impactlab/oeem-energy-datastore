@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import traceback
+import logging, traceback
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -30,7 +30,7 @@ def execute_project_run(project_run_pk):
     )
 
     try:
-        project.run_meter(meter_type=project_run.meter_type,
+        project.run_meter(meter_class=project_run.meter_class,
                           start_date=project_run.start_date,
                           end_date=project_run.end_date,
                           n_days=project_run.n_days)
@@ -44,10 +44,10 @@ def execute_project_run(project_run_pk):
         tb = traceback.format_exc()
         project_run.status = 'FAILED'
         project_run.traceback = tb
-
         logger.info(
             "Failed running {} meter for project {}:\n{}"
             .format(project_run.meter_type, project.pk, tb)
         )
+        logging.error(traceback.print_exc())
 
     project_run.save()

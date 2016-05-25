@@ -126,27 +126,9 @@ class Project(models.Model):
             raise NotImplementedError
         return model
 
-    def _get_meter_type_str(self, meter_type, meter_type_suffix):
-        return meter_type + "_"  + meter_type_suffix
-
-    def _get_meter_type_suffix(self, consumption_data):
-
-        fuel_type_tag = consumption_data.fuel_type
-
-        # determine model type
-        if fuel_type_tag == "electricity":
-            meter_type_suffix = "E"
-        elif fuel_type_tag == "natural_gas":
-            meter_type_suffix = "NG"
-        else:
-            raise NotImplementedError
-        return meter_type_suffix
-
-    def _save_meter_run(self, meter, meter_results, meter_type, consumption_data, cm_id):
+    def _save_meter_run(self, meter, meter_results, meter_class, consumption_data, cm_id):
 
         model = self._get_model(consumption_data)
-        meter_type_suffix = self._get_meter_type_suffix(consumption_data)
-        meter_type_str = self._get_meter_type_str(meter_type, meter_type_suffix)
 
         fuel_type_tag = consumption_data.fuel_type
 
@@ -197,7 +179,7 @@ class Project(models.Model):
                 annual_usage_reporting=annual_usage_reporting,
                 gross_savings=gross_savings,
                 annual_savings=annual_savings,
-                meter_type=meter_type_str,
+                meter_class=meter_class,
                 model_parameter_json_baseline=model_parameter_json_baseline,
                 model_parameter_json_reporting=model_parameter_json_reporting,
                 cvrmse_baseline=cvrmse_baseline,
@@ -224,10 +206,10 @@ class Project(models.Model):
         return Period(start_date, end_date)
 
 
-    def _get_meter(self, meter_type, settings=None):
-        MeterClass = METER_CLASS_CHOICES.get(meter_type, None)
+    def _get_meter(self, meter_class, settings=None):
+        MeterClass = METER_CLASS_CHOICES.get(meter_class, None)
         if MeterClass is None:
-            raise ValueError("Received an invald meter_type %s" % meter_type)
+            raise ValueError("Received an invald meter_class %s" % meter_class)
         if settings is None:
             settings = {}
         meter = MeterClass(settings=settings)
@@ -279,13 +261,13 @@ class Project(models.Model):
             monthly_average_usage_reporting.save()
 
 
-    def run_meter(self, meter_type='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None, meter_settings=None):
+    def run_meter(self, meter_class='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None, meter_settings=None):
         """
-        If possible, run the meter specified by meter_type.
+        If possible, run the meter specified by meter_class.
 
         Parameters
         ----------
-        meter_type: string
+        meter_class: string
             One of the keys in METER_CLASS_CHOICES
 
         start_date: datetime
@@ -305,7 +287,7 @@ class Project(models.Model):
             warn(message)
             return
 
-        meter = self._get_meter(meter_type, settings=meter_settings)
+        meter = self._get_meter(meter_class, settings=meter_settings)
         meter_results = meter.evaluate(DataCollection(project=project))
         timeseries_period = self._get_timeseries_period(project, start_date, end_date)
 
@@ -313,11 +295,10 @@ class Project(models.Model):
         for consumption_data, cm_id in zip(project.consumption, cm_ids):
 
             meter_run, model_parameters_baseline, model_parameters_reporting = \
-                    self._save_meter_run(meter, meter_results, meter_type, consumption_data, cm_id)
+                    self._save_meter_run(meter, meter_results, meter_class, consumption_data, cm_id)
             meter_runs.append(meter_run)
 
             model = self._get_model(consumption_data)
-            meter_type_suffix = self._get_meter_type_suffix(consumption_data)
 
             self._save_daily_and_monthly_timeseries(project, meter, meter_run, model, model_parameters_baseline, model_parameters_reporting, timeseries_period)
 
@@ -425,7 +406,7 @@ class ProjectRun(models.Model):
     )
     project = models.ForeignKey(Project)
     status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
-    meter_type = models.CharField(max_length=250, null=True, default="DefaultResidentialMeter")
+    meter_class = models.CharField(max_length=250, null=True, default="DefaultResidentialMeter")
     meter_settings = JSONField(null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
@@ -489,11 +470,11 @@ class ProjectBlock(models.Model):
     def __str__(self):
         return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
 
-    def run_meters(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
+    def run_meters(self, meter_class='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None):
         """ Run meter for each project in the project block.
         """
         for project in self.projects.all():
-            project.run_meter(meter_type, start_date, end_date, n_days)
+            project.run_meter(meter_class, start_date, end_date, n_days)
 
     def compute_summary_timeseries(self):
         """ Compute aggregate timeseries for all projects in project block.
@@ -636,12 +617,6 @@ class ConsumptionRecord(models.Model):
 
 @python_2_unicode_compatible
 class MeterRun(models.Model):
-    METER_TYPE_CHOICES = (
-        ('DFLT_RES_E', 'Default Residential Electricity'),
-        ('DFLT_RES_NG', 'Default Residential Natural Gas'),
-        ('DFLT_COM_E', 'Default Commercial Electricity'),
-        ('DFLT_COM_NG', 'Default Commercial Natural Gas'),
-    )
     project = models.ForeignKey(Project)
     consumption_metadata = models.ForeignKey(ConsumptionMetadata)
     serialization = models.CharField(max_length=100000, blank=True, null=True)
@@ -649,7 +624,7 @@ class MeterRun(models.Model):
     annual_usage_reporting = models.FloatField(blank=True, null=True)
     gross_savings = models.FloatField(blank=True, null=True)
     annual_savings = models.FloatField(blank=True, null=True)
-    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, blank=True, null=True)
+    meter_class = models.CharField(max_length=250, blank=True, null=True)
     model_parameter_json_baseline = models.CharField(max_length=10000, blank=True, null=True)
     model_parameter_json_reporting = models.CharField(max_length=10000, blank=True, null=True)
     cvrmse_baseline = models.FloatField(blank=True, null=True)

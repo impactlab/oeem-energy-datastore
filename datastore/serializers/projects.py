@@ -178,7 +178,7 @@ class ProjectRunSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'project',
-            'meter_type',
+            'meter_class',
             'meter_settings',
             'start_date',
             'end_date',
@@ -195,7 +195,7 @@ class ProjectRunSerializer(serializers.ModelSerializer):
             'updated',
         )
 
-    def validate_meter_type(self, value):
+    def validate_meter_class(self, value):
         if value not in models.METER_CLASS_CHOICES:
-            raise serializers.ValidationError("Invalid meter_type")
+            raise serializers.ValidationError("Invalid meter_class")
         return value

@@ -13,7 +13,7 @@ MINIMAL_METER_RUN_FIELDS = (
     'id',
     'project',
     'consumption_metadata',
-    'meter_type',
+    'meter_class',
     'annual_usage_baseline',
     'annual_usage_reporting',
     'annual_savings',
