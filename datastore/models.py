@@ -28,7 +28,7 @@ import itertools
 #
 # Also: this could live in a separate settings file
 METER_CLASS_CHOICES = {
-    'residential': 'DefaultResidentialMeter',
+    'residential': DefaultResidentialMeter,
 }
 
 FUEL_TYPE_CHOICES = [
