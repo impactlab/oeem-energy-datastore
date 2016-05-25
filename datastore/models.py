@@ -424,8 +424,8 @@ class ProjectRun(models.Model):
         ('commercial', 'Commercial'),
     )
     project = models.ForeignKey(Project)
-    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, default="RESIDENTIAL")
     status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
+    meter_type = models.CharField(max_length=250, null=True, default="DefaultResidentialMeter")
     meter_settings = JSONField(null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
