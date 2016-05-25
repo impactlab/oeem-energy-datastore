@@ -182,11 +182,13 @@ class ProjectRunSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'n_days',
+            'traceback',
             'status',
             'added',
             'updated',
         )
         read_only_fields = (
+            'traceback',
             'status',
             'added',
             'updated',
