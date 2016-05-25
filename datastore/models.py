@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import JSONField
 from django.utils.timezone import now
 from django.utils.encoding import python_2_unicode_compatible
 from django.db.models.signals import post_save, post_init
@@ -235,7 +236,7 @@ class Project(models.Model):
 
     def _get_meter(self, meter_type, settings=None):
         MeterClass = METER_CLASS_CHOICES.get(meter_type, None)
-        if MeterClass is None
+        if MeterClass is None:
             raise ValueError("Received an invald meter_type %s" % meter_type)
         meter = MeterClass(settings=settings)
         return meter
@@ -433,6 +434,7 @@ class ProjectRun(models.Model):
     project = models.ForeignKey(Project)
     meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, default="RESIDENTIAL")
     status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
+    meter_settings = JSONField(null=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     n_days = models.IntegerField(null=True)

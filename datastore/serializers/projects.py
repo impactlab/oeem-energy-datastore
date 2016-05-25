@@ -179,6 +179,7 @@ class ProjectRunSerializer(serializers.ModelSerializer):
             'id',
             'project',
             'meter_type',
+            'meter_settings',
             'start_date',
             'end_date',
             'n_days',
