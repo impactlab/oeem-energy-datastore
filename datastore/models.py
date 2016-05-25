@@ -21,6 +21,15 @@ import json
 from collections import defaultdict, OrderedDict
 import itertools
 
+# This is perhaps unneccessary...callers of `run_meter` could just
+# pass the class name directly. For now, though, the existing code
+# depends on being about to pass 'residential' as a meter type.
+#
+# Also: this could live in a separate settings file
+METER_CLASS_CHOICES = {
+    'residential': 'DefaultResidentialMeter',
+}
+
 FUEL_TYPE_CHOICES = [
     ('E', 'electricity'),
     ('NG', 'natural_gas'),
@@ -224,14 +233,11 @@ class Project(models.Model):
         return Period(start_date, end_date)
 
 
-    def _get_meter(self, meter_type):
-        if meter_type == "residential":
-            meter = DefaultResidentialMeter()
-        elif meter_type == "commercial":
-            raise NotImplementedError
-        else:
-            raise NotImplementedError
-
+    def _get_meter(self, meter_type, settings=None):
+        MeterClass = METER_CLASS_CHOICES.get(meter_type, None)
+        if MeterClass is None
+            raise ValueError("Received an invald meter_type %s" % meter_type)
+        meter = MeterClass(settings=settings)
         return meter
 
     def _save_daily_and_monthly_timeseries(self, project, meter, meter_run, model, model_parameters_baseline, model_parameters_reporting, period):
@@ -280,8 +286,24 @@ class Project(models.Model):
             monthly_average_usage_reporting.save()
 
 
-    def run_meter(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
-        """ If possible, run the meter specified by meter_type.
+    def run_meter(self, meter_type='residential', start_date=None, end_date=None, n_days=None, meter_settings=None):
+        """
+        If possible, run the meter specified by meter_type.
+
+        Parameters
+        ----------
+        meter_type: string
+            One of the keys in METER_CLASS_CHOICES
+
+        start_date: datetime
+
+        end_data: datetime
+
+        n_days: int
+
+        meter_settings: dict
+            Dictionary of extra settings to send to the meter.
+
         """
         try:
             project, cm_ids = self.eemeter_project()
@@ -290,7 +312,7 @@ class Project(models.Model):
             warn(message)
             return
 
-        meter = self._get_meter(meter_type)
+        meter = self._get_meter(meter_type, settings=meter_settings)
         meter_results = meter.evaluate(DataCollection(project=project))
         timeseries_period = self._get_timeseries_period(project, start_date, end_date)
 
