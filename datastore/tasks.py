@@ -23,10 +23,9 @@ def execute_project_run(project_run_pk):
     project_run.save()
 
     project = project_run.project
-
     logger.info(
         "Running {} meter for project {}"
-        .format(project_run.meter_type, project.pk)
+        .format(project_run.meter_class, project.pk)
     )
 
     try:
@@ -35,10 +34,9 @@ def execute_project_run(project_run_pk):
                           end_date=project_run.end_date,
                           n_days=project_run.n_days)
         project_run.status = 'SUCCESS'
-
         logger.info(
             "Successfully ran {} meter for project {}"
-            .format(project_run.meter_type, project.pk)
+            .format(project_run.meter_class, project.pk)
         )
     except:
         tb = traceback.format_exc()
@@ -46,7 +44,7 @@ def execute_project_run(project_run_pk):
         project_run.traceback = tb
         logger.info(
             "Failed running {} meter for project {}:\n{}"
-            .format(project_run.meter_type, project.pk, tb)
+            .format(project_run.meter_class, project.pk, tb)
         )
         logging.error(traceback.print_exc())
 

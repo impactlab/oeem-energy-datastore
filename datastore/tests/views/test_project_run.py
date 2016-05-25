@@ -48,7 +48,8 @@ class ProjectRunAPITestCase(OAuthTestCase):
         assert list(project_run.keys()) == [
             "id",
             "project",
-            "meter_type",
+            "meter_class",
+            "meter_settings",
             "start_date",
             "end_date",
             "n_days",
