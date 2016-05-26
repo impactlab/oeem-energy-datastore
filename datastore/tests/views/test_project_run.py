@@ -22,6 +22,17 @@ class ProjectRunAPITestCase(OAuthTestCase):
         }
         response = self.post('/api/v1/project_runs/', data)
         assert response.status_code == 201
+        # Test the default for meter_type
+        assert response.data['meter_class'] == 'DefaultResidentialMeter'
+
+
+        # Test failing meter_class validation
+        data = {
+            'project': self.project2.pk,
+            'meter_class': 'foo'
+        }
+        response = self.post('/api/v1/project_runs/', data)
+        assert response.status_code == 400
 
 
         # Test filtered retrieval for the first project
@@ -37,7 +48,8 @@ class ProjectRunAPITestCase(OAuthTestCase):
         assert list(project_run.keys()) == [
             "id",
             "project",
-            "meter_type",
+            "meter_class",
+            "meter_settings",
             "start_date",
             "end_date",
             "n_days",

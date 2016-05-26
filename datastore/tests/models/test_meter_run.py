@@ -30,7 +30,7 @@ class MeterRunTestCase(TestCase):
             "annual_usage_reporting",
             "gross_savings",
             "annual_savings",
-            "meter_type",
+            "meter_class",
             "model_parameter_json_baseline",
             "model_parameter_json_reporting",
             "cvrmse_baseline",

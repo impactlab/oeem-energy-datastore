@@ -145,7 +145,7 @@ LOGGING = {
     },
 }
 
-BROKER_URL = os.environ["BROKER_URL"]
+BROKER_URL = os.environ.get("BROKER_URL", None)
 
 # defaults for development, should be overriden in production.
 BROKER_TRANSPORT = os.environ.get("BROKER_TRANSPORT", "memory")
