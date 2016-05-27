@@ -20,5 +20,6 @@ admin.site.register(models.DailyUsageSummaryBaseline)
 admin.site.register(models.DailyUsageSummaryActual)
 admin.site.register(models.DailyUsageSummaryReporting)
 admin.site.register(models.FuelTypeSummary)
+admin.site.register(models.ProjectRun)
 
 admin.site.site_header = "Open Energy Efficiency Meter"

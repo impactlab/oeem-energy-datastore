@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.views.generic.base import RedirectView
-from django.conf.urls import include, url, patterns
+from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
@@ -22,6 +22,7 @@ from datastore import views as datastore_views
 
 router = DefaultRouter()
 router.register(r'projects', datastore_views.ProjectViewSet, base_name='project')
+router.register(r'project_runs', datastore_views.ProjectRunViewSet, base_name='project_run')
 router.register(r'project_attribute_keys', datastore_views.ProjectAttributeKeyViewSet, base_name='project_attribute_key')
 router.register(r'project_attributes', datastore_views.ProjectAttributeViewSet, base_name='project_attribute')
 router.register(r'project_owners', datastore_views.ProjectOwnerViewSet, base_name='project_owner')
@@ -41,6 +42,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     import debug_toolbar
-    urlpatterns += patterns('',
-        url(r'^__debug__/', include(debug_toolbar.urls)),
-    )
+    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))

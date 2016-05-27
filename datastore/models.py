@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import JSONField
 from django.utils.timezone import now
 from django.utils.encoding import python_2_unicode_compatible
 from django.db.models.signals import post_save, post_init
@@ -18,8 +19,12 @@ from warnings import warn
 from datetime import timedelta, datetime
 import numpy as np
 import json
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import itertools
+
+METER_CLASS_CHOICES = {
+    'DefaultResidentialMeter': DefaultResidentialMeter,
+}
 
 FUEL_TYPE_CHOICES = [
     ('E', 'electricity'),
@@ -74,12 +79,10 @@ class Project(models.Model):
     def __str__(self):
         return u'Project {}'.format(self.project_id)
 
-    @property
-    def baseline_period(self):
+    def eemeter_baseline_period(self):
         return Period(self.baseline_period_start, self.baseline_period_end)
 
-    @property
-    def reporting_period(self):
+    def eemeter_reporting_period(self):
         return Period(self.reporting_period_start, self.reporting_period_end)
 
     @property
@@ -89,35 +92,104 @@ class Project(models.Model):
         else:
             return None
 
-    def eemeter_project(self):
+    def eemeter_location(self):
         if self.lat_lng is not None:
             location = Location(lat_lng=self.lat_lng)
         elif self.weather_station is not None:
             location = Location(station=self.weather_station)
         else:
             location = Location(zipcode=self.zipcode)
-        consumption = [cm.eemeter_consumption_data() for cm in self.consumptionmetadata_set.all()]
-        consumption_metadata_ids = [cm.id for cm in self.consumptionmetadata_set.all()]
+        return location
 
-        project = EEMeterProject(location, consumption, self.baseline_period, self.reporting_period)
+    def eemeter_project(self):
+        location = self.eemeter_location()
+        cm_set = self.consumptionmetadata_set.all()
+        consumption = [cm.eemeter_consumption_data() for cm in cm_set]
+        consumption_metadata_ids = [cm.id for cm in cm_set]
+
+        baseline_period = self.eemeter_baseline_period()
+        reporting_period = self.eemeter_reporting_period()
+
+        project = EEMeterProject(location, consumption, baseline_period, reporting_period)
         return project, consumption_metadata_ids
 
-    def run_meter(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
-        """ If possible, run the meter specified by meter_type.
-        """
-        try:
-            project, cm_ids = self.eemeter_project()
-        except ValueError:
-            message = "Cannot create eemeter project; skipping project id={}.".format(self.project_id)
-            warn(message)
-            return
+    def _get_model(self, consumption_data):
 
-        if meter_type == "residential":
-            meter = DefaultResidentialMeter()
-        elif meter_type == "commercial":
-            raise NotImplementedError
+        fuel_type_tag = consumption_data.fuel_type
+
+        # determine model type
+        if fuel_type_tag == "electricity":
+            model = AverageDailyTemperatureSensitivityModel(heating=True,cooling=True)
+        elif fuel_type_tag == "natural_gas":
+            model = AverageDailyTemperatureSensitivityModel(heating=True,cooling=False)
         else:
             raise NotImplementedError
+        return model
+
+    def _save_meter_run(self, meter, meter_results, meter_class, meter_settings, consumption_data, cm_id):
+
+        model = self._get_model(consumption_data)
+
+        fuel_type_tag = consumption_data.fuel_type
+
+        # gather meter results
+        annual_usage_baseline = meter_results.get_data("annualized_usage", ["baseline", fuel_type_tag])
+        if annual_usage_baseline is not None:
+            annual_usage_baseline = annual_usage_baseline.value
+
+        annual_usage_reporting = meter_results.get_data("annualized_usage", ["reporting", fuel_type_tag])
+        if annual_usage_reporting is not None:
+            annual_usage_reporting = annual_usage_reporting.value
+
+        gross_savings = meter_results.get_data("gross_savings", [fuel_type_tag])
+        if gross_savings is not None:
+            gross_savings = gross_savings.value
+
+        annual_savings = None
+        if annual_usage_baseline is not None and annual_usage_reporting is not None:
+            annual_savings = annual_usage_baseline - annual_usage_reporting
+
+        # gather meter results
+        cvrmse_baseline = meter_results.get_data("cvrmse", ["baseline", fuel_type_tag])
+        if cvrmse_baseline is not None:
+            cvrmse_baseline = cvrmse_baseline.value
+
+        cvrmse_reporting = meter_results.get_data("cvrmse", ["reporting", fuel_type_tag])
+        if cvrmse_reporting is not None:
+            cvrmse_reporting = cvrmse_reporting.value
+
+        model_parameter_json_baseline = meter_results.get_data("model_params", ["baseline", fuel_type_tag])
+        model_parameter_array_baseline = None
+        if model_parameter_json_baseline is not None:
+            model_parameter_dict_baseline = model_parameter_json_baseline.value.to_dict()
+            model_parameter_json_baseline = json.dumps(model_parameter_dict_baseline)
+            model_parameters_baseline = model.param_type(model_parameter_dict_baseline)
+
+        model_parameter_json_reporting = meter_results.get_data("model_params", ["reporting", fuel_type_tag])
+        model_parameter_array_reporting = None
+        if model_parameter_json_reporting is not None:
+            model_parameter_dict_reporting = model_parameter_json_reporting.value.to_dict()
+            model_parameter_json_reporting = json.dumps(model_parameter_dict_reporting)
+            model_parameters_reporting = model.param_type(model_parameter_dict_reporting)
+
+            meter_run = MeterRun(project=self,
+                consumption_metadata=ConsumptionMetadata.objects.get(pk=cm_id),
+                serialization=dump(meter.meter),
+                annual_usage_baseline=annual_usage_baseline,
+                annual_usage_reporting=annual_usage_reporting,
+                gross_savings=gross_savings,
+                annual_savings=annual_savings,
+                meter_class=meter_class,
+                meter_settings=meter_settings,
+                model_parameter_json_baseline=model_parameter_json_baseline,
+                model_parameter_json_reporting=model_parameter_json_reporting,
+                cvrmse_baseline=cvrmse_baseline,
+                cvrmse_reporting=cvrmse_reporting)
+
+        meter_run.save()
+        return meter_run, model_parameters_baseline, model_parameters_reporting
+
+    def _get_timeseries_period(self, project, start_date, end_date):
 
         if start_date is None:
             start_date = now()
@@ -132,143 +204,156 @@ class Project(models.Model):
         if end_date is None:
             end_date = now()
 
-        daily_evaluation_period = Period(start_date, end_date)
+        return Period(start_date, end_date)
 
+
+    def _get_meter(self, meter_class, settings=None):
+        MeterClass = METER_CLASS_CHOICES.get(meter_class, None)
+        if MeterClass is None:
+            raise ValueError("Received an invald meter_class %s" % meter_class)
+        if settings is None:
+            settings = {}
+        meter = MeterClass(settings=settings)
+        return meter
+
+    def _save_daily_and_monthly_timeseries(self, project, meter, meter_run, model, model_parameters_baseline, model_parameters_reporting, period):
+
+        # record time series of usage for baseline and reporting
+        avg_temps = project.weather_source.daily_temperatures(
+                period, meter.temperature_unit_str)
+
+        values_baseline = model.transform(avg_temps, model_parameters_baseline)
+        values_reporting = model.transform(avg_temps, model_parameters_reporting)
+
+        month_names = [period.start.strftime("%Y-%m")]
+
+        month_groups_baseline = defaultdict(list)
+        month_groups_reporting = defaultdict(list)
+
+        for value_baseline, value_reporting, days in zip(values_baseline, values_reporting, range(period.timedelta.days)):
+            date = period.start + timedelta(days=days)
+
+            daily_usage_baseline = DailyUsageBaseline(meter_run=meter_run, value=value_baseline, date=date)
+            daily_usage_baseline.save()
+
+            daily_usage_reporting = DailyUsageReporting(meter_run=meter_run, value=value_reporting, date=date)
+            daily_usage_reporting.save()
+
+            # track monthly usage as well
+            current_month = date.strftime("%Y-%m")
+            if not current_month == month_names[-1]:
+                month_names.append(current_month)
+
+            month_groups_baseline[current_month].append(value_baseline)
+            month_groups_reporting[current_month].append(value_reporting)
+
+        for month_name in month_names:
+            baseline_values = month_groups_baseline[month_name]
+            reporting_values = month_groups_reporting[month_name]
+
+            monthly_average_baseline = 0 if baseline_values == [] else np.nanmean(baseline_values)
+            monthly_average_reporting = 0 if reporting_values == [] else np.nanmean(reporting_values)
+
+            dt = datetime.strptime(month_name, "%Y-%m")
+            monthly_average_usage_baseline = MonthlyAverageUsageBaseline(meter_run=meter_run, value=monthly_average_baseline, date=dt)
+            monthly_average_usage_baseline.save()
+
+            monthly_average_usage_reporting = MonthlyAverageUsageReporting(meter_run=meter_run, value=monthly_average_reporting, date=dt)
+            monthly_average_usage_reporting.save()
+
+
+    def run_meter(self, meter_class='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None, meter_settings=None):
+        """
+        If possible, run the meter specified by meter_class.
+
+        Parameters
+        ----------
+        meter_class: string
+            One of the keys in METER_CLASS_CHOICES
+
+        start_date: datetime
+
+        end_data: datetime
+
+        n_days: int
+
+        meter_settings: dict
+            Dictionary of extra settings to send to the meter.
+
+        """
+        try:
+            project, cm_ids = self.eemeter_project()
+        except ValueError:
+            message = "Cannot create eemeter project; skipping project id={}.".format(self.project_id)
+            warn(message)
+            return
+
+        meter = self._get_meter(meter_class, settings=meter_settings)
         meter_results = meter.evaluate(DataCollection(project=project))
+        timeseries_period = self._get_timeseries_period(project, start_date, end_date)
 
         meter_runs = []
         for consumption_data, cm_id in zip(project.consumption, cm_ids):
 
-            fuel_type_tag = consumption_data.fuel_type
-
-            # determine model type
-            if fuel_type_tag == "electricity":
-                meter_type_suffix = "E"
-                model = AverageDailyTemperatureSensitivityModel(heating=True,cooling=True)
-            elif fuel_type_tag == "natural_gas":
-                meter_type_suffix = "NG"
-                model = AverageDailyTemperatureSensitivityModel(heating=True,cooling=False)
-            else:
-                raise NotImplementedError
-
-            if meter_type == "residential":
-                meter_type_str = "DFLT_RES_" + meter_type_suffix
-            elif model_type == "commercial":
-                meter_type_str = "DFLT_COM_" + meter_type_suffix
-
-            # gather meter results
-            annual_usage_baseline = meter_results.get_data("annualized_usage", ["baseline", fuel_type_tag])
-            if annual_usage_baseline is not None:
-                annual_usage_baseline = annual_usage_baseline.value
-
-            annual_usage_reporting = meter_results.get_data("annualized_usage", ["reporting", fuel_type_tag])
-            if annual_usage_reporting is not None:
-                annual_usage_reporting = annual_usage_reporting.value
-
-            gross_savings = meter_results.get_data("gross_savings", [fuel_type_tag])
-            if gross_savings is not None:
-                gross_savings = gross_savings.value
-
-            annual_savings = None
-            if annual_usage_baseline is not None and annual_usage_reporting is not None:
-                annual_savings = annual_usage_baseline - annual_usage_reporting
-
-            # gather meter results
-            cvrmse_baseline = meter_results.get_data("cvrmse", ["baseline", fuel_type_tag])
-            if cvrmse_baseline is not None:
-                cvrmse_baseline = cvrmse_baseline.value
-
-            cvrmse_reporting = meter_results.get_data("cvrmse", ["reporting", fuel_type_tag])
-            if cvrmse_reporting is not None:
-                cvrmse_reporting = cvrmse_reporting.value
-
-            model_parameter_json_baseline = meter_results.get_data("model_params", ["baseline", fuel_type_tag])
-            model_parameter_array_baseline = None
-            if model_parameter_json_baseline is not None:
-                model_parameter_dict_baseline = model_parameter_json_baseline.value.to_dict()
-                model_parameter_json_baseline = json.dumps(model_parameter_dict_baseline)
-                model_parameters_baseline = model.param_type(model_parameter_dict_baseline)
-
-            model_parameter_json_reporting = meter_results.get_data("model_params", ["reporting", fuel_type_tag])
-            model_parameter_array_reporting = None
-            if model_parameter_json_reporting is not None:
-                model_parameter_dict_reporting = model_parameter_json_reporting.value.to_dict()
-                model_parameter_json_reporting = json.dumps(model_parameter_dict_reporting)
-                model_parameters_reporting = model.param_type(model_parameter_dict_reporting)
-
-            meter_run = MeterRun(project=self,
-                    consumption_metadata=ConsumptionMetadata.objects.get(pk=cm_id),
-                    serialization=dump(meter.meter),
-                    annual_usage_baseline=annual_usage_baseline,
-                    annual_usage_reporting=annual_usage_reporting,
-                    gross_savings=gross_savings,
-                    annual_savings=annual_savings,
-                    meter_type=meter_type_str,
-                    model_parameter_json_baseline=model_parameter_json_baseline,
-                    model_parameter_json_reporting=model_parameter_json_reporting,
-                    cvrmse_baseline=cvrmse_baseline,
-                    cvrmse_reporting=cvrmse_reporting)
-
-            meter_run.save()
+            meter_run, model_parameters_baseline, model_parameters_reporting = \
+                    self._save_meter_run(meter, meter_results, meter_class, meter_settings, consumption_data, cm_id)
             meter_runs.append(meter_run)
 
-            # record time series of usage for baseline and reporting
-            avg_temps = project.weather_source.daily_temperatures(
-                    daily_evaluation_period, meter.temperature_unit_str)
+            model = self._get_model(consumption_data)
 
-            values_baseline = model.transform(avg_temps, model_parameters_baseline)
-            values_reporting = model.transform(avg_temps, model_parameters_reporting)
-
-            month_names = [daily_evaluation_period.start.strftime("%Y-%m")]
-
-            month_groups_baseline = defaultdict(list)
-            month_groups_reporting = defaultdict(list)
-
-            for value_baseline, value_reporting, days in zip(values_baseline, values_reporting, range(daily_evaluation_period.timedelta.days)):
-                date = daily_evaluation_period.start + timedelta(days=days)
-
-                daily_usage_baseline = DailyUsageBaseline(meter_run=meter_run, value=value_baseline, date=date)
-                daily_usage_baseline.save()
-
-                daily_usage_reporting = DailyUsageReporting(meter_run=meter_run, value=value_reporting, date=date)
-                daily_usage_reporting.save()
-
-                # track monthly usage as well
-                current_month = date.strftime("%Y-%m")
-                if not current_month == month_names[-1]:
-                    month_names.append(current_month)
-
-                month_groups_baseline[current_month].append(value_baseline)
-                month_groups_reporting[current_month].append(value_reporting)
-
-            for month_name in month_names:
-                baseline_values = month_groups_baseline[month_name]
-                reporting_values = month_groups_reporting[month_name]
-
-                monthly_average_baseline = 0 if baseline_values == [] else np.nanmean(baseline_values)
-                monthly_average_reporting = 0 if reporting_values == [] else np.nanmean(reporting_values)
-
-                dt = datetime.strptime(month_name, "%Y-%m")
-                monthly_average_usage_baseline = MonthlyAverageUsageBaseline(meter_run=meter_run, value=monthly_average_baseline, date=dt)
-                monthly_average_usage_baseline.save()
-
-                monthly_average_usage_reporting = MonthlyAverageUsageReporting(meter_run=meter_run, value=monthly_average_reporting, date=dt)
-                monthly_average_usage_reporting.save()
+            self._save_daily_and_monthly_timeseries(project, meter, meter_run, model, model_parameters_baseline, model_parameters_reporting, timeseries_period)
 
         return meter_runs
 
     @staticmethod
     def recent_meter_runs(project_pks=[]):
+        """
+        Returns most recently create MeterRun objects for each
+        ConsumptionMetadata object associated with the set of projects.
+        NOTE: not an instance method!!
 
-        from django.db import connection
-        cursor = connection.cursor()
+        Parameters
+        ----------
+        project_pks : list of int, default []
+            Primary keys of projects for which to get recent meter runs. If
+            an empty list, will get recent meter runs for every project in
+            the database.
 
-        meter_runs = '''
+        Returns
+        -------
+        out : dict of dict
+            Dictionary in which project primary keys are keys and associated
+            meter runs are values. E.g.::
+
+            { # keys are primary keys of Project objects
+                1: { # keys are primary keys of ConsumptionMetadata objects
+                    1: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "E"
+                    },
+                    2: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "NG"
+                    }
+                },
+                2: {
+                    3: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "E"
+                    },
+                    4: {
+                        "meter_run": <MeterRun object>,
+                        "fuel_type": "NG"
+                    }
+                }
+            }
+
+        """
+
+        meter_run_query = '''
           SELECT DISTINCT ON (consumption.id)
-            project.id,
-            consumption.id,
             meter.*,
-            consumption.fuel_type
+            consumption.fuel_type AS fuel_type_
           FROM datastore_meterrun AS meter
           JOIN datastore_consumptionmetadata AS consumption
             ON meter.consumption_metadata_id = consumption.id
@@ -279,36 +364,60 @@ class Project(models.Model):
         qargs = []
 
         if project_pks:
-            meter_runs = '''
-              {}
+            meter_run_query += '''
               WHERE project.id IN %s
-            '''.format(meter_runs)
+            '''
             qargs.append(tuple(project_pks))
 
-        meter_runs = '''
-          {}
+        meter_run_query += '''
           ORDER BY consumption.id,
             meter.added DESC
-        '''.format(meter_runs)
+        '''
 
-        cursor.execute(meter_runs, qargs)
+        meter_runs = MeterRun.objects.raw(meter_run_query, qargs)
 
-        meterrun_columns = [col[0] for col in cursor.description[2:-1]]
+        # initialize with ordereddict for each project.
+        results = defaultdict(OrderedDict)
 
-        results = {}
-        for consumption_id, rows in itertools.groupby(cursor.fetchall(), key=lambda x: x[1]):
+        for meter_run in meter_runs:
 
-            grouped_rows = list(rows)
-            results[grouped_rows[0][0]] = [{
-                'meterrun': MeterRun(**dict(zip(meterrun_columns, row[2:-1]))),
-                'fuel_type': row[-1]
-            } for row in grouped_rows]
+            results[meter_run.project_id][meter_run.consumption_metadata_id] = {
+                'meter_run': meter_run,
+                'fuel_type': meter_run.fuel_type_,
+            }
 
         return results
 
     def attributes(self):
         return self.projectattribute_set.all()
 
+
+@python_2_unicode_compatible
+class ProjectRun(models.Model):
+    """Encapsulates the request to run a Project's meters, pointing to Celery objects and Meter results."""
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('RUNNING', 'Running'),
+        ('FAILED', 'Failed'),
+        ('SUCCESS', 'Success')
+    )
+    METER_TYPE_CHOICES = (
+        ('residential', 'Residential'),
+        ('commercial', 'Commercial'),
+    )
+    project = models.ForeignKey(Project)
+    status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
+    meter_class = models.CharField(max_length=250, null=True, default="DefaultResidentialMeter")
+    meter_settings = JSONField(null=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    n_days = models.IntegerField(null=True)
+    traceback = models.CharField(max_length=10000, null=True)
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return u'ProjectRun(project_id={}, status={})'.format(self.project.project_id, self.status)
 
 
 @python_2_unicode_compatible
@@ -362,11 +471,11 @@ class ProjectBlock(models.Model):
     def __str__(self):
         return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
 
-    def run_meters(self, meter_type='residential', start_date=None, end_date=None, n_days=None):
+    def run_meters(self, meter_class='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None):
         """ Run meter for each project in the project block.
         """
         for project in self.projects.all():
-            project.run_meter(meter_type, start_date, end_date, n_days)
+            project.run_meter(meter_class, start_date, end_date, n_days)
 
     def compute_summary_timeseries(self):
         """ Compute aggregate timeseries for all projects in project block.
@@ -509,12 +618,6 @@ class ConsumptionRecord(models.Model):
 
 @python_2_unicode_compatible
 class MeterRun(models.Model):
-    METER_TYPE_CHOICES = (
-        ('DFLT_RES_E', 'Default Residential Electricity'),
-        ('DFLT_RES_NG', 'Default Residential Natural Gas'),
-        ('DFLT_COM_E', 'Default Commercial Electricity'),
-        ('DFLT_COM_NG', 'Default Commercial Natural Gas'),
-    )
     project = models.ForeignKey(Project)
     consumption_metadata = models.ForeignKey(ConsumptionMetadata)
     serialization = models.CharField(max_length=100000, blank=True, null=True)
@@ -522,7 +625,8 @@ class MeterRun(models.Model):
     annual_usage_reporting = models.FloatField(blank=True, null=True)
     gross_savings = models.FloatField(blank=True, null=True)
     annual_savings = models.FloatField(blank=True, null=True)
-    meter_type = models.CharField(max_length=250, choices=METER_TYPE_CHOICES, blank=True, null=True)
+    meter_class = models.CharField(max_length=250, blank=True, null=True)
+    meter_settings = JSONField(null=True)
     model_parameter_json_baseline = models.CharField(max_length=10000, blank=True, null=True)
     model_parameter_json_reporting = models.CharField(max_length=10000, blank=True, null=True)
     cvrmse_baseline = models.FloatField(blank=True, null=True)

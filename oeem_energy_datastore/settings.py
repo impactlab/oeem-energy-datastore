@@ -19,12 +19,12 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'sslserver',
     'oauth2_provider',
     'rest_framework',
     'rest_framework_swagger',
     'api_doc',
     'datastore',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -36,8 +36,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django_pdb.middleware.PdbMiddleware',
 )
+
+if DEBUG:
+    MIDDLEWARE_CLASSES += ('django_pdb.middleware.PdbMiddleware',)
 
 ROOT_URLCONF = 'oeem_energy_datastore.urls'
 
@@ -105,30 +107,49 @@ LOGGING = {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
         },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
     },
     'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
         'logfile': {
             'level': 'DEBUG',
             'filters': ['require_debug_false'],
             'class': 'logging.handlers.WatchedFileHandler',
             'formatter': 'verbose',
-            'filename': os.environ.get("DJANGO_LOGFILE"),
-        }
+            'filename': os.environ.get("DJANGO_LOGFILE", "django.log"),
+        },
+        'celery': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.handlers.WatchedFileHandler',
+            'filename': os.environ.get("CELERY_LOGFILE", "celery.log"),
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['logfile'],
+            'handlers': ['console', 'logfile'],
             'level': 'DEBUG',
         },
-        'customer_registry.views': {
-            'handlers': ['logfile'],
+        'celery': {
+            'handlers': ['console', 'celery'],
             'level': 'DEBUG',
-            'propagate': True,
         },
-    }
+    },
 }
 
-BROKER_URL = 'amqp://guest:guest@{}:5672//'.format(os.environ["BROKER_HOST"])
+BROKER_URL = os.environ.get("BROKER_URL", None)
+
+# defaults for development, should be overriden in production.
+BROKER_TRANSPORT = os.environ.get("BROKER_TRANSPORT", "memory")
+CELERY_ALWAYS_EAGER = os.environ.get("CELERY_ALWAYS_EAGER", "true").lower() == "true"
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -143,7 +164,7 @@ SWAGGER_SETTINGS = {
 # DJANGO DEBUG TOOLBAR
 if DEBUG:
     INSTALLED_APPS += ('debug_toolbar',)
-    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',) 
+    MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     DEBUG_TOOLBAR_PATCH_SETTINGS = False
     INTERNAL_IPS = ['0.0.0.0', '127.0.0.1', 'localhost']
 

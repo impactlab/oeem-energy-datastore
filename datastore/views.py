@@ -4,20 +4,21 @@ from rest_framework.permissions import (
     BasePermission
 )
 from rest_framework.decorators import list_route
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
 from rest_framework.parsers import BaseParser
 
 import django_filters
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils.dateparse import parse_datetime
 
 from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 
 from . import models
 from . import serializers
+from . import tasks
 from collections import defaultdict
 from datetime import datetime
 
@@ -31,6 +32,7 @@ else:
 def projects_filter(queryset, value):
     """Project filter for non-project views"""
     return _filter_projects(queryset, value, "project__in")
+
 
 def _filter_projects(queryset, value, attr):
     """
@@ -80,7 +82,8 @@ class SyncMixin(object):
         record = self._parse_record(record, foreign_objects)
 
         try:
-            obj, created = self._get_or_create(record, foreign_objects)
+            with transaction.atomic():
+                obj, created = self._get_or_create(record, foreign_objects)
         except KeyError as e:
             return self._serialize_error(record, "error - missing field", e, foreign_objects)
         except models.Project.MultipleObjectsReturned as e:
@@ -102,7 +105,8 @@ class SyncMixin(object):
                     setattr(obj, attr, record[attr])
 
                 try:
-                    obj.save()
+                    with transaction.atomic():
+                        obj.save()
                 except ValueError as e:
                     return self._serialize_error(record, "error - bad field value - update", e, foreign_objects)
                 except IntegrityError as e:
@@ -461,6 +465,41 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
             record["reporting_period_start"] = parse_datetime(record["reporting_period_start"])
 
         return record
+
+
+class ProjectRunFilter(django_filters.FilterSet):
+    projects = django_filters.MethodFilter(action=projects_filter)
+
+    class Meta:
+        model = models.ProjectRun
+        fields = ['projects']
+
+
+class ProjectRunViewSet(mixins.CreateModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.RetrieveModelMixin,
+                        viewsets.GenericViewSet):
+
+    permission_classes = default_permissions_classes
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = ProjectRunFilter
+
+    def perform_create(self, serializer):
+      # Create the object normally
+      mixins.CreateModelMixin.perform_create(self, serializer)
+      project_run = serializer.instance
+
+      # ...and also push a celery job
+      tasks.execute_project_run.delay(project_run.pk)
+
+    def get_queryset(self):
+        return (models.ProjectRun.objects
+                                 .all()
+                                 .order_by('pk'))
+
+    def get_serializer_class(self):
+        return serializers.ProjectRunSerializer
+
 
 
 class MeterRunFilter(django_filters.FilterSet):

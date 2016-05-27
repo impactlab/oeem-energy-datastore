@@ -13,18 +13,17 @@ from datetime import datetime
 
 import json
 import pytz
+from six import string_types
 
 class MeterRunAPITestCase(OAuthTestCase):
 
-    def setUp(self):
-        """
-        Setup methods for a eemeter run storage
-        engine.
-        """
-        super(MeterRunAPITestCase,self).setUp()
+    @classmethod
+    def setUpTestData(cls):
 
-        self.project = models.Project.objects.create(
-            project_owner=self.user.projectowner,
+        super(MeterRunAPITestCase, cls).setUpTestData()
+
+        cls.project = models.Project.objects.create(
+            project_owner=cls.user.projectowner,
             project_id="PROJECT_ID",
             baseline_period_start=None,
             baseline_period_end=datetime(2012, 1, 1, tzinfo=pytz.UTC),
@@ -37,18 +36,18 @@ class MeterRunAPITestCase(OAuthTestCase):
         )
 
         elec = models.ConsumptionMetadata.objects.create(
-            project=self.project,
+            project=cls.project,
             fuel_type="E",
             energy_unit="KWH",
         )
 
         gas = models.ConsumptionMetadata.objects.create(
-            project=self.project,
+            project=cls.project,
             fuel_type="NG",
             energy_unit="THM",
         )
 
-        self.consumption_metadatas = [elec, gas]
+        cls.consumption_metadatas = [elec, gas]
 
         for i in range(0, 1000, 30):
             models.ConsumptionRecord.objects.create(
@@ -66,9 +65,9 @@ class MeterRunAPITestCase(OAuthTestCase):
             )
 
         ## Attempt to run the meter
-        self.project.run_meter(start_date=make_aware(datetime(2011,1,1)), end_date=make_aware(datetime(2015,1,1)))
-        self.meter_runs = [models.MeterRun.objects.get(consumption_metadata=cm) for cm in self.consumption_metadatas]
-        assert len(self.meter_runs) == 2
+        cls.project.run_meter(start_date=make_aware(datetime(2011,1,1)), end_date=make_aware(datetime(2015,1,1)))
+        cls.meter_runs = [models.MeterRun.objects.get(consumption_metadata=cm) for cm in cls.consumption_metadatas]
+        assert len(cls.meter_runs) == 2
 
     def test_meter_run_read(self):
         """
@@ -78,26 +77,115 @@ class MeterRunAPITestCase(OAuthTestCase):
 
             response = self.get('/api/v1/meter_runs/{}/'.format(meter_run.id))
             assert response.status_code == 200
-            assert response.data["project"] == self.project.id
-            assert response.data["consumption_metadata"] == consumption_metadata.id
 
-            model_parameters_baseline = json.loads(response.data["model_parameter_json_baseline"])
-            model_parameters_reporting = json.loads(response.data["model_parameter_json_reporting"])
+            fields = set([
+                'id',
+                'project',
+                'consumption_metadata',
+                'annual_savings',
+                'gross_savings',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
+                'valid_meter_run',
+                'meter_class',
+                'fuel_type',
+                'added',
+                'updated',
+            ])
 
-            assert type(model_parameters_baseline) == dict
-            assert type(model_parameters_reporting) == dict
+            assert fields == set(response.data.keys())
 
-            assert len(response.data["serialization"]) > 7000
+    def test_meter_run_summary_read(self):
+        """
+        Tests reading meter run data.
+        """
+        for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
 
-            assert len(response.data["dailyusagebaseline_set"]) == 1461
-            assert len(response.data["dailyusagereporting_set"]) == 1461
+            response = self.get('/api/v1/meter_runs/{}/?summary=True'.format(meter_run.id))
+            assert response.status_code == 200
 
-            assert response.data["meter_type"] == "DFLT_RES_E" or \
-                    response.data["meter_type"] == "DFLT_RES_NG"
+            fields = set([
+                'id',
+                'project',
+                'consumption_metadata',
+                'meter_class',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'annual_savings',
+                'gross_savings',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'valid_meter_run',
+                'added',
+                'updated',
+            ])
 
-            assert type(response.data["annual_usage_baseline"]) == float
-            assert type(response.data["annual_usage_reporting"]) == float
-            assert type(response.data["gross_savings"]) == float
-            assert type(response.data["annual_savings"]) == float
-            assert type(response.data["cvrmse_baseline"]) == float
-            assert type(response.data["cvrmse_reporting"]) == float
+            assert fields == set(response.data.keys())
+
+    def test_meter_run_monthly_read(self):
+        """
+        Tests reading meter run data.
+        """
+        for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
+
+            response = self.get('/api/v1/meter_runs/{}/?monthly=True'.format(meter_run.id))
+            assert response.status_code == 200
+
+            fields = set([
+                'id',
+                'project',
+                'consumption_metadata',
+                'annual_savings',
+                'gross_savings',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
+                'valid_meter_run',
+                'meter_class',
+                'fuel_type',
+                'added',
+                'updated',
+                'monthlyaverageusagebaseline_set',
+                'monthlyaverageusagereporting_set',
+            ])
+
+            assert fields == set(response.data.keys())
+
+    def test_meter_run_daily_read(self):
+        """
+        Tests reading meter run data.
+        """
+        for meter_run, consumption_metadata in zip(self.meter_runs,self.consumption_metadatas):
+
+            response = self.get('/api/v1/meter_runs/{}/?daily=True'.format(meter_run.id))
+            assert response.status_code == 200
+
+            fields = set([
+                'id',
+                'project',
+                'consumption_metadata',
+                'annual_savings',
+                'gross_savings',
+                'annual_usage_baseline',
+                'annual_usage_reporting',
+                'cvrmse_baseline',
+                'cvrmse_reporting',
+                'model_parameter_json_baseline',
+                'model_parameter_json_reporting',
+                'valid_meter_run',
+                'meter_class',
+                'fuel_type',
+                'added',
+                'updated',
+                'dailyusagebaseline_set',
+                'dailyusagereporting_set',
+            ])
+
+            assert fields == set(response.data.keys())
