@@ -1,6 +1,6 @@
 """Portal Service Layer
 
-The service layer provides an API on top of Django models to build useful outputs for consumers such as views. This layer helps keep views thin, simplifies testing, and eases separation of concerns for models.
+The service layer provides an API on top of Django models to build useful outputs for consumers such as views. This layer helps keep views thin, encourages reusability across views, simplifies testing, and eases separation of concerns for models.
 
 Have a look at this example on SO for a high-level example: http://stackoverflow.com/questions/12578908/separation-of-business-logic-and-data-access-in-django/12579490#12579490
 
@@ -37,3 +37,4 @@ views.py
 """
 
 from overview import overview
+from meterruns_export import meterruns_export

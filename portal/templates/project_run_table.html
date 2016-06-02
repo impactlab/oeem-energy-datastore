@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load getattribute %}
+
 {% block title %}Customer Portal{% endblock %}
 
 {% block body %}
@@ -12,49 +14,15 @@
 
       <table class="table">
         <tr>
-          <th>id</th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
-          <th></th>
+          {% for header in headers %}
+          <th>{{ header }} </th>
+          {% endfor %}
         </tr>
         {% for meter_run in meter_runs %}
         <tr>
-          <td>{{ meter_run.id }}</td>
-          <td>{{ meter_run.annual_savings}}</td>
-          <td>{{ meter_run.annual_usage_baseline}}</td>
-          <td>{{ meter_run.annual_usage_reporting}}</td>
-          <td>{{ meter_run.cvrmse_baseline}}</td>
-          <td>{{ meter_run.cvrmse_reporting}}</td>
-          <td>{{ meter_run.gross_savings}}</td>
-          <td>{{ meter_run.project.baseline_period_end }}</td>
-          <td>{{ meter_run.project.baseline_period_start }}</td>
-          <td>{{ meter_run.project.latitude }}</td>
-          <td>{{ meter_run.project.longitude }}</td>
-          <td>{{ meter_run.project.project_id }}</td>
-          <td>{{ meter_run.project.id }}</td>
-          <td>{{ meter_run.project.reporting_period_end }}</td>
-          <td>{{ meter_run.project.reporting_period_start }}</td>
-          <td>{{ meter_run.project.weather_station }}</td>
-          <td>{{ meter_run.project.zipcode }}</td>
-          <td>{{ meter_run.consumption_metadata.id }}</td>
-          <td>{{ meter_run.consumption_metadata.fuel_type }}</td>
-          <td>{{ meter_run.consumption_metadata.energy_unit }}</td>
+          {% for header in headers %}
+          <td>{{ meter_run|getattribute:header }}</td>
+          {% endfor %}
         </tr>
         {% endfor %}
       </table>
