@@ -8,7 +8,7 @@ def project_runs(request, id=None):
 
     # TODO: move into a model or service object or ...
     from datastore import models
-    meter_runs = models.MeterRun.objects.all()
+    meter_runs = models.MeterRun.objects.all().prefetch_related("project")
 
     data = {'meter_runs': meter_runs}
 

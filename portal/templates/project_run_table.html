@@ -9,11 +9,20 @@
 
     <div class="col-md-12">
       <h1>Project Run</h1>
-      <hr />
 
       <table class="table">
         <tr>
           <th>id</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
           <th></th>
           <th></th>
           <th></th>
@@ -30,6 +39,16 @@
           <td>{{ meter_run.cvrmse_baseline}}</td>
           <td>{{ meter_run.cvrmse_reporting}}</td>
           <td>{{ meter_run.gross_savings}}</td>
+          <td>{{ meter_run.project.baseline_period_end }}</td>
+          <td>{{ meter_run.project.baseline_period_start }}</td>
+          <td>{{ meter_run.project.latitude }}</td>
+          <td>{{ meter_run.project.longitude }}</td>
+          <td>{{ meter_run.project.project_id }}</td>
+          <td>{{ meter_run.project.id }}</td>
+          <td>{{ meter_run.project.reporting_period_end }}</td>
+          <td>{{ meter_run.project.reporting_period_start }}</td>
+          <td>{{ meter_run.project.weather_station }}</td>
+          <td>{{ meter_run.project.zipcode }}</td>
         </tr>
         {% endfor %}
       </table>
