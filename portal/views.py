@@ -3,17 +3,10 @@ import csv
 from django.shortcuts import render
 from django.http import HttpResponse
 
+from . import services
+
 def index(request):
-
-    # TODO: move into a model or service object or ...
-    from datastore import models
-    data = {
-        'project_count': models.Project.objects.count(),
-        'consumptionmetadata_count': models.ConsumptionMetadata.objects.count(),
-        'consumptionrecord_count': models.ConsumptionRecord.objects.count(),
-        'meterrun_count': models.MeterRun.objects.count()
-    }
-
+    data = services.overview()
     return render(request, 'index.html', data)
 
 def project_runs(request, id=None):
