@@ -11,13 +11,25 @@
       <h1>Project Run</h1>
       <hr />
 
-      <table>
+      <table class="table">
         <tr>
           <th>id</th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
         </tr>
-        {% for row in rows %}
+        {% for meter_run in meter_runs %}
         <tr>
-          <td>{{ row.id }}</td>
+          <td>{{ meter_run.id }}</td>
+          <td>{{ meter_run.annual_savings}}</td>
+          <td>{{ meter_run.annual_usage_baseline}}</td>
+          <td>{{ meter_run.annual_usage_reporting}}</td>
+          <td>{{ meter_run.cvrmse_baseline}}</td>
+          <td>{{ meter_run.cvrmse_reporting}}</td>
+          <td>{{ meter_run.gross_savings}}</td>
         </tr>
         {% endfor %}
       </table>

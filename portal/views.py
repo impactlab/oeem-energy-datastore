@@ -5,8 +5,11 @@ def index(request):
 
 def project_runs(request, id=None):
     """Render the table of results for a ProjectRun in an html table"""
-    data = {'rows': [
-        {'id': 1},
-        {'id': 2}
-    ]}
+
+    # TODO: move into a model or service object or ...
+    from datastore import models
+    meter_runs = models.MeterRun.objects.all()
+
+    data = {'meter_runs': meter_runs}
+
     return render(request, 'project_run_table.html', data)
