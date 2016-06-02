@@ -29,6 +29,9 @@
           <th></th>
           <th></th>
           <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
         </tr>
         {% for meter_run in meter_runs %}
         <tr>
@@ -49,6 +52,9 @@
           <td>{{ meter_run.project.reporting_period_start }}</td>
           <td>{{ meter_run.project.weather_station }}</td>
           <td>{{ meter_run.project.zipcode }}</td>
+          <td>{{ meter_run.consumption_metadata.id }}</td>
+          <td>{{ meter_run.consumption_metadata.fuel_type }}</td>
+          <td>{{ meter_run.consumption_metadata.energy_unit }}</td>
         </tr>
         {% endfor %}
       </table>
