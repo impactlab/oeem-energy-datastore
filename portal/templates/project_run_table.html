@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Portal{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="row-md-12">
+
+    <div class="col-md-12">
+      <h1>Project Run</h1>
+      <hr />
+
+      <table>
+        <tr>
+          <th>id</th>
+        </tr>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.id }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock body %}
