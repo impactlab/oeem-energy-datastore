@@ -1,4 +1,7 @@
+import csv
+
 from django.shortcuts import render
+from django.http import HttpResponse
 
 def index(request):
 
@@ -22,3 +25,13 @@ def project_runs(request, id=None):
     data = {'meter_runs': meter_runs}
 
     return render(request, 'project_run_table.html', data)
+
+def csv_export(request):
+    """Return a dump of all the MeterRuns in CSV form"""
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = 'attachment; filename="meter_runs.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['First row', 'Foo', 'Bar'])
+
+    return response

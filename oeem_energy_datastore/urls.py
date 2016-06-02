@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
     url(r'^portal/$', portal_views.index, name='index'),
     url(r'^portal/project_runs/(?P<id>[0-9]+)/$', portal_views.project_runs, name='portal_project_runs'),
+    url(r'^portal/csv_export/$', portal_views.csv_export, name='portal_csv_export'),
     url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
 ]
 
