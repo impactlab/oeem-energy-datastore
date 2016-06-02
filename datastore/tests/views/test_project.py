@@ -399,49 +399,49 @@ class ProjectAPITestCase(OAuthTestCase):
 
     def test_project_read_with_monthly_summary_meter_runs(self):
 
-            self.complete_project.run_meter()
+        self.complete_project.run_meter()
 
-            data = self.get(
-                '/api/v1/projects/{}/?with_monthly_summary=True'
-                .format(self.complete_project.pk)
-            ).json()
+        data = self.get(
+            '/api/v1/projects/{}/?with_monthly_summary=True'
+            .format(self.complete_project.pk)
+        ).json()
 
-            fields = set([
-                'id',
-                'project_owner',
-                'project_id',
-                'baseline_period_start',
-                'baseline_period_end',
-                'reporting_period_start',
-                'reporting_period_end',
-                'zipcode',
-                'weather_station',
-                'latitude',
-                'longitude',
-                'recent_meter_runs',
-            ])
+        fields = set([
+            'id',
+            'project_owner',
+            'project_id',
+            'baseline_period_start',
+            'baseline_period_end',
+            'reporting_period_start',
+            'reporting_period_end',
+            'zipcode',
+            'weather_station',
+            'latitude',
+            'longitude',
+            'recent_meter_runs',
+        ])
 
-            assert fields == set(data.keys())
+        assert fields == set(data.keys())
 
-            meter_run_fields = set([
-                'id',
-                'project',
-                'consumption_metadata',
-                'annual_savings',
-                'gross_savings',
-                'annual_usage_baseline',
-                'annual_usage_reporting',
-                'cvrmse_baseline',
-                'cvrmse_reporting',
-                'model_parameter_json_baseline',
-                'model_parameter_json_reporting',
-                'valid_meter_run',
-                'meter_class',
-                'fuel_type',
-                'added',
-                'updated',
-                'monthlyaverageusagebaseline_set',
-                'monthlyaverageusagereporting_set',
-            ])
+        meter_run_fields = set([
+            'id',
+            'project',
+            'consumption_metadata',
+            'annual_savings',
+            'gross_savings',
+            'annual_usage_baseline',
+            'annual_usage_reporting',
+            'cvrmse_baseline',
+            'cvrmse_reporting',
+            'model_parameter_json_baseline',
+            'model_parameter_json_reporting',
+            'valid_meter_run',
+            'meter_class',
+            'fuel_type',
+            'added',
+            'updated',
+            'monthlyaverageusagebaseline_set',
+            'monthlyaverageusagereporting_set',
+        ])
 
-            assert meter_run_fields == set(data['recent_meter_runs'][0].keys())
+        assert meter_run_fields == set(data['recent_meter_runs'][0].keys())
