@@ -19,7 +19,11 @@ def csv_export(request):
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="meter_runs.csv"'
 
-    writer = csv.writer(response)
-    writer.writerow(['First row', 'Foo', 'Bar'])
+    data = services.meterruns_export()
+
+    writer = csv.DictWriter(response, fieldnames=data['headers'])
+    writer.writeheader()
+    for meter_run in data['meter_runs']:
+        writer.writerow(meter_run)
 
     return response
