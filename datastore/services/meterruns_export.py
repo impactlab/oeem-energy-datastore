@@ -48,4 +48,5 @@ def meterruns_export():
     if len(meter_runs_serialized) > 0:
         headers = meter_runs_serialized[0].keys()
 
-    return {'meter_runs': map(serialize, meter_runs), 'headers': headers}
+    return {'meter_runs': list(map(serialize, meter_runs)), 'headers': headers}
+
