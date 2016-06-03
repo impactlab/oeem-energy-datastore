@@ -42,11 +42,11 @@ def serialize(meter_run):
 def meterruns_export():
     meter_runs = models.MeterRun.objects.all().prefetch_related("project", "consumption_metadata")
 
-    meter_runs_serialized = map(serialize, meter_runs)
+    meter_runs_serialized = list(map(serialize, meter_runs))
 
     headers = []
     if len(meter_runs_serialized) > 0:
         headers = meter_runs_serialized[0].keys()
 
-    return {'meter_runs': list(map(serialize, meter_runs)), 'headers': headers}
+    return {'meter_runs': meter_runs_serialized, 'headers': headers}
 
