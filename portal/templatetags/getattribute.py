@@ -19,7 +19,7 @@ def getattribute(value, arg):
 
     if hasattr(value, str(arg)):
         return getattr(value, arg)
-    elif arg in value:
+    elif hasattr(value, 'has_key') and value.has_key(arg):
         return value[arg]
     elif numeric_test.match(str(arg)) and len(value) > int(arg):
         return value[int(arg)]
