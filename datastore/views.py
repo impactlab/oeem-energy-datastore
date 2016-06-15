@@ -208,10 +208,9 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
         ]
 
         self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
-
     def _find_foreign_objects(self, record):
 
-        project = self.project_dict.get(str(record["project_project_id"]))
+        project = self.project_dict.get(record["project_project_id"])
         if project is None:
             return {
                 "status": "error - no Project found",
@@ -289,7 +288,7 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
     def _find_foreign_objects(self, record):
 
-        cm = self.metadata_dict.get((str(record["project_id"]), record["fuel_type"]))
+        cm = self.metadata_dict.get((record["project_id"], record["fuel_type"]))
         if cm is None:
             return {
                 "status": "error - no consumption metadata",
@@ -315,6 +314,12 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
     def _parse_record(self, record, foreign_objects):
         record["start"] = parse_datetime(record["start"])
         return record
+
+    @list_route(methods=['post'])
+    def bulk_sync(self, request):
+        # Retrieve metadata object
+        # Bulk upsert, using (start, metadata_id) as primary key
+        pass
 
 class ProjectFilter(django_filters.FilterSet):
 
