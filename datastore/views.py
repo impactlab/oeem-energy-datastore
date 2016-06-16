@@ -384,6 +384,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         fieldnames = records[0].keys()
         writer = csv.DictWriter(infile, fieldnames=fieldnames)
         for record in records:
+            # Empty value break the import. Skip them.
+            if record['value'] is None:
+                continue
             writer.writerow(record)
         infile.seek(0)
 
