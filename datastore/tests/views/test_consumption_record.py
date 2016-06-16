@@ -50,32 +50,71 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
     def test_consumption_record_bulk_sync(self):
 
+        # Create a two metadata objects
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
+            "energy_unit": "KWH",
+            "fuel_type": "E"
+        }, {
+            "project_project_id": "DEF",
             "energy_unit": "KWH",
             "fuel_type": "E"
         }])
 
         assert response.data[0]['status'] == 'created'
         cm_id = response.data[0]['id']
+        cm_id2 = response.data[1]['id']
 
+        # Make sure the records don't already exist
+        def get_test_record_by_start(start, cm_id=cm_id):
+            return models.ConsumptionRecord.objects.filter(start=start, metadata_id=cm_id).first()
+        start_a = "2014-01-01T00:00:00+00:00"
+        start_b = "2014-01-01T01:00:00+00:00"
+        a = get_test_record_by_start(start_a)
+        b = get_test_record_by_start(start_b)
+        assert a is None
+        assert b is None
 
         response = self.post('/api/v1/consumption_records/bulk_sync/', [{
             "metadata_id": cm_id,
-            "start": "2014-01-01T00:00:00+00:00",
+            "start": start_a,
             "value": 1.0,
             "estimated": True
         }, {
             "metadata_id": cm_id,
-            "start": "2014-01-01T01:00:00+00:00",
+            "start": start_b,
             "value": 2.0,
             "estimated": True
         }])
 
-        # assert response.data[0]['status'] == 'created'
-        # assert response.data[0]['metadata'] == cm_id
-        # assert response.data[1]['metadata'] == cm_id
-        assert False
+        # Check that the two records were created
+        a = get_test_record_by_start(start_a)
+        b = get_test_record_by_start(start_b)
+        assert a is not None
+        assert b is not None
+
+        # Test updating
+        response = self.post('/api/v1/consumption_records/bulk_sync/', [{
+            "metadata_id": cm_id,
+            "start": start_a,
+            "value": 3.0,
+            "estimated": True
+        }])
+
+        a = get_test_record_by_start(start_a)
+        assert a.value == 3.0
+
+        # Test metadata_id keys properly
+        response = self.post('/api/v1/consumption_records/bulk_sync/', [{
+            "metadata_id": cm_id2,
+            "start": start_a,
+            "value": 4.0,
+            "estimated": True
+        }])
+
+        c = get_test_record_by_start(start_a, cm_id=cm_id2)
+        assert c is not None
+        assert c.value == 4.0
 
 
     def test_consumption_record_create_read(self):

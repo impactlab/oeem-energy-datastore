@@ -387,6 +387,7 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
             writer.writerow(record)
         infile.seek(0)
 
+        # Build SQL statement for upsert from temporary table to real table
         update_schema_statement = ",".join([
           "{name} = {tmp_tablename}.{name}".format(name=column['name'], tmp_tablename=tmp_tablename) for column in schema
         ])
@@ -421,8 +422,6 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                    insert_columns=insert_columns,
                    insert_schema_statement=insert_schema_statement)
 
-        print upsert_statement
-
         try:
             # Create the temporary table
             cursor.execute(create_tmp_table_statement)
@@ -430,25 +429,15 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
             # Load data into temporary table from CSV
             cursor.copy_from(file=infile, table=tmp_tablename, sep=',', columns=fieldnames)
 
-            resp = cursor.execute("select * from %s;" % tablename)
-            print cursor.fetchall()
-
             # Upsert it into the actual table
             cursor.execute(upsert_statement)
-
-            resp = cursor.execute("select * from %s;" % tablename)
-            print cursor.fetchall()
-
         finally:
             cursor.close()
 
+        # TODO: smarter response. Maybe some sort of error check?
         return Response({
             "status": "success"
         })
-
-
-
-
 
 
 class ProjectFilter(django_filters.FilterSet):
