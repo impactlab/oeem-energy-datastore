@@ -75,7 +75,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         # assert response.data[0]['status'] == 'created'
         # assert response.data[0]['metadata'] == cm_id
         # assert response.data[1]['metadata'] == cm_id
-        assert True
+        assert False
 
 
     def test_consumption_record_create_read(self):

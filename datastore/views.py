@@ -373,12 +373,31 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
           {create_tmp_table_statement}
         """.format(tmp_tablename=tmp_tablename, create_tmp_table_statement=create_tmp_table_statement)
 
+        import StringIO
+        infile = StringIO.StringIO()
+
+        records = request.data
+
+        import csv
+        fieldnames = records[0].keys()
+        writer = csv.DictWriter(infile, fieldnames=fieldnames)
+        for record in records:
+            writer.writerow(record)
+        infile.seek(0)
+
         try:
+            # Create the temporary table
             cursor.execute(statement)
+
+            # Load data into temporary table
+            resp = cursor.copy_from(file=infile, table=tmp_tablename, sep=',', columns=fieldnames)
+
+            resp = cursor.execute("select * from %s;" % tmp_tablename)
+            print "select * from %s;" % tmp_tablename
+            print cursor.fetchall()
         finally:
             cursor.close()
 
-        # Load data into temporary table
         return Response({
             "status": "success"
         })
