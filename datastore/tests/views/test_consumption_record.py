@@ -17,6 +17,41 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         )
         self.consumption_metadata.save()
 
+    def test_consumption_record_sync(self):
+
+        response = self.post('/api/v1/consumption_metadatas/sync/', [{
+            "project_project_id": "ABC",
+            "energy_unit": "KWH",
+            "fuel_type": "E"
+        }])
+
+        assert response.data[0]['status'] == 'created'
+        cm_id = response.data[0]['id']
+
+        response = self.post('/api/v1/consumption_records/sync/', [{
+            "project_id": "ABC",
+            "energy_unit": "KWH",
+            "fuel_type": "E",
+            "start": "2014-01-01T00:00:00+00:00",
+            "end": "2014-01-01T01:00:00+00:00",
+            "value": 1.0,
+            "estimated": True
+        }, {
+            "project_id": "ABC",
+            "energy_unit": "KWH",
+            "fuel_type": "E",
+            "start": "2014-01-01T01:00:00+00:00",
+            "end": "2014-01-01T02:00:00+00:00",
+            "value": 2.0,
+            "estimated": True
+        }])
+
+
+        assert response.data[0]['status'] == 'created'
+        assert response.data[0]['metadata'] == cm_id
+        assert response.data[1]['metadata'] == cm_id
+
+
     def test_consumption_record_create_read(self):
         data = [{
             "start": "2014-01-01T00:00:00+00:00",
@@ -45,3 +80,4 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert response.data['value'] == 0.0
         assert response.data['estimated'] == False
         assert response.data['metadata'] == self.consumption_metadata.pk
+

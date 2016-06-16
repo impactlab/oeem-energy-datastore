@@ -283,8 +283,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         ]
 
         consumption_metadatas = models.ConsumptionMetadata.objects.all()
+
         self.metadata_dict = {(cm.project.project_id, cm.fuel_type): cm
-                         for cm in consumption_metadatas}
+                         for cm in consumption_metadatas if cm.project}
 
     def _find_foreign_objects(self, record):
 
