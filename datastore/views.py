@@ -338,8 +338,10 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         cursor = connection.cursor()
 
         # Create temporary table
+        import uuid
+        tmp_id = str(uuid.uuid4()).translate(None, '-')
         tablename = models.ConsumptionRecord._meta.db_table
-        tmp_tablename = "tmp_" + tablename
+        tmp_tablename = "tmp_" + tablename + "_" + tmp_id
 
         schema = [
             {
