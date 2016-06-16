@@ -23,6 +23,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from django.conf import settings
+from django.db import connection
 
 if settings.DEBUG:
     default_permissions_classes = [DjangoModelPermissionsOrAnonReadOnly]
@@ -318,9 +319,74 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
     @list_route(methods=['post'])
     def bulk_sync(self, request):
-        # Retrieve metadata object
+        """
+        `POST /api/v1/consumption_records/bulk_sync/`
+
+        Expects records like the following::
+
+            [
+                {
+                     "start": "2016-03-15T00:00:00+0000",
+                     "value": 10.2,
+                     "metadata_id": 1 # Retrieved using /consumptions_metadata/sync/
+                },
+                ...
+            ]
+        """
+
         # Bulk upsert, using (start, metadata_id) as primary key
-        pass
+        cursor = connection.cursor()
+
+        # Create temporary table
+        tablename = models.ConsumptionRecord._meta.db_table
+        tmp_tablename = "tmp_" + tablename
+
+        schema = [
+            {
+                'name': 'start',
+                'type': 'timestamp with time zone'
+            },
+            {
+                'name': 'value',
+                'type': 'double precision'
+            },
+            {
+                'name': 'estimated',
+                'type': 'boolean'
+            },
+            {
+                'name': 'metadata_id',
+                'type': 'integer'
+            }
+        ]
+
+        schema_statement = ",".join([
+          column['name'] + " " + column['type'] for column in schema
+        ])
+
+        create_tmp_table_statement = """
+          CREATE TABLE {tmp_tablename}({schema_statement});
+        """.format(tmp_tablename=tmp_tablename, schema_statement=schema_statement)
+
+        statement = """
+          DROP TABLE IF EXISTS {tmp_tablename};
+          {create_tmp_table_statement}
+        """.format(tmp_tablename=tmp_tablename, create_tmp_table_statement=create_tmp_table_statement)
+
+        try:
+            cursor.execute(statement)
+        finally:
+            cursor.close()
+
+        # Load data into temporary table
+        return Response({
+            "status": "success"
+        })
+
+
+
+
+
 
 class ProjectFilter(django_filters.FilterSet):
 

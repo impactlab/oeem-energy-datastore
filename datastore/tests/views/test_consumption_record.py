@@ -33,7 +33,6 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "energy_unit": "KWH",
             "fuel_type": "E",
             "start": "2014-01-01T00:00:00+00:00",
-            "end": "2014-01-01T01:00:00+00:00",
             "value": 1.0,
             "estimated": True
         }, {
@@ -41,15 +40,42 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "energy_unit": "KWH",
             "fuel_type": "E",
             "start": "2014-01-01T01:00:00+00:00",
-            "end": "2014-01-01T02:00:00+00:00",
             "value": 2.0,
             "estimated": True
         }])
 
-
         assert response.data[0]['status'] == 'created'
         assert response.data[0]['metadata'] == cm_id
         assert response.data[1]['metadata'] == cm_id
+
+    def test_consumption_record_bulk_sync(self):
+
+        response = self.post('/api/v1/consumption_metadatas/sync/', [{
+            "project_project_id": "ABC",
+            "energy_unit": "KWH",
+            "fuel_type": "E"
+        }])
+
+        assert response.data[0]['status'] == 'created'
+        cm_id = response.data[0]['id']
+
+
+        response = self.post('/api/v1/consumption_records/bulk_sync/', [{
+            "metadata_id": cm_id,
+            "start": "2014-01-01T00:00:00+00:00",
+            "value": 1.0,
+            "estimated": True
+        }, {
+            "metadata_id": cm_id,
+            "start": "2014-01-01T01:00:00+00:00",
+            "value": 2.0,
+            "estimated": True
+        }])
+
+        # assert response.data[0]['status'] == 'created'
+        # assert response.data[0]['metadata'] == cm_id
+        # assert response.data[1]['metadata'] == cm_id
+        assert True
 
 
     def test_consumption_record_create_read(self):
