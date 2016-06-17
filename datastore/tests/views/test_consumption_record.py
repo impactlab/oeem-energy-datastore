@@ -48,7 +48,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert response.data[0]['metadata'] == cm_id
         assert response.data[1]['metadata'] == cm_id
 
-    def test_consumption_record_bulk_sync(self):
+    def test_consumption_record_sync2(self):
 
         # Create a two metadata objects
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
@@ -75,7 +75,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert a is None
         assert b is None
 
-        response = self.post('/api/v1/consumption_records/bulk_sync/', [{
+        response = self.post('/api/v1/consumption_records/sync2/', [{
             "metadata_id": cm_id,
             "start": start_a,
             "value": 1.0,
@@ -94,7 +94,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert b is not None
 
         # Test updating
-        response = self.post('/api/v1/consumption_records/bulk_sync/', [{
+        response = self.post('/api/v1/consumption_records/sync2/', [{
             "metadata_id": cm_id,
             "start": start_a,
             "value": 3.0,
@@ -105,7 +105,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert a.value == 3.0
 
         # Test metadata_id keys properly
-        response = self.post('/api/v1/consumption_records/bulk_sync/', [{
+        response = self.post('/api/v1/consumption_records/sync2/', [{
             "metadata_id": cm_id2,
             "start": start_a,
             "value": 4.0,

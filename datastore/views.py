@@ -318,9 +318,12 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         return record
 
     @list_route(methods=['post'])
-    def bulk_sync(self, request):
+    def sync2(self, request):
         """
-        `POST /api/v1/consumption_records/bulk_sync/`
+        `POST /api/v1/consumption_records/sync2/`
+
+        A much faster sync implementation. Slightly different behavior than the existing sync route in that
+        it expects a `metadata_id` rather than the metadata properties.
 
         Expects records like the following::
 
@@ -334,32 +337,13 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
             ]
         """
 
-        schema = [
-            {
-                'name': 'start',
-                'type': 'timestamp with time zone'
-            },
-            {
-                'name': 'value',
-                'type': 'double precision'
-            },
-            {
-                'name': 'estimated',
-                'type': 'boolean'
-            },
-            {
-                'name': 'metadata_id',
-                'type': 'integer'
-            }
-        ]
-        # TODO: assert that the schema hasn't changed.
+        fields = ['start', 'value', 'estimated', 'metadata_id']
 
         records = request.data
-
         # Filter out records with an empty `value` field, which breaks import
         records = [record for record in records if record['value'] is not None]
 
-        result = services.bulk_sync(records, schema, models.ConsumptionRecord, ['start', 'metadata_id'])
+        result = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
 
         # TODO: smarter response. Maybe some sort of error check?
         return Response(result)

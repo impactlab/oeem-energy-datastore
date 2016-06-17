@@ -4,7 +4,7 @@ import csv
 
 from django.db import connection
 
-def bulk_sync(records, schema, model_class, keys):
+def bulk_sync(records, fields, model_class, keys):
     """
     Upsert data for the given `model_class` using a temporary table.
 
@@ -18,19 +18,11 @@ def bulk_sync(records, schema, model_class, keys):
                 project_id: 1
             }]
 
-        schema: list of dicts with db field names and database types
+        fields: list of fields expected to import
 
             Example:
-            [
-                {
-                    'name': 'start',
-                    'type': 'timestamp with time zone'
-                },
-                {
-                    'name': 'value',
-                    'type': 'double precision'
-                }
-            ]
+
+                ['start', 'value', 'project_id']
 
         model_class: Django model class
 
@@ -43,6 +35,15 @@ def bulk_sync(records, schema, model_class, keys):
             ['start', 'project_id']
 
     """
+
+    # Build schema from field names
+    schema = [
+        {
+            'name': field,
+            'type': model_class._meta.get_field(field).db_type(connection)
+        }
+        for field in fields
+    ]
 
     # Bulk upsert, using (start, metadata_id) as primary key
     cursor = connection.cursor()
