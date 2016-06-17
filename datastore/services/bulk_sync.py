@@ -8,32 +8,33 @@ def bulk_sync(records, fields, model_class, keys):
     """
     Upsert data for the given `model_class` using a temporary table.
 
-        records: list of dicts with data to insert
+    Parameters
+    ----------
+    records: list of dicts with data to insert
 
-            Example:
+        Example:
 
-            [{
-                start: 2016-01-01,
-                value: 10.0,
-                project_id: 1
-            }]
+        [{
+            start: 2016-01-01,
+            value: 10.0,
+            project_id: 1
+        }]
 
-        fields: list of fields expected to import
+    fields: list of fields expected to import
 
-            Example:
+        Example:
 
-                ['start', 'value', 'project_id']
+        ['start', 'value', 'project_id']
 
-        model_class: Django model class
+    model_class: Django model class
 
-        keys: primary or composite key
+    keys: primary or composite key
 
-            Examples:
+        Examples:
 
-            ['id']
+        ['id']
 
-            ['start', 'project_id']
-
+        ['start', 'project_id']
     """
 
     # Build schema from field names
