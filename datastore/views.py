@@ -369,13 +369,8 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         ])
 
         create_tmp_table_statement = """
-          CREATE TABLE {tmp_tablename}({schema_statement});
+          CREATE TEMPORARY TABLE {tmp_tablename}({schema_statement});
         """.format(tmp_tablename=tmp_tablename, schema_statement=schema_statement)
-
-        create_tmp_table_statement = """
-          DROP TABLE IF EXISTS {tmp_tablename};
-          {create_tmp_table_statement}
-        """.format(tmp_tablename=tmp_tablename, create_tmp_table_statement=create_tmp_table_statement)
 
         records = request.data
 
@@ -419,8 +414,6 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                                          {tablename}.metadata_id = {tmp_tablename}.metadata_id
           WHERE {tablename}.start IS NULL AND
                 {tablename}.metadata_id IS NULL;
-
-          DROP TABLE IF EXISTS {tmp_tablename};
         """.format(tablename=tablename,
                    tmp_tablename=tmp_tablename,
                    update_schema_statement=update_schema_statement,
