@@ -38,3 +38,4 @@ views.py
 
 from .overview import overview
 from .meterruns_export import meterruns_export
+from .bulk_sync import bulk_sync

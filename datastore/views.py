@@ -19,11 +19,11 @@ from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 from . import models
 from . import serializers
 from . import tasks
+from . import services
 from collections import defaultdict
 from datetime import datetime
 
 from django.conf import settings
-from django.db import connection
 
 if settings.DEBUG:
     default_permissions_classes = [DjangoModelPermissionsOrAnonReadOnly]
@@ -334,15 +334,6 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
             ]
         """
 
-        # Bulk upsert, using (start, metadata_id) as primary key
-        cursor = connection.cursor()
-
-        # Create temporary table
-        import uuid
-        tmp_id = str(uuid.uuid4()).translate(None, '-')
-        tablename = models.ConsumptionRecord._meta.db_table
-        tmp_tablename = "tmp_" + tablename + "_" + tmp_id
-
         schema = [
             {
                 'name': 'start',
@@ -361,81 +352,17 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                 'type': 'integer'
             }
         ]
-
         # TODO: assert that the schema hasn't changed.
-
-        schema_statement = ",".join([
-          column['name'] + " " + column['type'] for column in schema
-        ])
-
-        create_tmp_table_statement = """
-          CREATE TEMPORARY TABLE {tmp_tablename}({schema_statement});
-        """.format(tmp_tablename=tmp_tablename, schema_statement=schema_statement)
 
         records = request.data
 
-        # Write the request data to an in-memory CSV file for a subsequent Postgres COPY
-        import StringIO
-        import csv
-        infile = StringIO.StringIO()
-        fieldnames = records[0].keys()
-        writer = csv.DictWriter(infile, fieldnames=fieldnames)
-        for record in records:
-            # Empty value break the import. Skip them.
-            if record['value'] is None:
-                continue
-            writer.writerow(record)
-        infile.seek(0)
+        # Filter out records with an empty `value` field, which breaks import
+        records = [record for record in records if record['value'] is not None]
 
-        # Build SQL statement for upsert from temporary table to real table
-        update_schema_statement = ",".join([
-          "{name} = {tmp_tablename}.{name}".format(name=column['name'], tmp_tablename=tmp_tablename) for column in schema
-        ])
-
-        insert_columns = ",".join([
-          column['name'] for column in schema
-        ])
-
-        insert_schema_statement = ",".join([
-          "{tmp_tablename}.{name}".format(name=column['name'], tmp_tablename=tmp_tablename) for column in schema
-        ])
-
-        upsert_statement = """
-          UPDATE {tablename}
-          SET {update_schema_statement}
-          FROM {tmp_tablename}
-          WHERE {tablename}.start = {tmp_tablename}.start AND
-                {tablename}.metadata_id = {tmp_tablename}.metadata_id;
-
-          INSERT INTO {tablename}({insert_columns})
-          SELECT {insert_schema_statement}
-          FROM {tmp_tablename}
-          LEFT OUTER JOIN {tablename} ON {tablename}.start = {tmp_tablename}.start AND
-                                         {tablename}.metadata_id = {tmp_tablename}.metadata_id
-          WHERE {tablename}.start IS NULL AND
-                {tablename}.metadata_id IS NULL;
-        """.format(tablename=tablename,
-                   tmp_tablename=tmp_tablename,
-                   update_schema_statement=update_schema_statement,
-                   insert_columns=insert_columns,
-                   insert_schema_statement=insert_schema_statement)
-
-        try:
-            # Create the temporary table
-            cursor.execute(create_tmp_table_statement)
-
-            # Load data into temporary table from CSV
-            cursor.copy_from(file=infile, table=tmp_tablename, sep=',', columns=fieldnames)
-
-            # Upsert it into the actual table
-            cursor.execute(upsert_statement)
-        finally:
-            cursor.close()
+        result = services.bulk_sync(records, schema, models.ConsumptionRecord, ['start', 'metadata_id'])
 
         # TODO: smarter response. Maybe some sort of error check?
-        return Response({
-            "status": "success"
-        })
+        return Response(result)
 
 
 class ProjectFilter(django_filters.FilterSet):
