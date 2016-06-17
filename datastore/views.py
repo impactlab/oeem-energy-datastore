@@ -345,7 +345,6 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
         result = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
 
-        # TODO: smarter response. Maybe some sort of error check?
         return Response(result)
 
 

@@ -124,7 +124,6 @@ def bulk_sync(records, fields, model_class, keys):
     finally:
         cursor.close()
 
-    # TODO: smarter response. Maybe some sort of error check?
     return {
         "status": "success"
     }
