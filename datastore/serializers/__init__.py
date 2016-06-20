@@ -140,7 +140,7 @@ class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
 
-    project = ProjectSerializer()
+    project = ProjectSerializer(required=False)
 
     class Meta:
         model = models.ConsumptionMetadata
