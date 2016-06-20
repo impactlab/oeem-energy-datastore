@@ -140,6 +140,8 @@ class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
 
+    project = ProjectSerializer()
+
     class Meta:
         model = models.ConsumptionMetadata
         fields = ('id', 'fuel_type', 'energy_unit', 'project')
