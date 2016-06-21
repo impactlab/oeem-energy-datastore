@@ -93,16 +93,27 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert a is not None
         assert b is not None
 
-        # Test updating
+        # Test updating and adding
+        start_c = "2014-01-01T02:00:00+00:00"
+
         response = self.post('/api/v1/consumption_records/sync2/', [{
             "metadata_id": cm_id,
             "start": start_a,
             "value": 3.0,
-            "estimated": True
+            "estimated": False
+        }, {
+            "metadata_id": cm_id,
+            "start": start_c,
+            "value": 4.0,
+            "estimated": False
         }])
 
         a = get_test_record_by_start(start_a)
         assert a.value == 3.0
+
+        c = get_test_record_by_start(start_c)
+        assert c.value == 4.0
+        assert c.estimated == False
 
         # Test metadata_id keys properly
         response = self.post('/api/v1/consumption_records/sync2/', [{
