@@ -344,9 +344,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         # Filter out records with an empty `value` field, which breaks import
         records = [record for record in records if record.get('value', None) is not None]
 
-        result = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
+        result, status = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
 
-        return Response(result)
+        return Response(result, status=status)
 
 
 class ProjectFilter(django_filters.FilterSet):

@@ -7,14 +7,14 @@ import traceback
 from django.db import connection
 
 def success_response():
-    return {
+    return ({
         "status": "success"
-    }
+    }, 200)
 
 def error_response():
-    return {
+    return ({
         "status": "error"
-    }
+    }, 400)
 
 def bulk_sync(records, fields, model_class, keys):
     """

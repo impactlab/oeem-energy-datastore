@@ -136,7 +136,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "estimated": False,
             "value": 1.0
         }])
-        assert response.status_code == 200
+        assert response.status_code == 400
         assert response.data['status'] == 'error'
 
         # Invalid `value` should return an error status
@@ -146,6 +146,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "estimated": False,
             "value": "foo"
         }])
+        assert response.status_code == 400
         assert response.data['status'] == 'error'
 
 
