@@ -128,6 +128,27 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert c.value == 4.0
 
 
+        # Test some invalid records
+
+        # Missing field `start` should error out
+        response = self.post('/api/v1/consumption_records/sync2/', [{
+            "metadata_id": cm_id,
+            "estimated": False,
+            "value": 1.0
+        }])
+        assert response.status_code == 200
+        assert response.data['status'] == 'error'
+
+        # Invalid `value` should return an error status
+        response = self.post('/api/v1/consumption_records/sync2/', [{
+            "metadata_id": cm_id,
+            "start": start_a,
+            "estimated": False,
+            "value": "foo"
+        }])
+        assert response.data['status'] == 'error'
+
+
     def test_consumption_record_create_read(self):
         data = [{
             "start": "2014-01-01T00:00:00+00:00",

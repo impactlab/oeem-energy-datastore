@@ -1,8 +1,20 @@
 import uuid
 import StringIO
 import csv
+import logging
+import traceback
 
 from django.db import connection
+
+def success_response():
+    return {
+        "status": "success"
+    }
+
+def error_response():
+    return {
+        "status": "error"
+    }
 
 def bulk_sync(records, fields, model_class, keys):
     """
@@ -36,6 +48,20 @@ def bulk_sync(records, fields, model_class, keys):
 
         ['start', 'project_id']
     """
+
+    if records is None or len(records) == 0:
+        return success_response()
+
+    # Error out if missing fields
+    def valid_record(record):
+        for field in fields:
+            if field not in record:
+                return False
+        return True
+    for record in records:
+        if not valid_record(record):
+            return error_response()
+
 
     # Build schema from field names
     schema = [
@@ -112,6 +138,8 @@ def bulk_sync(records, fields, model_class, keys):
                insert_columns=insert_columns,
                insert_schema_statement=insert_schema_statement)
 
+    response = success_response()
+
     try:
         # Create the temporary table
         cursor.execute(create_tmp_table_statement)
@@ -121,9 +149,12 @@ def bulk_sync(records, fields, model_class, keys):
 
         # Upsert it into the actual table
         cursor.execute(upsert_statement)
+    except:
+        # Log exception
+        logging.error(traceback.print_exc())
+
+        response = error_response()
     finally:
         cursor.close()
 
-    return {
-        "status": "success"
-    }
+    return response

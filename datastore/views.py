@@ -340,8 +340,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         fields = ['start', 'value', 'estimated', 'metadata_id']
 
         records = request.data
+
         # Filter out records with an empty `value` field, which breaks import
-        records = [record for record in records if record['value'] is not None]
+        records = [record for record in records if record.get('value', None) is not None]
 
         result = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
 
