@@ -67,7 +67,15 @@ class SyncMixin(object):
 
         response_data = [self._sync_record(record) for record in request.data]
 
-        return Response(response_data)
+        # Return a 400 response if any of the records failed to sync
+        #
+        # Convention is that "status" key is only returned during errors.
+        status_code = 200
+        for obj in response_data:
+            if "status" in obj:
+                status_code = 400
+
+        return Response(response_data, status=status_code)
 
     def _sync_record(self, record):
         """ Get/Create/Update records as necessary, returing dict with data
