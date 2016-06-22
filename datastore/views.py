@@ -71,9 +71,9 @@ class SyncMixin(object):
         #
         # Convention is that "status" key is only returned during errors.
         status_code = 200
-        for obj in response_data:
-            if "status" in obj:
-                status_code = 400
+        # for obj in response_data:
+        #     if "status" in obj:
+        #         status_code = 400
 
         return Response(response_data, status=status_code)
 
