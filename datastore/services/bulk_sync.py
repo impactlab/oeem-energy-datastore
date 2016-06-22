@@ -1,8 +1,11 @@
 import uuid
-import StringIO
 import csv
 import logging
 import traceback
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from django.db import connection
 
