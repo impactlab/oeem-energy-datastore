@@ -92,7 +92,7 @@ def bulk_sync(records, fields, model_class, keys):
     """.format(tmp_tablename=tmp_tablename, schema_statement=schema_statement)
 
     # Write the request data to an in-memory CSV file for a subsequent Postgres COPY
-    infile = StringIO.StringIO()
+    infile = StringIO()
     fieldnames = records[0].keys()
     writer = csv.DictWriter(infile, fieldnames=fieldnames)
     for record in records:
