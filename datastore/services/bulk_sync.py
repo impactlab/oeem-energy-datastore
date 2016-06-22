@@ -2,6 +2,7 @@ import uuid
 import csv
 import logging
 import traceback
+import re
 try:
     from StringIO import StringIO
 except ImportError:
@@ -79,7 +80,7 @@ def bulk_sync(records, fields, model_class, keys):
     cursor = connection.cursor()
 
     # Create temporary table
-    tmp_id = str(uuid.uuid4()).translate(None, '-')
+    tmp_id = re.sub("-", "", str(uuid.uuid4()))
     tablename = model_class._meta.db_table
     tmp_tablename = "tmp_" + tablename + "_" + tmp_id
 
