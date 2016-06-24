@@ -127,6 +127,15 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert c is not None
         assert c.value == 4.0
 
+        # Sending a dict instead of a list should be handled gracefully
+        response = self.post('/api/v1/consumption_records/sync2/', {
+            "start": start_a,
+            "metadata_id": cm_id,
+            "estimated": False,
+            "value": 1.0
+        })
+        assert response.status_code == 200
+
 
         # Test some invalid records
 

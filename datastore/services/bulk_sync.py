@@ -15,9 +15,10 @@ def success_response():
         "status": "success"
     }, 200)
 
-def error_response():
+def error_response(message="Error attempting to sync"):
     return ({
-        "status": "error"
+        "status": "error",
+        "message": message
     }, 400)
 
 def bulk_sync(records, fields, model_class, keys):
@@ -65,7 +66,6 @@ def bulk_sync(records, fields, model_class, keys):
     for record in records:
         if not valid_record(record):
             return error_response()
-
 
     # Build schema from field names
     schema = [

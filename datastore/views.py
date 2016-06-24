@@ -347,6 +347,10 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
         records = request.data
 
+        # Wrap as list if missing
+        if type(records) is not list:
+            records = [records]
+
         # Filter out records with an empty `value` field, which breaks import
         records = [record for record in records if record.get('value', None) is not None]
 
