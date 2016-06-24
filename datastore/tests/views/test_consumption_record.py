@@ -136,6 +136,18 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         })
         assert response.status_code == 200
 
+        # A null `value` should be supported
+        response = self.post('/api/v1/consumption_records/sync2/', [{
+            "start": start_a,
+            "metadata_id": cm_id,
+            "estimated": False,
+            "value": None
+        }])
+        assert response.status_code == 200
+        a = get_test_record_by_start(start_a)
+        assert a is not None
+        assert a.value is None
+
 
         # Test some invalid records
 

@@ -351,9 +351,6 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         if type(records) is not list:
             records = [records]
 
-        # Filter out records with an empty `value` field, which breaks import
-        records = [record for record in records if record.get('value', None) is not None]
-
         result, status = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
 
         return Response(result, status=status)

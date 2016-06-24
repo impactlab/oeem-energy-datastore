@@ -149,7 +149,7 @@ def bulk_sync(records, fields, model_class, keys):
         cursor.execute(create_tmp_table_statement)
 
         # Load data into temporary table from CSV
-        cursor.copy_from(file=infile, table=tmp_tablename, sep=',', columns=fieldnames)
+        cursor.copy_from(file=infile, table=tmp_tablename, sep=',', columns=fieldnames, null="")
 
         # Upsert it into the actual table
         cursor.execute(upsert_statement)
