@@ -19,6 +19,7 @@ from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
 from . import models
 from . import serializers
 from . import tasks
+from . import services
 from collections import defaultdict
 from datetime import datetime
 
@@ -66,7 +67,13 @@ class SyncMixin(object):
 
         response_data = [self._sync_record(record) for record in request.data]
 
-        return Response(response_data)
+        # Return a 400 response if any of the records failed to sync
+        status_code = 200
+        for obj in response_data:
+            if "error" in obj.get("status", ""):
+                status_code = 400
+
+        return Response(response_data, status=status_code)
 
     def _sync_record(self, record):
         """ Get/Create/Update records as necessary, returing dict with data
@@ -208,7 +215,6 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
         ]
 
         self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
-
     def _find_foreign_objects(self, record):
 
         project = self.project_dict.get(str(record["project_project_id"]))
@@ -284,8 +290,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         ]
 
         consumption_metadatas = models.ConsumptionMetadata.objects.all()
+
         self.metadata_dict = {(cm.project.project_id, cm.fuel_type): cm
-                         for cm in consumption_metadatas}
+                         for cm in consumption_metadatas if cm.project}
 
     def _find_foreign_objects(self, record):
 
@@ -315,6 +322,39 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
     def _parse_record(self, record, foreign_objects):
         record["start"] = parse_datetime(record["start"])
         return record
+
+    @list_route(methods=['post'])
+    def sync2(self, request):
+        """
+        `POST /api/v1/consumption_records/sync2/`
+
+        A much faster sync implementation. Slightly different behavior than the existing sync route in that
+        it expects a `metadata_id` rather than the metadata properties.
+
+        Expects records like the following::
+
+            [
+                {
+                     "start": "2016-03-15T00:00:00+0000",
+                     "value": 10.2,
+                     "metadata_id": 1 # Retrieved using /consumptions_metadata/sync/
+                },
+                ...
+            ]
+        """
+
+        fields = ['start', 'value', 'estimated', 'metadata_id']
+
+        records = request.data
+
+        # Wrap as list if missing
+        if type(records) is not list:
+            records = [records]
+
+        result, status = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
+
+        return Response(result, status=status)
+
 
 class ProjectFilter(django_filters.FilterSet):
 
