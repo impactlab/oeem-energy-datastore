@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Portal{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="row-md-12">
+
+    <div class="col-md-12">
+      <h1>OEEM Customer Portal</h1>
+      <hr />
+    </div>
+
+    <div class="col-md-8">
+
+      <div>
+        <a href="{% url 'portal_csv_export' %}" class="btn btn-primary">Download Results CSV</a>
+      </div>
+
+      <hr />
+
+      <h3>Project and Consumption Data</h3>
+
+      <p>{{ project_count }} projects</p>
+      <p>{{ consumptionmetadata_count }} project consumption data collection (ConsumptionMetadata)</p>
+      <p>{{ consumptionrecord_count }} consumption data points (ConsumptionRecord)</p>
+
+      <h3>Meter Runs</h3>
+      <p>{{ meterrun_count }} meter runs</p>
+
+    </div>
+
+    <div class="col-md-4">
+    </div>
+  </div>
+</div>
+
+{% endblock body %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% load getattribute %}
+
+{% block title %}Customer Portal{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="row-md-12">
+
+    <div class="col-md-12">
+      <h1>Meter Runs</h1>
+
+      <table class="table">
+        <tr>
+          {% for header in headers %}
+          <th>{{ header }} </th>
+          {% endfor %}
+        </tr>
+        {% for meter_run in meter_runs %}
+        <tr>
+          {% for header in headers %}
+          <td>{{ meter_run|getattribute:header }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock body %}

@@ -25,6 +25,7 @@ INSTALLED_APPS = (
     'api_doc',
     'datastore',
     'djcelery',
+    'portal',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -113,7 +114,7 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
