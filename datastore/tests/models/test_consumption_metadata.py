@@ -3,8 +3,7 @@ from django.contrib.auth.models import User
 
 from datastore import models
 
-
-import eemeter.consumption
+from eemeter.structures import EnergyTrace
 
 class ConsumptionMetadataTestCase(TestCase):
 
@@ -33,5 +32,5 @@ class ConsumptionMetadataTestCase(TestCase):
             assert hasattr(self.consumptionmetadata, attribute)
 
     def test_eemeter_consumption_data(self):
-        consumption_data = self.consumptionmetadata.eemeter_consumption_data()
-        assert isinstance(consumption_data, eemeter.consumption.ConsumptionData)
+        trace = self.consumptionmetadata.eemeter_consumption_data()
+        assert isinstance(trace, EnergyTrace)

@@ -23,7 +23,7 @@ class ProjectRunAPITestCase(OAuthTestCase):
         response = self.post('/api/v1/project_runs/', data)
         assert response.status_code == 201
         # Test the default for meter_type
-        assert response.data['meter_class'] == 'DefaultResidentialMeter'
+        assert response.data['meter_class'] == 'EnergyEfficiencyMeter'
 
 
         # Test failing meter_class validation
@@ -61,10 +61,9 @@ class ProjectRunAPITestCase(OAuthTestCase):
 
     def test_project_run_status_success(self):
 
-        # bad meter type
         data = {
             'project': self.project.pk,
-            'meter_type': 'residential',
+            'meter_class': 'EnergyEfficiencyMeter',
         }
         response = self.post('/api/v1/project_runs/', data)
         project_run = response.data

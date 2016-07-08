@@ -4,10 +4,11 @@ from .shared import OAuthTestCase
 
 from oauth2_provider.models import AccessToken
 
-from eemeter.consumption import ConsumptionData as EEMeterConsumptionData
-from eemeter.project import Project as EEMeterProject
-from eemeter.examples import get_example_project
-from eemeter.evaluation import Period
+from eemeter.structures import (
+    EnergyTrace,
+    Project,
+    ModelingPeriod,
+)
 
 from datetime import datetime
 

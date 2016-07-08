@@ -25,7 +25,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "fuel_type": "E"
         }])
 
-        assert response.data[0]['status'] == 'created'
+        assert response.data[0]['status'] == 'unchanged - same record'
         cm_id = response.data[0]['id']
 
         response = self.post('/api/v1/consumption_records/sync/', [{
@@ -61,7 +61,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "fuel_type": "E"
         }])
 
-        assert response.data[0]['status'] == 'created'
+        assert response.data[0]['status'] == 'unchanged - same record'
         cm_id = response.data[0]['id']
         cm_id2 = response.data[1]['id']
 
