@@ -429,10 +429,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         if not hasattr(self.request, 'query_params'):
             return serializers.ProjectSerializer
 
-        if self.request.query_params.get(
-                "with_monthly_summary", "False") == "True":
-            return serializers.ProjectWithMonthlyMeterRunsSerializer
-
         with_attributes = self.request.query_params.get(
                 "with_attributes", "False") == "True"
         with_meter_runs = self.request.query_params.get(
@@ -584,10 +580,6 @@ class MeterRunViewSet(viewsets.ModelViewSet):
 
         if self.request.query_params.get("summary", "False") == "True":
             return serializers.MeterRunSummarySerializer
-        elif self.request.query_params.get("daily", "False") == "True":
-            return serializers.MeterRunDailySerializer
-        elif self.request.query_params.get("monthly", "False") == "True":
-            return serializers.MeterRunMonthlySerializer
         else:
             return serializers.MeterRunSerializer
 
@@ -600,9 +592,6 @@ class ProjectBlockViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
             return serializers.ProjectBlockSerializer
-
-        if self.request.query_params.get("monthly_timeseries", "false") == "True":
-            return serializers.ProjectBlockMonthlyTimeseriesSerializer
 
         if self.request.query_params.get("name_only", "false") == "True":
             return serializers.ProjectBlockNameSerializer

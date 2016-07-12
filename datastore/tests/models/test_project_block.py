@@ -38,6 +38,3 @@ class ProjectBlockTestCase(TestCase):
     def test_run_meters(self):
         with pytest.raises(AttributeError):
             self.project_block.run_meters()
-
-    def test_recent_summaries(self):
-        recent_summaries = self.project_block.recent_summaries()

@@ -6,75 +6,36 @@ from .projects import *
 from .meter_runs import *
 
 
-### ProjectOwner ###
-
 class ProjectOwnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProjectOwner
-        fields = ( 'id', 'user')
-
-
-### ProjectBlock ###
-
-class ProjectBlockSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProjectBlock
-        fields = ( 'id', 'name', 'projects')
-
-
-class ProjectBlockNameSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.ProjectBlock
-        fields = ( 'id', 'name')
-
-
-class MonthlyUsageSummaryBaselineSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.MonthlyUsageSummaryBaseline
-        fields = ( 'id', 'value', 'date')
-
-
-class MonthlyUsageSummaryActualSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = models.MonthlyUsageSummaryActual
-        fields = ( 'id', 'value', 'date', 'n_projects')
-
-
-class InterpretationSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
-
-    monthlyusagesummarybaseline_set = MonthlyUsageSummaryBaselineSerializer(many=True, read_only=True)
-    monthlyusagesummaryactual_set = MonthlyUsageSummaryActualSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = models.InterpretationSummary
         fields = (
             'id',
-            'interpretation',
-            'monthlyusagesummarybaseline_set',
-            'monthlyusagesummaryactual_set',
+            'user'
         )
 
 
-class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
-
-    recent_summaries = InterpretationSummaryMonthlyTimeseriesSerializer(many=True, read_only=True)
+class ProjectBlockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ProjectBlock
         fields = (
             'id',
             'name',
-            'projects',
-            'recent_summaries',
+            'projects'
         )
 
 
-### ProjectAttributeKey ###
+class ProjectBlockNameSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.ProjectBlock
+        fields = (
+            'id',
+            'name'
+        )
+
 
 class ProjectAttributeKeySerializer(serializers.ModelSerializer):
 
@@ -87,8 +48,6 @@ class ProjectAttributeKeySerializer(serializers.ModelSerializer):
             'data_type'
         )
 
-
-### ProjectAttribute ###
 
 class ProjectAttributeSerializer(serializers.ModelSerializer):
 
@@ -120,22 +79,24 @@ class ProjectAttributeValueSerializer(serializers.ModelSerializer):
         )
 
 
-### ConsumptionRecord ###
-
 class ConsumptionRecordSerializer(serializers.ModelSerializer):
 
     value = serializers.FloatField(source='value_clean')
 
     class Meta:
         model = models.ConsumptionRecord
-        fields = ('id', 'start', 'value', 'estimated', 'metadata',)
+        fields = (
+            'id',
+            'start',
+            'value',
+            'estimated',
+            'metadata',
+        )
 
     def create(self, validated_data):
         value_clean = validated_data.pop('value_clean')
         validated_data["value"] = value_clean
         return models.ConsumptionRecord.objects.create(**validated_data)
-
-### ConsumptionMetadata ###
 
 
 class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
@@ -144,7 +105,12 @@ class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ('id', 'interpretation', 'unit', 'project')
+        fields = (
+            'id',
+            'interpretation',
+            'unit',
+            'project',
+        )
 
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
@@ -153,7 +119,13 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ('id', 'interpretation', 'unit', 'records', 'project')
+        fields = (
+            'id',
+            'interpretation',
+            'unit',
+            'records',
+            'project',
+        )
 
     def create(self, validated_data):
         records_data = validated_data.pop('records')

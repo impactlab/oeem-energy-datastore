@@ -4,7 +4,6 @@ from django.db.models import Manager
 
 from .meter_runs import (
     MeterRunSummarySerializer,
-    MeterRunMonthlySerializer,
 )
 
 from .. import models
@@ -13,7 +12,6 @@ __all__ = (
     'ProjectSerializer',
     'ProjectWithAttributesSerializer',
     'ProjectWithMeterRunsSerializer',
-    'ProjectWithMonthlyMeterRunsSerializer',
     'ProjectWithAttributesAndMeterRunsSerializer',
     'ProjectRunSerializer',
 )
@@ -77,17 +75,12 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
 
 class ProjectMeterRunMixin(object):
 
-    include_monthly = False
-
     def to_representation(self, instance, get_meter_runs=True):
 
         # get fields in the usual way.
         ret = serializers.Serializer.to_representation(self, instance)
 
-        if self.include_monthly:
-            serializer = MeterRunMonthlySerializer(read_only=True)
-        else:
-            serializer = MeterRunSummarySerializer(read_only=True)
+        serializer = MeterRunSummarySerializer(read_only=True)
 
         if get_meter_runs:
             recent_meter_runs = instance.recent_meter_runs(
@@ -98,13 +91,8 @@ class ProjectMeterRunMixin(object):
 
         return ret
 
-class ProjectMeterRunMonthlyMixin(ProjectMeterRunMixin):
-    include_monthly = True
-
 
 class ProjectWithMeterRunsListSerializer(serializers.ListSerializer):
-
-    include_monthly = False
 
     def to_representation(self, data):
         """
@@ -122,21 +110,13 @@ class ProjectWithMeterRunsListSerializer(serializers.ListSerializer):
         recent_meter_runs = models.Project.recent_meter_runs(
                 project_pks=project_pks)
 
-        if self.include_monthly:
-            serializer = MeterRunMonthlySerializer(read_only=True)
-        else:
-            serializer = MeterRunSummarySerializer(read_only=True)
+        serializer = MeterRunSummarySerializer(read_only=True)
 
         for r in ret:
             meter_runs = recent_meter_runs[r["id"]]
             _update_with_recent_meter_runs(r, meter_runs, serializer)
 
         return ret
-
-
-class ProjectWithMeterRunsMonthlyListSerializer(
-        ProjectWithMeterRunsListSerializer):
-    include_monthly = True
 
 
 class ProjectWithMeterRunsSerializer(ProjectMeterRunMixin,
@@ -146,15 +126,6 @@ class ProjectWithMeterRunsSerializer(ProjectMeterRunMixin,
         model = models.Project
         fields = BASIC_PROJECT_FIELDS
         list_serializer_class = ProjectWithMeterRunsListSerializer
-
-
-class ProjectWithMonthlyMeterRunsSerializer(ProjectMeterRunMonthlyMixin,
-        serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Project
-        fields = BASIC_PROJECT_FIELDS
-        list_serializer_class = ProjectWithMeterRunsMonthlyListSerializer
 
 
 class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,

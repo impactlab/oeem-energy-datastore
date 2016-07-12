@@ -18,6 +18,3 @@ class Command(BaseCommand):
         for project in projects:
             print("Running meter for {}".format(project))
             project.run_meter()
-
-        print("Computing project block summary timeseries.")
-        project_block.compute_summary_timeseries()
