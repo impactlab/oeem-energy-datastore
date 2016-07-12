@@ -151,6 +151,10 @@ LOGGING = {
 
 BROKER_URL = os.environ.get("BROKER_URL", None)
 
+# Support pointing BROKER_URL at another environment variable by prefixing with $
+if BROKER_URL is not None and BROKER_URL.startswith("$"):
+    BROKER_URL = os.environ.get(BROKER_URL[1:], None)
+
 # defaults for development, should be overriden in production.
 BROKER_TRANSPORT = os.environ.get("BROKER_TRANSPORT", "memory")
 CELERY_ALWAYS_EAGER = os.environ.get("CELERY_ALWAYS_EAGER", "true").lower() == "true"
