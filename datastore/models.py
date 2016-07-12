@@ -110,25 +110,22 @@ class Project(models.Model):
     def _eemeter_location(self):
         return ZIPCodeSite(zipcode=self.zipcode)
 
-    def run_meter(self, meter_class='EnergyEfficiencyMeter', start_date=None,
-                  end_date=None, n_days=None, meter_settings=None):
+    def run_meter(self, meter_class='EnergyEfficiencyMeter',
+                  meter_settings=None):
         """
         If possible, run the meter specified by meter_class.
 
         Parameters
         ----------
-        meter_class: string
+        meter_class : str
             One of the keys in METER_CLASS_CHOICES
-
-        start_date: datetime
-
-        end_data: datetime
-
-        n_days: int
-
-        meter_settings: dict
+        meter_settings : dict
             Dictionary of extra settings to send to the meter.
 
+        Returns
+        -------
+        meter_runs : list of MeterRun objects.
+            Outputted meter runs
         """
         try:
             project = self.eemeter_project()
@@ -320,9 +317,6 @@ class ProjectRun(models.Model):
     status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
     meter_class = models.CharField(max_length=250, null=True, default="EnergyEfficiencyMeter")
     meter_settings = JSONField(null=True)
-    start_date = models.DateTimeField(null=True)
-    end_date = models.DateTimeField(null=True)
-    n_days = models.IntegerField(null=True)
     traceback = models.CharField(max_length=10000, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -382,11 +376,11 @@ class ProjectBlock(models.Model):
     def __str__(self):
         return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
 
-    def run_meters(self, meter_class='DefaultResidentialMeter', start_date=None, end_date=None, n_days=None):
+    def run_meters(self, meter_class='EnergyEfficiencyMeter', meter_settings=None):
         """ Run meter for each project in the project block.
         """
         for project in self.projects.all():
-            project.run_meter(meter_class, start_date, end_date, n_days)
+            project.run_meter(meter_class, meter_settings)
 
     def compute_summary_timeseries(self):
         """ Compute aggregate timeseries for all projects in project block.

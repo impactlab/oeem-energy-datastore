@@ -30,9 +30,7 @@ def execute_project_run(project_run_pk):
 
     try:
         project.run_meter(meter_class=project_run.meter_class,
-                          start_date=project_run.start_date,
-                          end_date=project_run.end_date,
-                          n_days=project_run.n_days)
+                          meter_settings=project_run.meter_settings)
         project_run.status = 'SUCCESS'
         logger.info(
             "Successfully ran {} meter for project {}"

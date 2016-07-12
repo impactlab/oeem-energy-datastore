@@ -66,7 +66,7 @@ class MeterRunAPITestCase(OAuthTestCase):
             )
 
         ## Attempt to run the meter
-        cls.project.run_meter(start_date=make_aware(datetime(2011,1,1)), end_date=make_aware(datetime(2015,1,1)))
+        cls.project.run_meter()
         cls.meter_runs = [models.MeterRun.objects.get(consumption_metadata=cm) for cm in cls.consumption_metadatas]
         assert len(cls.meter_runs) == 2
 
