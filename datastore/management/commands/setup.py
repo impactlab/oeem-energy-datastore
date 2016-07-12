@@ -18,7 +18,7 @@ class Command(BaseCommand):
         user.save()
         ## consumption data
         
-        consumption_metadata = ConsumptionMetadata(fuel_type="E", energy_unit="KWH")
+        consumption_metadata = ConsumptionMetadata(fuel_type="E", unit="KWH")
         consumption_metadata.save()
         record = ConsumptionRecord(
             metadata=self.consumption_metadata, start=now(), estimated=False)

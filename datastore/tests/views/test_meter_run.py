@@ -39,13 +39,13 @@ class MeterRunAPITestCase(OAuthTestCase):
         elec = models.ConsumptionMetadata.objects.create(
             project=cls.project,
             fuel_type="E",
-            energy_unit="KWH",
+            unit="KWH",
         )
 
         gas = models.ConsumptionMetadata.objects.create(
             project=cls.project,
             fuel_type="NG",
-            energy_unit="THM",
+            unit="THM",
         )
 
         cls.consumption_metadatas = [elec, gas]

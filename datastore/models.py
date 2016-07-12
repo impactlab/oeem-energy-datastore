@@ -33,7 +33,7 @@ FUEL_TYPE_CHOICES = [
     ('NG', 'natural_gas'),
 ]
 
-ENERGY_UNIT_CHOICES = [
+UNIT_CHOICES = [
     ('KWH', 'kWh'),
     ('THM', 'therm'),
 ]
@@ -525,7 +525,7 @@ class ProjectBlock(models.Model):
 @python_2_unicode_compatible
 class ConsumptionMetadata(models.Model):
     fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
-    energy_unit = models.CharField(max_length=3, choices=ENERGY_UNIT_CHOICES)
+    unit = models.CharField(max_length=3, choices=UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -533,14 +533,14 @@ class ConsumptionMetadata(models.Model):
     def eemeter_consumption_data(self):
         records = [r.eemeter_record() for r in self.records.all()]
         fuel_type = dict(FUEL_TYPE_CHOICES)[self.fuel_type]
-        unit_name = dict(ENERGY_UNIT_CHOICES)[self.energy_unit]
+        unit_name = dict(UNIT_CHOICES)[self.unit]
         interpretation = "{}_CONSUMPTION_SUPPLIED".format(fuel_type.upper())
         return EnergyTrace(interpretation, records=records, unit=unit_name,
                            serializer=ArbitraryStartSerializer())
 
     def __str__(self):
         n = len(self.records.all())
-        return u'ConsumptionMetadata(fuel_type={}, energy_unit={}, n={})'.format(self.fuel_type, self.energy_unit, n)
+        return u'ConsumptionMetadata(fuel_type={}, unit={}, n={})'.format(self.fuel_type, self.unit, n)
 
 
 @python_2_unicode_compatible

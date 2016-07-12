@@ -167,12 +167,12 @@ class ConsumptionMetadataFilter(django_filters.FilterSet):
 
     fuel_type = django_filters.MultipleChoiceFilter(
             choices=models.FUEL_TYPE_CHOICES)
-    energy_unit = django_filters.MultipleChoiceFilter(
-            choices=models.ENERGY_UNIT_CHOICES)
+    unit = django_filters.MultipleChoiceFilter(
+            choices=models.UNIT_CHOICES)
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['fuel_type', 'energy_unit', 'project']
+        fields = ['fuel_type', 'unit', 'project']
 
 
 class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
@@ -202,7 +202,7 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
                 {
                     "project_project_id": "PROJECT_A",
                     "fuel_type": "E",
-                    "energy_unit": "KWH"
+                    "unit": "KWH"
                 },
                 ...
             ]
@@ -211,7 +211,7 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
 
     def _create_properties(self):
         self.attributes = [
-            "energy_unit",
+            "unit",
         ]
 
         self.project_dict = {p.project_id: p for p in models.Project.objects.all()}

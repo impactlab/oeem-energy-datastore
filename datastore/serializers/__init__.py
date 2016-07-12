@@ -144,7 +144,7 @@ class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ('id', 'fuel_type', 'energy_unit', 'project')
+        fields = ('id', 'fuel_type', 'unit', 'project')
 
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
@@ -153,7 +153,7 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ('id', 'fuel_type', 'energy_unit', 'records', 'project')
+        fields = ('id', 'fuel_type', 'unit', 'records', 'project')
 
     def create(self, validated_data):
         records_data = validated_data.pop('records')

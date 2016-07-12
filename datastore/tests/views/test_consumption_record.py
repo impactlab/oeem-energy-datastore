@@ -13,7 +13,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
         self.consumption_metadata = models.ConsumptionMetadata(
             fuel_type="E",
-            energy_unit="KWH",
+            unit="KWH",
         )
         self.consumption_metadata.save()
 
@@ -21,7 +21,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
-            "energy_unit": "KWH",
+            "unit": "KWH",
             "fuel_type": "E"
         }])
 
@@ -30,14 +30,14 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
         response = self.post('/api/v1/consumption_records/sync/', [{
             "project_id": "ABC",
-            "energy_unit": "KWH",
+            "unit": "KWH",
             "fuel_type": "E",
             "start": "2014-01-01T00:00:00+00:00",
             "value": 1.0,
             "estimated": True
         }, {
             "project_id": "ABC",
-            "energy_unit": "KWH",
+            "unit": "KWH",
             "fuel_type": "E",
             "start": "2014-01-01T01:00:00+00:00",
             "value": 2.0,
@@ -53,11 +53,11 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         # Create a two metadata objects
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
-            "energy_unit": "KWH",
+            "unit": "KWH",
             "fuel_type": "E"
         }, {
             "project_project_id": "DEF",
-            "energy_unit": "KWH",
+            "unit": "KWH",
             "fuel_type": "E"
         }])
 

@@ -14,7 +14,7 @@ class MeterRunTestCase(TestCase):
         consumptionmetadata = models.ConsumptionMetadata.objects.create(
             project=project,
             fuel_type="E",
-            energy_unit="KWH",
+            unit="KWH",
         )
         self.meterrun = models.MeterRun.objects.create(
             project=project,
