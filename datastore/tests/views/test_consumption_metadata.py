@@ -4,7 +4,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
     def test_consumption_metadata_create_read(self):
         consumption_data = {
-            "fuel_type": "E",
+            "interpretation": "E_C_S",
             "unit": "KWH",
         }
 
@@ -14,7 +14,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
         assert isinstance(response.data['id'], int)
         assert response.data['unit'] == 'KWH'
-        assert response.data['fuel_type'] == 'E'
+        assert response.data['interpretation'] == 'E_C_S'
         assert response.data['project'] == None
 
         consumption_metadata_id = response.data['id']
@@ -24,6 +24,6 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
         assert response.data['id'] == consumption_metadata_id
         assert response.data['unit'] == 'KWH'
-        assert response.data['fuel_type'] == 'E'
+        assert response.data['interpretation'] == 'E_C_S'
         assert response.data['project'] == None
         assert response.data['records'] == []

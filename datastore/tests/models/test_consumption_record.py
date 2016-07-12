@@ -15,7 +15,7 @@ class ConsumptionRecordTestCase(TestCase):
         )
         consumptionmetadata = models.ConsumptionMetadata.objects.create(
             project=project,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
         self.consumptionrecord = models.ConsumptionRecord.objects.create(

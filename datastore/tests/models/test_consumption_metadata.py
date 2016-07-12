@@ -15,14 +15,14 @@ class ConsumptionMetadataTestCase(TestCase):
         )
         self.consumptionmetadata = models.ConsumptionMetadata.objects.create(
             project=project,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
 
 
     def test_attributes(self):
         attributes = [
-            "fuel_type",
+            "interpretation",
             "unit",
             "project",
             "added",

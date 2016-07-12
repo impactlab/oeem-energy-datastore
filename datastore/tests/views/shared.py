@@ -41,13 +41,13 @@ class OAuthTestCase(TestCase):
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(
             project=cls.project,
-            fuel_type="NG",
+            interpretation="NG_C_S",
             unit="THM",
         )
 
         cls.cm_e = models.ConsumptionMetadata.objects.create(
             project=cls.project,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
 
@@ -94,13 +94,13 @@ class OAuthTestCase(TestCase):
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(
             project=cls.project2,
-            fuel_type="NG",
+            interpretation="NG_C_S",
             unit="THM",
         )
 
         cls.cm_e = models.ConsumptionMetadata.objects.create(
             project=cls.project2,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
 

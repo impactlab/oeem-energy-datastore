@@ -38,7 +38,7 @@ def _update_with_recent_meter_runs(data, meter_runs, serializer):
 
     for k, v in meter_runs.items():
         meter_run = serializer.to_representation(v["meter_run"])
-        meter_run.update({"fuel_type": v["fuel_type"]})
+        meter_run.update({"interpretation": v["interpretation"]})
         meter_runs_data.append(meter_run)
 
     data.update({"recent_meter_runs": meter_runs_data})

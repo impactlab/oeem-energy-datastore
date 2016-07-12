@@ -45,16 +45,16 @@ class MonthlyUsageSummaryActualSerializer(serializers.ModelSerializer):
         fields = ( 'id', 'value', 'date', 'n_projects')
 
 
-class FuelTypeSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
+class InterpretationSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
 
     monthlyusagesummarybaseline_set = MonthlyUsageSummaryBaselineSerializer(many=True, read_only=True)
     monthlyusagesummaryactual_set = MonthlyUsageSummaryActualSerializer(many=True, read_only=True)
 
     class Meta:
-        model = models.FuelTypeSummary
+        model = models.InterpretationSummary
         fields = (
             'id',
-            'fuel_type',
+            'interpretation',
             'monthlyusagesummarybaseline_set',
             'monthlyusagesummaryactual_set',
         )
@@ -62,7 +62,7 @@ class FuelTypeSummaryMonthlyTimeseriesSerializer(serializers.ModelSerializer):
 
 class ProjectBlockMonthlyTimeseriesSerializer(serializers.ModelSerializer):
 
-    recent_summaries = FuelTypeSummaryMonthlyTimeseriesSerializer(many=True, read_only=True)
+    recent_summaries = InterpretationSummaryMonthlyTimeseriesSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.ProjectBlock
@@ -144,7 +144,7 @@ class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ('id', 'fuel_type', 'unit', 'project')
+        fields = ('id', 'interpretation', 'unit', 'project')
 
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
@@ -153,7 +153,7 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ('id', 'fuel_type', 'unit', 'records', 'project')
+        fields = ('id', 'interpretation', 'unit', 'records', 'project')
 
     def create(self, validated_data):
         records_data = validated_data.pop('records')

@@ -12,7 +12,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         super(ConsumptionRecordAPITestCase,self).setUp()
 
         self.consumption_metadata = models.ConsumptionMetadata(
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
         self.consumption_metadata.save()
@@ -22,7 +22,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
             "unit": "KWH",
-            "fuel_type": "E"
+            "interpretation": "E_C_S"
         }])
 
         assert response.data[0]['status'] == 'unchanged - same record'
@@ -31,14 +31,14 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         response = self.post('/api/v1/consumption_records/sync/', [{
             "project_id": "ABC",
             "unit": "KWH",
-            "fuel_type": "E",
+            "interpretation": "E_C_S",
             "start": "2014-01-01T00:00:00+00:00",
             "value": 1.0,
             "estimated": True
         }, {
             "project_id": "ABC",
             "unit": "KWH",
-            "fuel_type": "E",
+            "interpretation": "E_C_S",
             "start": "2014-01-01T01:00:00+00:00",
             "value": 2.0,
             "estimated": True
@@ -54,11 +54,11 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
             "unit": "KWH",
-            "fuel_type": "E"
+            "interpretation": "E_C_S"
         }, {
             "project_project_id": "DEF",
             "unit": "KWH",
-            "fuel_type": "E"
+            "interpretation": "E_C_S"
         }])
 
         assert response.data[0]['status'] == 'unchanged - same record'

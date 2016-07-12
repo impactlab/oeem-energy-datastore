@@ -36,13 +36,13 @@ class ProjectTestCase(TestCase):
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(
             project=cls.project,
-            fuel_type="NG",
+            interpretation="NG_C_S",
             unit="THM",
         )
 
         cls.cm_e = models.ConsumptionMetadata.objects.create(
             project=cls.project,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
 
@@ -122,8 +122,8 @@ class ProjectTestCase(TestCase):
         gas_meter_run = project_meter_runs[self.cm_ng.pk]
         elec_meter_run = project_meter_runs[self.cm_e.pk]
 
-        assert gas_meter_run["fuel_type"] == "NG"
-        assert elec_meter_run["fuel_type"] == "E"
+        assert gas_meter_run["interpretation"] == "NG_C_S"
+        assert elec_meter_run["interpretation"] == "E_C_S"
 
         assert isinstance(gas_meter_run["meter_run"], models.MeterRun)
         assert isinstance(elec_meter_run["meter_run"], models.MeterRun)
@@ -144,8 +144,8 @@ class ProjectTestCase(TestCase):
         gas_meter_run = project_meter_runs[self.cm_ng.pk]
         elec_meter_run = project_meter_runs[self.cm_e.pk]
 
-        assert gas_meter_run["fuel_type"] == "NG"
-        assert elec_meter_run["fuel_type"] == "E"
+        assert gas_meter_run["interpretation"] == "NG_C_S"
+        assert elec_meter_run["interpretation"] == "E_C_S"
 
         assert isinstance(gas_meter_run["meter_run"], models.MeterRun)
         assert isinstance(elec_meter_run["meter_run"], models.MeterRun)

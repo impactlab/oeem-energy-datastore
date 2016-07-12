@@ -46,13 +46,13 @@ class ProjectAPITestCase(OAuthTestCase):
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(
             project=cls.complete_project,
-            fuel_type="NG",
+            interpretation="NG_C_S",
             unit="THM",
         )
 
         cls.cm_e = models.ConsumptionMetadata.objects.create(
             project=cls.complete_project,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
 
@@ -389,7 +389,7 @@ class ProjectAPITestCase(OAuthTestCase):
             'cvrmse_reporting',
             'valid_meter_run',
             'meter_class',
-            'fuel_type',
+            'interpretation',
             'added',
             'updated',
         ])
@@ -437,7 +437,7 @@ class ProjectAPITestCase(OAuthTestCase):
             'model_parameter_json_reporting',
             'valid_meter_run',
             'meter_class',
-            'fuel_type',
+            'interpretation',
             'added',
             'updated',
             'monthlyaverageusagebaseline_set',

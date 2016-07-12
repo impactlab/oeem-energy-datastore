@@ -26,7 +26,7 @@ MINIMAL_METER_RUN_FIELDS = (
 )
 
 EXTRA_METER_RUN_FIELDS = (
-    'fuel_type',
+    'interpretation',
     'model_parameter_json_baseline',
     'model_parameter_json_reporting',
 )

@@ -38,13 +38,13 @@ class MeterRunAPITestCase(OAuthTestCase):
 
         elec = models.ConsumptionMetadata.objects.create(
             project=cls.project,
-            fuel_type="E",
+            interpretation="E_C_S",
             unit="KWH",
         )
 
         gas = models.ConsumptionMetadata.objects.create(
             project=cls.project,
-            fuel_type="NG",
+            interpretation="NG_C_S",
             unit="THM",
         )
 
@@ -93,7 +93,7 @@ class MeterRunAPITestCase(OAuthTestCase):
                 'model_parameter_json_reporting',
                 'valid_meter_run',
                 'meter_class',
-                'fuel_type',
+                'interpretation',
                 'added',
                 'updated',
             ])
@@ -150,7 +150,7 @@ class MeterRunAPITestCase(OAuthTestCase):
                 'model_parameter_json_reporting',
                 'valid_meter_run',
                 'meter_class',
-                'fuel_type',
+                'interpretation',
                 'added',
                 'updated',
                 'monthlyaverageusagebaseline_set',
@@ -182,7 +182,7 @@ class MeterRunAPITestCase(OAuthTestCase):
                 'model_parameter_json_reporting',
                 'valid_meter_run',
                 'meter_class',
-                'fuel_type',
+                'interpretation',
                 'added',
                 'updated',
                 'dailyusagebaseline_set',

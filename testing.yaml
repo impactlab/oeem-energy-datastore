@@ -44,14 +44,14 @@
 - model: datastore.consumptionmetadata
   fields:
     unit: KWH
-    fuel_type: E
+    interpretation: E_C_S
     project: 1
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
 - model: datastore.consumptionmetadata
   fields:
     unit: THM
-    fuel_type: NG
+    interpretation: NG_C_S
     project: 1
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
@@ -59,14 +59,14 @@
 - model: datastore.consumptionmetadata
   fields:
     unit: KWH
-    fuel_type: E
+    interpretation: E_C_S
     project: 2
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00
 - model: datastore.consumptionmetadata
   fields:
     unit: THM
-    fuel_type: NG
+    interpretation: E_C_S
     project: 2
     added: 2015-01-01 00:00:00+00:00
     updated: 2015-01-01 00:00:00+00:00

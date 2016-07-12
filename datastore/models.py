@@ -28,9 +28,14 @@ METER_CLASS_CHOICES = {
     'EnergyEfficiencyMeter': EnergyEfficiencyMeter,
 }
 
-FUEL_TYPE_CHOICES = [
-    ('E', 'electricity'),
-    ('NG', 'natural_gas'),
+INTERPRETATION_CHOICES = [
+    ('E_C_S', 'ELECTRICITY_CONSUMPTION_SUPPLIED'),
+    ('E_C_T', 'ELECTRICITY_CONSUMPTION_TOTAL'),
+    ('E_C_N', 'ELECTRICITY_CONSUMPTION_NET'),
+    ('E_OSG_T', 'ELECTRICITY_ON_SITE_GENERATION_TOTAL'),
+    ('E_OSG_C', 'ELECTRICITY_ON_SITE_GENERATION_CONSUMED'),
+    ('E_OSG_U', 'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'),
+    ('NG_C_S', 'NATURAL_GAS_CONSUMPTION_SUPPLIED'),
 ]
 
 UNIT_CHOICES = [
@@ -211,51 +216,6 @@ class Project(models.Model):
         meter_run = MeterRun(**kwargs)
         return meter_run
 
-    # def _save_daily_and_monthly_timeseries(self, project, meter, meter_run, model, model_parameters_baseline, model_parameters_reporting, period):
-    #
-    #     # record time series of usage for baseline and reporting
-    #     avg_temps = project.weather_source.daily_temperatures(
-    #             period, meter.temperature_unit_str)
-    #
-    #     values_baseline = model.transform(avg_temps, model_parameters_baseline)
-    #     values_reporting = model.transform(avg_temps, model_parameters_reporting)
-    #
-    #     month_names = [period.start.strftime("%Y-%m")]
-    #
-    #     month_groups_baseline = defaultdict(list)
-    #     month_groups_reporting = defaultdict(list)
-    #
-    #     for value_baseline, value_reporting, days in zip(values_baseline, values_reporting, range(period.timedelta.days)):
-    #         date = period.start + timedelta(days=days)
-    #
-    #         daily_usage_baseline = DailyUsageBaseline(meter_run=meter_run, value=value_baseline, date=date)
-    #         daily_usage_baseline.save()
-    #
-    #         daily_usage_reporting = DailyUsageReporting(meter_run=meter_run, value=value_reporting, date=date)
-    #         daily_usage_reporting.save()
-    #
-    #         # track monthly usage as well
-    #         current_month = date.strftime("%Y-%m")
-    #         if not current_month == month_names[-1]:
-    #             month_names.append(current_month)
-    #
-    #         month_groups_baseline[current_month].append(value_baseline)
-    #         month_groups_reporting[current_month].append(value_reporting)
-    #
-    #     for month_name in month_names:
-    #         baseline_values = month_groups_baseline[month_name]
-    #         reporting_values = month_groups_reporting[month_name]
-    #
-    #         monthly_average_baseline = 0 if baseline_values == [] else np.nanmean(baseline_values)
-    #         monthly_average_reporting = 0 if reporting_values == [] else np.nanmean(reporting_values)
-    #
-    #         dt = datetime.strptime(month_name, "%Y-%m")
-    #         monthly_average_usage_baseline = MonthlyAverageUsageBaseline(meter_run=meter_run, value=monthly_average_baseline, date=dt)
-    #         monthly_average_usage_baseline.save()
-    #
-    #         monthly_average_usage_reporting = MonthlyAverageUsageReporting(meter_run=meter_run, value=monthly_average_reporting, date=dt)
-    #         monthly_average_usage_reporting.save()
-
     @staticmethod
     def recent_meter_runs(project_pks=[]):
         """
@@ -280,21 +240,21 @@ class Project(models.Model):
                 1: { # keys are primary keys of ConsumptionMetadata objects
                     1: {
                         "meter_run": <MeterRun object>,
-                        "fuel_type": "E"
+                        "interpretation": "E"
                     },
                     2: {
                         "meter_run": <MeterRun object>,
-                        "fuel_type": "NG"
+                        "interpretation": "NG"
                     }
                 },
                 2: {
                     3: {
                         "meter_run": <MeterRun object>,
-                        "fuel_type": "E"
+                        "interpretation": "E"
                     },
                     4: {
                         "meter_run": <MeterRun object>,
-                        "fuel_type": "NG"
+                        "interpretation": "NG"
                     }
                 }
             }
@@ -304,7 +264,7 @@ class Project(models.Model):
         meter_run_query = '''
           SELECT DISTINCT ON (consumption.id)
             meter.*,
-            consumption.fuel_type AS fuel_type_
+            consumption.interpretation AS interpretation_
           FROM datastore_meterrun AS meter
           JOIN datastore_consumptionmetadata AS consumption
             ON meter.consumption_metadata_id = consumption.id
@@ -334,7 +294,7 @@ class Project(models.Model):
 
             results[meter_run.project_id][meter_run.consumption_metadata_id] = {
                 'meter_run': meter_run,
-                'fuel_type': meter_run.fuel_type_,
+                'interpretation': meter_run.interpretation_,
             }
 
         return results
@@ -431,7 +391,7 @@ class ProjectBlock(models.Model):
     def compute_summary_timeseries(self):
         """ Compute aggregate timeseries for all projects in project block.
         """
-        data_by_fuel_type = defaultdict(lambda: {
+        data_by_interpretation = defaultdict(lambda: {
             "baseline_by_month": defaultdict(list),
             "baseline_by_date": defaultdict(list),
             "actual_by_month": defaultdict(list),
@@ -444,19 +404,19 @@ class ProjectBlock(models.Model):
         for project in self.projects.all():
             for meter_run in project.recent_meter_runs():
 
-                fuel_type = meter_run.consumption_metadata.fuel_type
+                interpretation = meter_run.consumption_metadata.interpretation
                 dailyusagebaseline_set = meter_run.dailyusagebaseline_set.all()
                 dailyusagereporting_set = meter_run.dailyusagereporting_set.all()
                 assert len(dailyusagebaseline_set) == len(dailyusagereporting_set)
 
-                fuel_type_data = data_by_fuel_type[fuel_type]
-                baseline_by_month = fuel_type_data["baseline_by_month"]
-                baseline_by_date = fuel_type_data["baseline_by_date"]
-                actual_by_month = fuel_type_data["actual_by_month"]
-                actual_by_date = fuel_type_data["actual_by_date"]
-                reporting_by_month = fuel_type_data["reporting_by_month"]
-                reporting_by_date = fuel_type_data["reporting_by_date"]
-                n_completed_projects_by_date = fuel_type_data["n_completed_projects_by_date"]
+                interpretation_data = data_by_interpretation[interpretation]
+                baseline_by_month = interpretation_data["baseline_by_month"]
+                baseline_by_date = interpretation_data["baseline_by_date"]
+                actual_by_month = interpretation_data["actual_by_month"]
+                actual_by_date = interpretation_data["actual_by_date"]
+                reporting_by_month = interpretation_data["reporting_by_month"]
+                reporting_by_date = interpretation_data["reporting_by_date"]
+                n_completed_projects_by_date = interpretation_data["n_completed_projects_by_date"]
 
                 for daily_usage_baseline, daily_usage_reporting in \
                         zip(dailyusagebaseline_set, dailyusagereporting_set):
@@ -481,66 +441,66 @@ class ProjectBlock(models.Model):
                     reporting_by_month[month].append(reporting_value)
                     reporting_by_date[date].append(reporting_value)
 
-        for fuel_type, fuel_type_data in data_by_fuel_type.items():
+        for interpretation, interpretation_data in data_by_interpretation.items():
 
-            baseline_by_month = fuel_type_data["baseline_by_month"]
-            baseline_by_date = fuel_type_data["baseline_by_date"]
-            actual_by_month = fuel_type_data["actual_by_month"]
-            actual_by_date = fuel_type_data["actual_by_date"]
-            reporting_by_month = fuel_type_data["reporting_by_month"]
-            reporting_by_date = fuel_type_data["reporting_by_date"]
-            n_completed_projects_by_date = fuel_type_data["n_completed_projects_by_date"]
+            baseline_by_month = interpretation_data["baseline_by_month"]
+            baseline_by_date = interpretation_data["baseline_by_date"]
+            actual_by_month = interpretation_data["actual_by_month"]
+            actual_by_date = interpretation_data["actual_by_date"]
+            reporting_by_month = interpretation_data["reporting_by_month"]
+            reporting_by_date = interpretation_data["reporting_by_date"]
+            n_completed_projects_by_date = interpretation_data["n_completed_projects_by_date"]
 
             date_labels = sorted(baseline_by_date.keys())
             month_labels = sorted(baseline_by_month.keys())
 
-            fuel_type_summary = FuelTypeSummary(project_block=self,
-                    fuel_type=fuel_type)
-            fuel_type_summary.save()
+            interpretation_summary = InterpretationSummary(project_block=self,
+                    interpretation=interpretation)
+            interpretation_summary.save()
 
             for date in date_labels:
-                DailyUsageSummaryBaseline(fuel_type_summary=fuel_type_summary,
+                DailyUsageSummaryBaseline(interpretation_summary=interpretation_summary,
                         value=np.nansum(baseline_by_date[date]), date=date).save()
-                DailyUsageSummaryActual(fuel_type_summary=fuel_type_summary,
+                DailyUsageSummaryActual(interpretation_summary=interpretation_summary,
                         value=np.nansum(actual_by_date[date]), date=date,
                         n_projects=n_completed_projects_by_date[date]).save()
-                DailyUsageSummaryReporting(fuel_type_summary=fuel_type_summary,
+                DailyUsageSummaryReporting(interpretation_summary=interpretation_summary,
                         value=np.nansum(reporting_by_date[date]), date=date).save()
 
             for month in month_labels:
                 date = datetime.strptime(month, "%Y-%m").date()
-                MonthlyUsageSummaryBaseline(fuel_type_summary=fuel_type_summary,
+                MonthlyUsageSummaryBaseline(interpretation_summary=interpretation_summary,
                         value=np.nansum(baseline_by_month[month]), date=date).save()
-                MonthlyUsageSummaryActual(fuel_type_summary=fuel_type_summary,
+                MonthlyUsageSummaryActual(interpretation_summary=interpretation_summary,
                         value=np.nansum(actual_by_month[month]), date=date,
                         n_projects=n_completed_projects_by_date[date]).save()
-                MonthlyUsageSummaryReporting(fuel_type_summary=fuel_type_summary,
+                MonthlyUsageSummaryReporting(interpretation_summary=interpretation_summary,
                         value=np.nansum(reporting_by_month[month]), date=date).save()
 
     def recent_summaries(self):
-        fuel_types = set([fts['fuel_type'] for fts in self.fueltypesummary_set.values('fuel_type')])
-        return [self.fueltypesummary_set.filter(fuel_type=fuel_type).latest('added') for fuel_type in fuel_types]
+        interpretations = set([fts['interpretation'] for fts in self.interpretationsummary_set.values('interpretation')])
+        return [self.interpretationsummary_set.filter(interpretation=interpretation).latest('added') for interpretation in interpretations]
 
 
 @python_2_unicode_compatible
 class ConsumptionMetadata(models.Model):
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
+    interpretation = models.CharField(max_length=16, choices=INTERPRETATION_CHOICES)
     unit = models.CharField(max_length=3, choices=UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
+    label = models.CharField(max_length=140, blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     def eemeter_consumption_data(self):
         records = [r.eemeter_record() for r in self.records.all()]
-        fuel_type = dict(FUEL_TYPE_CHOICES)[self.fuel_type]
+        interpretation = dict(INTERPRETATION_CHOICES)[self.interpretation]
         unit_name = dict(UNIT_CHOICES)[self.unit]
-        interpretation = "{}_CONSUMPTION_SUPPLIED".format(fuel_type.upper())
         return EnergyTrace(interpretation, records=records, unit=unit_name,
                            serializer=ArbitraryStartSerializer())
 
     def __str__(self):
         n = len(self.records.all())
-        return u'ConsumptionMetadata(fuel_type={}, unit={}, n={})'.format(self.fuel_type, self.unit, n)
+        return u'ConsumptionMetadata(interpretation={}, unit={}, n={})'.format(self.interpretation, self.unit, n)
 
 
 @python_2_unicode_compatible
@@ -603,8 +563,8 @@ class MeterRun(models.Model):
         return _json_clean(self.cvrmse_reporting)
 
     @property
-    def fuel_type(self):
-        return self.consumption_metadata.fuel_type
+    def interpretation(self):
+        return self.consumption_metadata.interpretation
 
     def valid_meter_run(self, threshold=20):
         if self.cvrmse_baseline is None or self.cvrmse_reporting is None:
@@ -677,19 +637,19 @@ class MonthlyAverageUsageReporting(models.Model):
 
 
 @python_2_unicode_compatible
-class FuelTypeSummary(models.Model):
+class InterpretationSummary(models.Model):
     project_block = models.ForeignKey(ProjectBlock)
-    fuel_type = models.CharField(max_length=3, choices=FUEL_TYPE_CHOICES)
+    interpretation = models.CharField(max_length=3, choices=INTERPRETATION_CHOICES)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return u'FuelTypeSummary(project_block={}, fuel_type={})'.format(self.project_block, self.fuel_type)
+        return u'InterpretationSummary(project_block={}, interpretation={})'.format(self.project_block, self.interpretation)
 
 
 @python_2_unicode_compatible
 class DailyUsageSummaryBaseline(models.Model):
-    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    interpretation_summary = models.ForeignKey(InterpretationSummary)
     value = models.FloatField()
     date = models.DateField()
 
@@ -702,7 +662,7 @@ class DailyUsageSummaryBaseline(models.Model):
 
 @python_2_unicode_compatible
 class DailyUsageSummaryActual(models.Model):
-    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    interpretation_summary = models.ForeignKey(InterpretationSummary)
     value = models.FloatField()
     date = models.DateField()
     n_projects = models.IntegerField()
@@ -718,7 +678,7 @@ class DailyUsageSummaryActual(models.Model):
 
 @python_2_unicode_compatible
 class DailyUsageSummaryReporting(models.Model):
-    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    interpretation_summary = models.ForeignKey(InterpretationSummary)
     value = models.FloatField()
     date = models.DateField()
 
@@ -731,7 +691,7 @@ class DailyUsageSummaryReporting(models.Model):
 
 @python_2_unicode_compatible
 class MonthlyUsageSummaryBaseline(models.Model):
-    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    interpretation_summary = models.ForeignKey(InterpretationSummary)
     value = models.FloatField()
     date = models.DateField()
 
@@ -744,7 +704,7 @@ class MonthlyUsageSummaryBaseline(models.Model):
 
 @python_2_unicode_compatible
 class MonthlyUsageSummaryActual(models.Model):
-    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    interpretation_summary = models.ForeignKey(InterpretationSummary)
     value = models.FloatField()
     date = models.DateField()
     n_projects = models.IntegerField()
@@ -758,7 +718,7 @@ class MonthlyUsageSummaryActual(models.Model):
 
 @python_2_unicode_compatible
 class MonthlyUsageSummaryReporting(models.Model):
-    fuel_type_summary = models.ForeignKey(FuelTypeSummary)
+    interpretation_summary = models.ForeignKey(InterpretationSummary)
     value = models.FloatField()
     date = models.DateField()
 
@@ -768,18 +728,6 @@ class MonthlyUsageSummaryReporting(models.Model):
     class Meta:
         ordering = ['date']
 
-
-# # if project set changed, recompute the summary timeseries.
-# TODO if needed, uncomment when this can be moved into the background, otherwise too slow.
-# @receiver(post_init, sender=ProjectBlock)
-# def project_block_compute_summary_timeseries(sender, instance, **kwargs):
-#     instance.__projects = instance.projects
-#
-# @receiver(post_save, sender=ProjectBlock)
-# def project_block_compute_summary_timeseries(sender, instance, **kwargs):
-#     if instance.__projects != instance.projects:
-#         instance.compute_summary_timeseries()
-#         instance.__projects = instance.projects
 
 @receiver(post_save, sender=User)
 def create_project_owner(sender, instance, **kwargs):

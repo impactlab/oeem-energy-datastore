@@ -165,14 +165,14 @@ class ProjectOwnerViewSet(viewsets.ModelViewSet):
 
 class ConsumptionMetadataFilter(django_filters.FilterSet):
 
-    fuel_type = django_filters.MultipleChoiceFilter(
-            choices=models.FUEL_TYPE_CHOICES)
+    interpretation = django_filters.MultipleChoiceFilter(
+            choices=models.INTERPRETATION_CHOICES)
     unit = django_filters.MultipleChoiceFilter(
             choices=models.UNIT_CHOICES)
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['fuel_type', 'unit', 'project']
+        fields = ['interpretation', 'unit', 'project']
 
 
 class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
@@ -201,7 +201,7 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             [
                 {
                     "project_project_id": "PROJECT_A",
-                    "fuel_type": "E",
+                    "interpretation": "E_C_S",
                     "unit": "KWH"
                 },
                 ...
@@ -229,13 +229,13 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
     def _get_fields(self, record, foreign_objects):
         return {
             "project": foreign_objects["project"],
-            "fuel_type": record["fuel_type"],
+            "interpretation": record["interpretation"],
         }
 
     def _error_fields(self, record, foreign_objects):
         return {
             "project": record["project_project_id"],
-            "fuel_type": record["fuel_type"],
+            "interpretation": record["interpretation"],
         }
 
     def _parse_record(self, record, foreign_objects):
@@ -274,8 +274,8 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                      "end": "2016-03-15T00:15:00+0000",
                      "value": 10.2,
                      "project_id": "SOMEPROJECTID", # not the primary key - the project_id attribute.
-                     "fuel_type": "electricity",
-                     "unit_name": "kWh"
+                     "interpretation": "ELECTRICITY_CONSUMPTION_SUPPLIED",
+                     "unit_name": "KWH"
                 },
                 ...
             ]
@@ -291,18 +291,18 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
         consumption_metadatas = models.ConsumptionMetadata.objects.all()
 
-        self.metadata_dict = {(cm.project.project_id, cm.fuel_type): cm
+        self.metadata_dict = {(cm.project.project_id, cm.interpretation): cm
                          for cm in consumption_metadatas if cm.project}
 
     def _find_foreign_objects(self, record):
 
-        cm = self.metadata_dict.get((str(record["project_id"]), record["fuel_type"]))
+        cm = self.metadata_dict.get((str(record["project_id"]), record["interpretation"]))
         if cm is None:
             return {
                 "status": "error - no consumption metadata",
                 "start": record["start"],
                 "project_id": record["project_id"],
-                "fuel_type": record["fuel_type"],
+                "interpretation": record["interpretation"],
             }
 
         return {"metadata": cm}
@@ -543,15 +543,15 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
 
 
 class MeterRunFilter(django_filters.FilterSet):
-    fuel_type = django_filters.MultipleChoiceFilter(
-            name="consumption_metadata__fuel_type",
-            choices=models.FUEL_TYPE_CHOICES)
+    interpretation = django_filters.MultipleChoiceFilter(
+            name="consumption_metadata__interpretation",
+            choices=models.INTERPRETATION_CHOICES)
     projects = django_filters.MethodFilter(action=projects_filter)
     most_recent = django_filters.MethodFilter(action="most_recent_filter")
 
     class Meta:
         model = models.MeterRun
-        fields = ['fuel_type', 'most_recent', 'projects']
+        fields = ['interpretation', 'most_recent', 'projects']
 
     def most_recent_filter(self, queryset, value):
         if value != "True":
