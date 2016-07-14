@@ -537,52 +537,52 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
         return serializers.ProjectRunSerializer
 
 
-
-class MeterRunFilter(django_filters.FilterSet):
-    interpretation = django_filters.MultipleChoiceFilter(
-            name="consumption_metadata__interpretation",
-            choices=models.INTERPRETATION_CHOICES)
-    projects = django_filters.MethodFilter(action=projects_filter)
-    most_recent = django_filters.MethodFilter(action="most_recent_filter")
-
-    class Meta:
-        model = models.MeterRun
-        fields = ['interpretation', 'most_recent', 'projects']
-
-    def most_recent_filter(self, queryset, value):
-        if value != "True":
-            return queryset
-
-        encountered_cms = set()
-        accepted_meter_runs = set()
-        for meter_run in queryset.order_by('-updated').all():
-            if meter_run.consumption_metadata not in encountered_cms:
-                encountered_cms.add(meter_run.consumption_metadata)
-                accepted_meter_runs.add(meter_run.pk)
-
-        return queryset.filter(pk__in=accepted_meter_runs)
-
-
-class MeterRunViewSet(viewsets.ModelViewSet):
-
-    permission_classes = default_permissions_classes
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_class = MeterRunFilter
-
-    def get_queryset(self):
-        return models.MeterRun.objects.all()\
-                                     .prefetch_related('consumption_metadata')\
-                                     .order_by('pk')
-
-    def get_serializer_class(self):
-        if not hasattr(self.request, 'query_params'):
-            return serializers.MeterRunSerializer
-
-        if self.request.query_params.get("summary", "False") == "True":
-            return serializers.MeterRunSummarySerializer
-        else:
-            return serializers.MeterRunSerializer
-
+#
+# class MeterRunFilter(django_filters.FilterSet):
+#     interpretation = django_filters.MultipleChoiceFilter(
+#             name="consumption_metadata__interpretation",
+#             choices=models.INTERPRETATION_CHOICES)
+#     projects = django_filters.MethodFilter(action=projects_filter)
+#     most_recent = django_filters.MethodFilter(action="most_recent_filter")
+#
+#     class Meta:
+#         model = models.MeterRun
+#         fields = ['interpretation', 'most_recent', 'projects']
+#
+#     def most_recent_filter(self, queryset, value):
+#         if value != "True":
+#             return queryset
+#
+#         encountered_cms = set()
+#         accepted_meter_runs = set()
+#         for meter_run in queryset.order_by('-updated').all():
+#             if meter_run.consumption_metadata not in encountered_cms:
+#                 encountered_cms.add(meter_run.consumption_metadata)
+#                 accepted_meter_runs.add(meter_run.pk)
+#
+#         return queryset.filter(pk__in=accepted_meter_runs)
+#
+#
+# class MeterRunViewSet(viewsets.ModelViewSet):
+#
+#     permission_classes = default_permissions_classes
+#     filter_backends = (filters.DjangoFilterBackend,)
+#     filter_class = MeterRunFilter
+#
+#     def get_queryset(self):
+#         return models.MeterRun.objects.all()\
+#                                      .prefetch_related('consumption_metadata')\
+#                                      .order_by('pk')
+#
+#     def get_serializer_class(self):
+#         if not hasattr(self.request, 'query_params'):
+#             return serializers.MeterRunSerializer
+#
+#         if self.request.query_params.get("summary", "False") == "True":
+#             return serializers.MeterRunSummarySerializer
+#         else:
+#             return serializers.MeterRunSerializer
+#
 
 class ProjectBlockViewSet(viewsets.ModelViewSet):
 

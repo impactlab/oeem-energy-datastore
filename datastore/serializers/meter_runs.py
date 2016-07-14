@@ -39,28 +39,28 @@ COMPLETE_METER_RUN_FIELDS = (
 
 NORMAL_METER_RUN_FIELDS = MINIMAL_METER_RUN_FIELDS + EXTRA_METER_RUN_FIELDS
 
-
-class MeterRunSerializer(serializers.ModelSerializer):
-    annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
-    annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
-    annual_savings = serializers.FloatField(source='annual_savings_clean')
-    gross_savings = serializers.FloatField(source='gross_savings_clean')
-    cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
-    cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
-
-    class Meta:
-        model = models.MeterRun
-        fields = NORMAL_METER_RUN_FIELDS
-
-
-class MeterRunSummarySerializer(serializers.ModelSerializer):
-    annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
-    annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
-    annual_savings = serializers.FloatField(source='annual_savings_clean')
-    gross_savings = serializers.FloatField(source='gross_savings_clean')
-    cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
-    cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
-
-    class Meta:
-        model = models.MeterRun
-        fields = MINIMAL_METER_RUN_FIELDS
+#
+# class MeterRunSerializer(serializers.ModelSerializer):
+#     annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
+#     annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
+#     annual_savings = serializers.FloatField(source='annual_savings_clean')
+#     gross_savings = serializers.FloatField(source='gross_savings_clean')
+#     cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
+#     cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
+#
+#     class Meta:
+#         model = models.MeterRun
+#         fields = NORMAL_METER_RUN_FIELDS
+#
+#
+# class MeterRunSummarySerializer(serializers.ModelSerializer):
+#     annual_usage_baseline = serializers.FloatField(source='annual_usage_baseline_clean')
+#     annual_usage_reporting = serializers.FloatField(source='annual_usage_reporting_clean')
+#     annual_savings = serializers.FloatField(source='annual_savings_clean')
+#     gross_savings = serializers.FloatField(source='gross_savings_clean')
+#     cvrmse_baseline = serializers.FloatField(source='cvrmse_baseline_clean')
+#     cvrmse_reporting = serializers.FloatField(source='cvrmse_reporting_clean')
+#
+#     class Meta:
+#         model = models.MeterRun
+#         fields = MINIMAL_METER_RUN_FIELDS

@@ -2,9 +2,9 @@ from rest_framework import serializers
 
 from django.db.models import Manager
 
-from .meter_runs import (
-    MeterRunSummarySerializer,
-)
+# from .meter_runs import (
+#     MeterRunSummarySerializer,
+# )
 
 from .. import models
 
