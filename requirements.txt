@@ -12,9 +12,11 @@ djangorestframework
 eemeter>=0.3.19
 pandas>=0.18
 psycopg2
+redis
 requests
 sqlalchemy
 django-grappelli
 gunicorn
 django-rest-swagger
 djangorestframework-bulk
+whitenoise
