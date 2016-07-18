@@ -165,14 +165,14 @@ class ProjectOwnerViewSet(viewsets.ModelViewSet):
 
 class ConsumptionMetadataFilter(django_filters.FilterSet):
 
-    fuel_type = django_filters.MultipleChoiceFilter(
-            choices=models.FUEL_TYPE_CHOICES)
-    energy_unit = django_filters.MultipleChoiceFilter(
-            choices=models.ENERGY_UNIT_CHOICES)
+    interpretation = django_filters.MultipleChoiceFilter(
+            choices=models.INTERPRETATION_CHOICES)
+    unit = django_filters.MultipleChoiceFilter(
+            choices=models.UNIT_CHOICES)
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['fuel_type', 'energy_unit', 'project']
+        fields = ['interpretation', 'unit', 'project']
 
 
 class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
@@ -201,8 +201,8 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             [
                 {
                     "project_project_id": "PROJECT_A",
-                    "fuel_type": "E",
-                    "energy_unit": "KWH"
+                    "interpretation": "E_C_S",
+                    "unit": "KWH"
                 },
                 ...
             ]
@@ -211,7 +211,7 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
 
     def _create_properties(self):
         self.attributes = [
-            "energy_unit",
+            "unit",
         ]
 
         self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
@@ -229,13 +229,13 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
     def _get_fields(self, record, foreign_objects):
         return {
             "project": foreign_objects["project"],
-            "fuel_type": record["fuel_type"],
+            "interpretation": record["interpretation"],
         }
 
     def _error_fields(self, record, foreign_objects):
         return {
             "project": record["project_project_id"],
-            "fuel_type": record["fuel_type"],
+            "interpretation": record["interpretation"],
         }
 
     def _parse_record(self, record, foreign_objects):
@@ -274,8 +274,8 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                      "end": "2016-03-15T00:15:00+0000",
                      "value": 10.2,
                      "project_id": "SOMEPROJECTID", # not the primary key - the project_id attribute.
-                     "fuel_type": "electricity",
-                     "unit_name": "kWh"
+                     "interpretation": "ELECTRICITY_CONSUMPTION_SUPPLIED",
+                     "unit_name": "KWH"
                 },
                 ...
             ]
@@ -291,18 +291,18 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
         consumption_metadatas = models.ConsumptionMetadata.objects.all()
 
-        self.metadata_dict = {(cm.project.project_id, cm.fuel_type): cm
+        self.metadata_dict = {(cm.project.project_id, cm.interpretation): cm
                          for cm in consumption_metadatas if cm.project}
 
     def _find_foreign_objects(self, record):
 
-        cm = self.metadata_dict.get((str(record["project_id"]), record["fuel_type"]))
+        cm = self.metadata_dict.get((str(record["project_id"]), record["interpretation"]))
         if cm is None:
             return {
                 "status": "error - no consumption metadata",
                 "start": record["start"],
                 "project_id": record["project_id"],
-                "fuel_type": record["fuel_type"],
+                "interpretation": record["interpretation"],
             }
 
         return {"metadata": cm}
@@ -429,10 +429,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         if not hasattr(self.request, 'query_params'):
             return serializers.ProjectSerializer
 
-        if self.request.query_params.get(
-                "with_monthly_summary", "False") == "True":
-            return serializers.ProjectWithMonthlyMeterRunsSerializer
-
         with_attributes = self.request.query_params.get(
                 "with_attributes", "False") == "True"
         with_meter_runs = self.request.query_params.get(
@@ -541,56 +537,52 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
         return serializers.ProjectRunSerializer
 
 
-
-class MeterRunFilter(django_filters.FilterSet):
-    fuel_type = django_filters.MultipleChoiceFilter(
-            name="consumption_metadata__fuel_type",
-            choices=models.FUEL_TYPE_CHOICES)
-    projects = django_filters.MethodFilter(action=projects_filter)
-    most_recent = django_filters.MethodFilter(action="most_recent_filter")
-
-    class Meta:
-        model = models.MeterRun
-        fields = ['fuel_type', 'most_recent', 'projects']
-
-    def most_recent_filter(self, queryset, value):
-        if value != "True":
-            return queryset
-
-        encountered_cms = set()
-        accepted_meter_runs = set()
-        for meter_run in queryset.order_by('-updated').all():
-            if meter_run.consumption_metadata not in encountered_cms:
-                encountered_cms.add(meter_run.consumption_metadata)
-                accepted_meter_runs.add(meter_run.pk)
-
-        return queryset.filter(pk__in=accepted_meter_runs)
-
-
-class MeterRunViewSet(viewsets.ModelViewSet):
-
-    permission_classes = default_permissions_classes
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_class = MeterRunFilter
-
-    def get_queryset(self):
-        return models.MeterRun.objects.all()\
-                                     .prefetch_related('consumption_metadata')\
-                                     .order_by('pk')
-
-    def get_serializer_class(self):
-        if not hasattr(self.request, 'query_params'):
-            return serializers.MeterRunSerializer
-
-        if self.request.query_params.get("summary", "False") == "True":
-            return serializers.MeterRunSummarySerializer
-        elif self.request.query_params.get("daily", "False") == "True":
-            return serializers.MeterRunDailySerializer
-        elif self.request.query_params.get("monthly", "False") == "True":
-            return serializers.MeterRunMonthlySerializer
-        else:
-            return serializers.MeterRunSerializer
-
+#
+# class MeterRunFilter(django_filters.FilterSet):
+#     interpretation = django_filters.MultipleChoiceFilter(
+#             name="consumption_metadata__interpretation",
+#             choices=models.INTERPRETATION_CHOICES)
+#     projects = django_filters.MethodFilter(action=projects_filter)
+#     most_recent = django_filters.MethodFilter(action="most_recent_filter")
+#
+#     class Meta:
+#         model = models.MeterRun
+#         fields = ['interpretation', 'most_recent', 'projects']
+#
+#     def most_recent_filter(self, queryset, value):
+#         if value != "True":
+#             return queryset
+#
+#         encountered_cms = set()
+#         accepted_meter_runs = set()
+#         for meter_run in queryset.order_by('-updated').all():
+#             if meter_run.consumption_metadata not in encountered_cms:
+#                 encountered_cms.add(meter_run.consumption_metadata)
+#                 accepted_meter_runs.add(meter_run.pk)
+#
+#         return queryset.filter(pk__in=accepted_meter_runs)
+#
+#
+# class MeterRunViewSet(viewsets.ModelViewSet):
+#
+#     permission_classes = default_permissions_classes
+#     filter_backends = (filters.DjangoFilterBackend,)
+#     filter_class = MeterRunFilter
+#
+#     def get_queryset(self):
+#         return models.MeterRun.objects.all()\
+#                                      .prefetch_related('consumption_metadata')\
+#                                      .order_by('pk')
+#
+#     def get_serializer_class(self):
+#         if not hasattr(self.request, 'query_params'):
+#             return serializers.MeterRunSerializer
+#
+#         if self.request.query_params.get("summary", "False") == "True":
+#             return serializers.MeterRunSummarySerializer
+#         else:
+#             return serializers.MeterRunSerializer
+#
 
 class ProjectBlockViewSet(viewsets.ModelViewSet):
 
@@ -600,9 +592,6 @@ class ProjectBlockViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
             return serializers.ProjectBlockSerializer
-
-        if self.request.query_params.get("monthly_timeseries", "false") == "True":
-            return serializers.ProjectBlockMonthlyTimeseriesSerializer
 
         if self.request.query_params.get("name_only", "false") == "True":
             return serializers.ProjectBlockNameSerializer

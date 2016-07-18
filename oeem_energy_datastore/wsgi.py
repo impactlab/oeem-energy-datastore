@@ -13,3 +13,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "oeem_energy_datastore.settings")
 
 application = get_wsgi_application()
+
+# Serve static files using Whitenoise
+from whitenoise.django import DjangoWhiteNoise
+application = DjangoWhiteNoise(application)

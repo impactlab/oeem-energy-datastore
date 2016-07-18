@@ -24,8 +24,8 @@ def serialize(meter_run):
     ]
     consumption_metadata_attrs = [
         'id',
-        'fuel_type',
-        'energy_unit'
+        'interpretation',
+        'unit'
     ]
 
     resp = {}

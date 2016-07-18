@@ -13,16 +13,9 @@ class ExportServiceTestCase(TestCase):
         )
         consumptionmetadata = models.ConsumptionMetadata.objects.create(
             project=project,
-            fuel_type="E",
-            energy_unit="KWH",
-        )
-        self.meterrun = models.MeterRun.objects.create(
-            project=project,
-            consumption_metadata=consumptionmetadata,
+            interpretation="E_C_S",
+            unit="KWH",
         )
 
     def test_export(self):
-        data = services.meterruns_export()
-        assert 'headers' in data
-        assert 'meter_runs' in data
-        assert len(data['meter_runs']) == 1
+        assert False

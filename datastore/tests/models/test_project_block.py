@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 
+import pytest
+
 from datastore import models
 
 class ProjectBlockTestCase(TestCase):
@@ -34,7 +36,5 @@ class ProjectBlockTestCase(TestCase):
             assert hasattr(self.project_block, attribute)
 
     def test_run_meters(self):
-        self.project_block.run_meters()
-
-    def test_recent_summaries(self):
-        recent_summaries = self.project_block.recent_summaries()
+        with pytest.raises(AttributeError):
+            self.project_block.run_meters()

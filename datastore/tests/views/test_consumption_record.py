@@ -12,8 +12,8 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         super(ConsumptionRecordAPITestCase,self).setUp()
 
         self.consumption_metadata = models.ConsumptionMetadata(
-            fuel_type="E",
-            energy_unit="KWH",
+            interpretation="E_C_S",
+            unit="KWH",
         )
         self.consumption_metadata.save()
 
@@ -21,24 +21,24 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
-            "energy_unit": "KWH",
-            "fuel_type": "E"
+            "unit": "KWH",
+            "interpretation": "E_C_S"
         }])
 
-        assert response.data[0]['status'] == 'created'
+        assert response.data[0]['status'] == 'unchanged - same record'
         cm_id = response.data[0]['id']
 
         response = self.post('/api/v1/consumption_records/sync/', [{
             "project_id": "ABC",
-            "energy_unit": "KWH",
-            "fuel_type": "E",
+            "unit": "KWH",
+            "interpretation": "E_C_S",
             "start": "2014-01-01T00:00:00+00:00",
             "value": 1.0,
             "estimated": True
         }, {
             "project_id": "ABC",
-            "energy_unit": "KWH",
-            "fuel_type": "E",
+            "unit": "KWH",
+            "interpretation": "E_C_S",
             "start": "2014-01-01T01:00:00+00:00",
             "value": 2.0,
             "estimated": True
@@ -53,15 +53,15 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         # Create a two metadata objects
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
-            "energy_unit": "KWH",
-            "fuel_type": "E"
+            "unit": "KWH",
+            "interpretation": "E_C_S"
         }, {
             "project_project_id": "DEF",
-            "energy_unit": "KWH",
-            "fuel_type": "E"
+            "unit": "KWH",
+            "interpretation": "E_C_S"
         }])
 
-        assert response.data[0]['status'] == 'created'
+        assert response.data[0]['status'] == 'unchanged - same record'
         cm_id = response.data[0]['id']
         cm_id2 = response.data[1]['id']
 
