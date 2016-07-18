@@ -257,54 +257,6 @@ class ProjectAPITestCase(OAuthTestCase):
         response.data[0]['project_id'] == 'PROJECT_ID'
         response.data[0]['status'] == 'error - bad field value - update'
 
-    def test_project_with_meter_runs(self):
-
-        complete_project_data = self.get(
-            '/api/v1/projects/{}/?with_meter_runs=True'
-            .format(self.complete_project.pk)
-        ).json()
-
-        assert complete_project_data['project_id'] == 'PROJECTID_2'
-        assert complete_project_data['recent_meter_runs'] == []
-
-        self.complete_project.run_meter()
-
-        complete_project_data = self.get(
-            '/api/v1/projects/{}/?with_meter_runs=True'
-            .format(self.complete_project.pk)
-        ).json()
-
-        assert complete_project_data['project_id'] == 'PROJECTID_2'
-        rmr = complete_project_data['recent_meter_runs']
-        assert len(rmr) == 2
-        # assert_allclose(rmr[0]['annual_savings'], 0, rtol=1e-3, atol=1e-3)
-        # assert_allclose(rmr[0]['gross_savings'], 0, rtol=1e-3, atol=1e-3)
-        assert 'annual_usage_baseline' in rmr[0]
-        assert 'annual_usage_reporting' in rmr[0]
-        assert 'cvrmse_baseline' in rmr[0]
-        assert 'cvrmse_reporting' in rmr[0]
-        assert rmr[0]['consumption_metadata'] == self.cm_ng.pk
-        assert rmr[0]['project'] == self.complete_project.pk
-
-        # assert_allclose(rmr[1]['annual_savings'], 0, rtol=1e-3, atol=1e-3)
-        # assert_allclose(rmr[1]['gross_savings'], 0, rtol=1e-3, atol=1e-3)
-        assert 'annual_usage_baseline' in rmr[1]
-        assert 'annual_usage_reporting' in rmr[1]
-        assert 'cvrmse_baseline' in rmr[1]
-        assert 'cvrmse_reporting' in rmr[1]
-        assert rmr[1]['consumption_metadata'] == self.cm_e.pk
-        assert rmr[1]['project'] == self.complete_project.pk
-
-        all_project_data = self.get(
-            '/api/v1/projects/?with_meter_runs=True'
-        ).json()
-
-        assert len(all_project_data) == 4
-        assert len(all_project_data[0]["recent_meter_runs"]) == 0
-        assert len(all_project_data[1]["recent_meter_runs"]) == 0
-        assert len(all_project_data[2]["recent_meter_runs"]) == 0
-        assert len(all_project_data[3]["recent_meter_runs"]) == 2
-
     def test_project_read_no_query_params(self):
         data = self.get(
             '/api/v1/projects/{}/'
@@ -349,49 +301,3 @@ class ProjectAPITestCase(OAuthTestCase):
         ])
 
         assert fields == set(data.keys())
-
-    def test_project_read_with_attributes_and_meter_runs(self):
-
-        self.complete_project.run_meter()
-
-        data = self.get(
-            '/api/v1/projects/{}/?with_attributes=True&with_meter_runs=True'
-            .format(self.complete_project.pk)
-        ).json()
-
-        fields = set([
-            'id',
-            'project_owner',
-            'project_id',
-            'baseline_period_start',
-            'baseline_period_end',
-            'reporting_period_start',
-            'reporting_period_end',
-            'zipcode',
-            'weather_station',
-            'latitude',
-            'longitude',
-            'attributes',
-            'recent_meter_runs',
-        ])
-
-        assert fields == set(data.keys())
-
-        meter_run_fields = set([
-            'id',
-            'project',
-            'consumption_metadata',
-            'annual_savings',
-            'gross_savings',
-            'annual_usage_baseline',
-            'annual_usage_reporting',
-            'cvrmse_baseline',
-            'cvrmse_reporting',
-            'valid_meter_run',
-            'meter_class',
-            'interpretation',
-            'added',
-            'updated',
-        ])
-
-        assert meter_run_fields == set(data['recent_meter_runs'][0].keys())

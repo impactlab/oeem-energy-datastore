@@ -2,17 +2,11 @@ from rest_framework import serializers
 
 from django.db.models import Manager
 
-# from .meter_runs import (
-#     MeterRunSummarySerializer,
-# )
-
 from .. import models
 
 __all__ = (
     'ProjectSerializer',
     'ProjectWithAttributesSerializer',
-    'ProjectWithMeterRunsSerializer',
-    'ProjectWithAttributesAndMeterRunsSerializer',
     'ProjectRunSerializer',
 )
 
@@ -71,75 +65,6 @@ class ProjectWithAttributesSerializer(serializers.ModelSerializer):
         fields = BASIC_PROJECT_FIELDS + (
             'attributes',
         )
-
-
-class ProjectMeterRunMixin(object):
-
-    def to_representation(self, instance, get_meter_runs=True):
-
-        # get fields in the usual way.
-        ret = serializers.Serializer.to_representation(self, instance)
-
-        serializer = MeterRunSummarySerializer(read_only=True)
-
-        if get_meter_runs:
-            recent_meter_runs = instance.recent_meter_runs(
-                    project_pks=[instance.pk])
-
-            meter_runs = recent_meter_runs[instance.pk]
-            _update_with_recent_meter_runs(ret, meter_runs, serializer)
-
-        return ret
-
-
-class ProjectWithMeterRunsListSerializer(serializers.ListSerializer):
-
-    def to_representation(self, data):
-        """
-        List of object instances -> List of dicts of primitive datatypes.
-        """
-        # get fields in the usual way.
-        iterable = data.all() if isinstance(data, Manager) else data
-
-        ret = [
-            self.child.to_representation(item, get_meter_runs=False)
-            for item in iterable
-        ]
-
-        project_pks = [p["id"] for p in ret]
-        recent_meter_runs = models.Project.recent_meter_runs(
-                project_pks=project_pks)
-
-        serializer = MeterRunSummarySerializer(read_only=True)
-
-        for r in ret:
-            meter_runs = recent_meter_runs[r["id"]]
-            _update_with_recent_meter_runs(r, meter_runs, serializer)
-
-        return ret
-
-
-class ProjectWithMeterRunsSerializer(ProjectMeterRunMixin,
-        serializers.ModelSerializer):
-
-    class Meta:
-        model = models.Project
-        fields = BASIC_PROJECT_FIELDS
-        list_serializer_class = ProjectWithMeterRunsListSerializer
-
-
-class ProjectWithAttributesAndMeterRunsSerializer(ProjectMeterRunMixin,
-        serializers.ModelSerializer):
-
-    attributes = ProjectAttributeValueEmbeddedSerializer(many=True,
-                                                         read_only=True)
-
-    class Meta:
-        model = models.Project
-        fields = BASIC_PROJECT_FIELDS + (
-            'attributes',
-        )
-        list_serializer_class = ProjectWithMeterRunsListSerializer
 
 
 class ProjectRunSerializer(serializers.ModelSerializer):
