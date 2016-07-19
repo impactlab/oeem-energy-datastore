@@ -121,4 +121,12 @@ class ProjectTestCase(TestCase):
         project_result = self.project.run_meter(weather_source=self.weather_source,
                                weather_normal_source=self.weather_normal_source)
 
-        assert False
+        assert project_result.eemeter_version == "0.3.20"
+        assert project_result.meter_class == "EnergyEfficiencyMeter"
+        assert isinstance(project_result.project_id, int)
+        assert project_result.meter_settings is None
+
+        assert len(project_result.derivative_aggregations.all()) == 3
+        assert len(project_result.energy_trace_model_results.all()) == 4
+        assert len(project_result.modeling_periods.all()) == 2
+        assert len(project_result.modeling_period_groups.all()) == 1

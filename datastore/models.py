@@ -477,7 +477,7 @@ class ConsumptionRecord(models.Model):
 
 @python_2_unicode_compatible
 class ProjectResult(models.Model):
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(Project, related_name='project_result')
     eemeter_version = models.CharField(max_length=100)
     meter_class = models.CharField(max_length=250, blank=True, null=True)
     meter_settings = JSONField(null=True)
@@ -495,7 +495,8 @@ class ProjectResult(models.Model):
 
 @python_2_unicode_compatible
 class ModelingPeriod(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
+    project_result = models.ForeignKey(ProjectResult,
+        related_name='modeling_periods')
     interpretation = models.CharField(
         max_length=10,
         choices=(('BASELINE', 'Baseline'), ('REPORTING', 'Reporting'),)
@@ -511,11 +512,12 @@ class ModelingPeriod(models.Model):
 
 @python_2_unicode_compatible
 class ModelingPeriodGroup(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
+    project_result = models.ForeignKey(ProjectResult,
+        related_name='modeling_period_groups')
     baseline_period = models.ForeignKey(ModelingPeriod,
-        related_name='baseline_period')
+        related_name='baseline_groups')  # TODO validate consistency
     reporting_period = models.ForeignKey(ModelingPeriod,
-        related_name='reporting_period')
+        related_name='reporting_groups')  # TODO validate consistency
 
     def __str__(self):
         return (
@@ -526,7 +528,8 @@ class ModelingPeriodGroup(models.Model):
 
 @python_2_unicode_compatible
 class EnergyTraceModelResult(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
+    project_result = models.ForeignKey(ProjectResult,
+        related_name='energy_trace_model_results')
     energy_trace = models.ForeignKey(ConsumptionMetadata)
     modeling_period = models.ForeignKey(ModelingPeriod)
     status = models.CharField(max_length=1000, null=True)
@@ -548,7 +551,8 @@ class EnergyTraceModelResult(models.Model):
 
 @python_2_unicode_compatible
 class Derivative(models.Model):
-    energy_trace_model_result = models.ForeignKey(EnergyTraceModelResult)
+    energy_trace_model_result = models.ForeignKey(EnergyTraceModelResult,
+        related_name='derivatives')
     interpretation = models.CharField(max_length=100)
     value = models.FloatField()
     upper = models.FloatField()
@@ -564,8 +568,10 @@ class Derivative(models.Model):
 
 @python_2_unicode_compatible
 class DerivativeAggregation(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
-    modeling_period_group = models.ForeignKey(ModelingPeriodGroup)
+    project_result = models.ForeignKey(ProjectResult,
+        related_name='derivative_aggregations')
+    modeling_period_group = models.ForeignKey(ModelingPeriodGroup,
+        related_name='derivative_aggregations')
     trace_interpretation = models.CharField(max_length=100)
     interpretation = models.CharField(max_length=100)
     baseline_value = models.FloatField()

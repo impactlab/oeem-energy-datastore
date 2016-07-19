@@ -32,7 +32,7 @@ router.register(r'project_owners', datastore_views.ProjectOwnerViewSet, base_nam
 router.register(r'project_blocks', datastore_views.ProjectBlockViewSet, base_name='project_block')
 router.register(r'consumption_metadatas', datastore_views.ConsumptionMetadataViewSet, base_name='consumption_metadata')
 router.register(r'consumption_records', datastore_views.ConsumptionRecordViewSet, base_name='consumption_record')
-# router.register(r'meter_runs', datastore_views.MeterRunViewSet, base_name='meter_run')
+router.register(r'project_results', datastore_views.ProjectResultViewSet, base_name='project_result')
 
 challenge_slug = os.environ.get("CHALLENGE_SLUG")
 

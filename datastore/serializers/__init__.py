@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .. import models
 
 from .projects import *
-# from .meter_runs import *
+from .project_results import *
 
 
 class ProjectOwnerSerializer(serializers.ModelSerializer):
