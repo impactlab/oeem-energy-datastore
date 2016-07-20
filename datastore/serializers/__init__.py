@@ -2,8 +2,32 @@ from rest_framework import serializers
 
 from .. import models
 
-from .projects import *
-from .project_results import *
+from .projects import (
+    ProjectSerializer,
+    ProjectWithAttributesSerializer,
+    ProjectRunSerializer,
+)
+
+from .project_results import (
+    ProjectResultSerializer,
+)
+
+__all__ = (
+    'ProjectSerializer',
+    'ProjectWithAttributesSerializer',
+    'ProjectRunSerializer',
+    'ProjectResultSerializer',
+    'ProjectOwnerSerializer',
+    'ProjectBlockSerializer',
+    'ProjectBlockNameSerializer',
+    'ProjectAttributeKeySerializer',
+    'ProjectAttributeSerializer',
+    'ProjectAttributeValueSerializer',
+    'ConsumptionRecordSerializer',
+    'ConsumptionMetadataSummarySerializer',
+    'ConsumptionRecordEmbeddedSerializer',
+    'ConsumptionMetadataSerializer',
+)
 
 
 class ProjectOwnerSerializer(serializers.ModelSerializer):
@@ -145,10 +169,10 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
         records_data = validated_data.pop('records')
 
         consumption_metadata = \
-                models.ConsumptionMetadata.objects.create(**validated_data)
+            models.ConsumptionMetadata.objects.create(**validated_data)
 
         for record_data in records_data:
-            models.ConsumptionRecord.objects.create(metadata=consumption_metadata,
-                    **record_data)
+            models.ConsumptionRecord.objects.create(
+                metadata=consumption_metadata, **record_data)
 
         return consumption_metadata

@@ -1,6 +1,5 @@
 from .shared import OAuthTestCase
 
-import json
 
 class ProjectRunAPITestCase(OAuthTestCase):
 
@@ -25,7 +24,6 @@ class ProjectRunAPITestCase(OAuthTestCase):
         # Test the default for meter_type
         assert response.data['meter_class'] == 'EnergyEfficiencyMeter'
 
-
         # Test failing meter_class validation
         data = {
             'project': self.project2.pk,
@@ -33,7 +31,6 @@ class ProjectRunAPITestCase(OAuthTestCase):
         }
         response = self.post('/api/v1/project_runs/', data)
         assert response.status_code == 400
-
 
         # Test filtered retrieval for the first project
         data = {
@@ -67,7 +64,8 @@ class ProjectRunAPITestCase(OAuthTestCase):
 
         assert project_run['status'] == 'PENDING'
 
-        response = self.get('/api/v1/project_runs/{}/'.format(project_run['id']))
+        response = self.get(
+            '/api/v1/project_runs/{}/'.format(project_run['id']))
         project_run = response.data
 
         assert project_run['status'] == 'SUCCESS'

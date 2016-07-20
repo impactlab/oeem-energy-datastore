@@ -1,6 +1,5 @@
 from django.utils.timezone import now, timedelta
 from django.core.management.base import BaseCommand
-from datastore import models
 from django.contrib.auth.models import User
 from oauth2_provider.models import AccessToken, get_application_model
 from datetime import datetime
@@ -15,7 +14,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # create a superuser
-        user = User.objects.create_superuser('demo','demo@example.com','demo-password')
+        user = User.objects.create_superuser('demo', 'demo@example.com',
+                                             'demo-password')
         user.save()
 
         app = ApplicationModel.objects.create(
@@ -25,7 +25,7 @@ class Command(BaseCommand):
             user=user
         )
 
-        token = AccessToken.objects.create(
+        AccessToken.objects.create(
             user=user,
             token='tokstr',
             application=app,
@@ -33,11 +33,9 @@ class Command(BaseCommand):
             scope="read write"
         )
 
-        project_owner = user.projectowner
-
-        project = create_project(spec={
+        create_project(spec={
             "project_id": "ABC",
-            "project_owner": project_owner,
+            "project_owner": user.projectowner,
             "baseline_period_end": datetime(2012, 1, 1, tzinfo=pytz.UTC),
             "reporting_period_start": datetime(2012, 2, 1, tzinfo=pytz.UTC),
             "zipcode": "91104",

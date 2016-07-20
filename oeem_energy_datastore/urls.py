@@ -24,29 +24,70 @@ from portal import views as portal_views
 from letsencrypt import views as letsencrypt_views
 
 router = DefaultRouter()
-router.register(r'projects', datastore_views.ProjectViewSet, base_name='project')
-router.register(r'project_runs', datastore_views.ProjectRunViewSet, base_name='project_run')
-router.register(r'project_attribute_keys', datastore_views.ProjectAttributeKeyViewSet, base_name='project_attribute_key')
-router.register(r'project_attributes', datastore_views.ProjectAttributeViewSet, base_name='project_attribute')
-router.register(r'project_owners', datastore_views.ProjectOwnerViewSet, base_name='project_owner')
-router.register(r'project_blocks', datastore_views.ProjectBlockViewSet, base_name='project_block')
-router.register(r'consumption_metadatas', datastore_views.ConsumptionMetadataViewSet, base_name='consumption_metadata')
-router.register(r'consumption_records', datastore_views.ConsumptionRecordViewSet, base_name='consumption_record')
-router.register(r'project_results', datastore_views.ProjectResultViewSet, base_name='project_result')
+
+router.register(
+    r'projects',
+    datastore_views.ProjectViewSet,
+    base_name='project')
+
+router.register(
+    r'project_runs',
+    datastore_views.ProjectRunViewSet,
+    base_name='project_run')
+
+router.register(
+    r'project_attribute_keys',
+    datastore_views.ProjectAttributeKeyViewSet,
+    base_name='project_attribute_key')
+
+router.register(
+    r'project_attributes',
+    datastore_views.ProjectAttributeViewSet,
+    base_name='project_attribute')
+
+router.register(
+    r'project_owners',
+    datastore_views.ProjectOwnerViewSet,
+    base_name='project_owner')
+
+router.register(
+    r'project_blocks',
+    datastore_views.ProjectBlockViewSet,
+    base_name='project_block')
+
+router.register(
+    r'consumption_metadatas',
+    datastore_views.ConsumptionMetadataViewSet,
+    base_name='consumption_metadata')
+
+router.register(
+    r'consumption_records',
+    datastore_views.ConsumptionRecordViewSet,
+    base_name='consumption_record')
+
+router.register(
+    r'project_results',
+    datastore_views.ProjectResultViewSet,
+    base_name='project_result')
 
 challenge_slug = os.environ.get("CHALLENGE_SLUG")
 
 urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^oauth2/', include('oauth2_provider.urls', namespace='oauth2_provider')),
+    url(r'^oauth2/', include('oauth2_provider.urls',
+        namespace='oauth2_provider')),
     url(r'^docs/', include('api_doc.urls')),
     url(r'^api/v1/', include(router.urls)),
     url(r'^portal/$', portal_views.index, name='index'),
-    url(r'^portal/meter_runs/$', portal_views.meter_runs, name='portal_meter_runs'),
-    url(r'^portal/csv_export/$', portal_views.csv_export, name='portal_csv_export'),
-    url(r'^\.well-known/acme-challenge/%s$' % challenge_slug, letsencrypt_views.challenge, name='letsencrypt_challenge'),
-    url(r'^$', RedirectView.as_view(url='admin/', permanent=False), name='index')
+    url(r'^portal/meter_runs/$', portal_views.meter_runs,
+        name='portal_meter_runs'),
+    url(r'^portal/csv_export/$', portal_views.csv_export,
+        name='portal_csv_export'),
+    url(r'^\.well-known/acme-challenge/%s$' % challenge_slug,
+        letsencrypt_views.challenge, name='letsencrypt_challenge'),
+    url(r'^$', RedirectView.as_view(url='admin/', permanent=False),
+        name='index')
 ]
 
 if settings.DEBUG:

@@ -1,15 +1,11 @@
 from .shared import OAuthTestCase
-from django.contrib.auth.models import User
 
-from datetime import datetime, timedelta
-import json
+from datetime import datetime
 
 import pytz
-import numpy as np
-from numpy.testing import assert_allclose
 
-from datastore import models
 from datastore.services import create_project
+
 
 class ProjectAPITestCase(OAuthTestCase):
 
@@ -135,7 +131,9 @@ class ProjectAPITestCase(OAuthTestCase):
             'reporting_lower',
             'reporting_n',
         ]
-        energy_trace_model_result = project_result['energy_trace_model_results'][0]
+
+        energy_trace_model_result = \
+            project_result['energy_trace_model_results'][0]
         assert list(energy_trace_model_result.keys()) == [
             'id',
             'project_result',

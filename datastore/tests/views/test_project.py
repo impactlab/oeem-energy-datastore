@@ -1,11 +1,11 @@
-from .shared import OAuthTestCase
-from django.contrib.auth.models import User
-from datastore import models
 from datetime import datetime, timedelta
+
 import pytz
-import json
 import numpy as np
-from numpy.testing import assert_allclose
+
+from .shared import OAuthTestCase
+from datastore import models
+
 
 class ProjectAPITestCase(OAuthTestCase):
 
@@ -63,9 +63,10 @@ class ProjectAPITestCase(OAuthTestCase):
                 value = np.nan
             else:
                 value = 1.0
+            start = datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i)
             records.append(models.ConsumptionRecord(
                 metadata=cls.cm_ng,
-                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                start=start,
                 value=value,
                 estimated=False,
             ))
@@ -75,9 +76,13 @@ class ProjectAPITestCase(OAuthTestCase):
                 value = np.nan
             else:
                 value = 1
+            start = (
+                datetime(2011, 12, 1, tzinfo=pytz.UTC) +
+                timedelta(seconds=i*900)
+            )
             records.append(models.ConsumptionRecord(
                 metadata=cls.cm_e,
-                start=datetime(2011, 12, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
+                start=start,
                 value=value,
                 estimated=False,
             ))
@@ -95,7 +100,8 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['project_id'] == "PROJECT_ID"
         assert response.data['baseline_period_start'] == "2014-01-01T00:00:00Z"
         assert response.data['baseline_period_end'] == "2014-01-01T00:00:00Z"
-        assert response.data['reporting_period_start'] == "2014-01-01T00:00:00Z"
+        assert response.data['reporting_period_start'] == \
+            "2014-01-01T00:00:00Z"
         assert response.data['reporting_period_end'] == "2014-01-01T00:00:00Z"
         assert response.data['zipcode'] == "ZIPCODE"
         assert response.data['weather_station'] == "STATION"
@@ -112,7 +118,8 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data['project_id'] == "PROJECT_ID"
         assert response.data['baseline_period_start'] == "2014-01-01T00:00:00Z"
         assert response.data['baseline_period_end'] == "2014-01-01T00:00:00Z"
-        assert response.data['reporting_period_start'] == "2014-01-01T00:00:00Z"
+        assert response.data['reporting_period_start'] == \
+            "2014-01-01T00:00:00Z"
         assert response.data['reporting_period_end'] == "2014-01-01T00:00:00Z"
         assert response.data['zipcode'] == "ZIPCODE"
         assert response.data['weather_station'] == "STATION"
@@ -158,10 +165,12 @@ class ProjectAPITestCase(OAuthTestCase):
 
         assert response.data[0]['project_owner'] == self.project_owner.id
         assert response.data[0]['project_id'] == 'PROJECT_ID'
-        assert response.data[0]['baseline_period_start'] == None
-        assert response.data[0]['baseline_period_end'] == '2014-01-01T00:00:00Z'
-        assert response.data[0]['reporting_period_start'] == '2014-01-01T00:00:00Z'
-        assert response.data[0]['reporting_period_end'] == None
+        assert response.data[0]['baseline_period_start'] is None
+        assert response.data[0]['baseline_period_end'] == \
+            '2014-01-01T00:00:00Z'
+        assert response.data[0]['reporting_period_start'] == \
+            '2014-01-01T00:00:00Z'
+        assert response.data[0]['reporting_period_end'] is None
         assert response.data[0]['weather_station'] == 'STATION'
         assert response.data[0]['zipcode'] == 'ZIPCODE'
         assert response.data[0]['latitude'] == 0.0
@@ -185,10 +194,12 @@ class ProjectAPITestCase(OAuthTestCase):
 
         assert response.data[0]['project_owner'] == self.project_owner.id
         assert response.data[0]['project_id'] == 'PROJECT_ID'
-        assert response.data[0]['baseline_period_start'] == None
-        assert response.data[0]['baseline_period_end'] == '2014-01-01T00:00:00Z'
-        assert response.data[0]['reporting_period_start'] == '2014-01-01T00:00:00Z'
-        assert response.data[0]['reporting_period_end'] == None
+        assert response.data[0]['baseline_period_start'] is None
+        assert response.data[0]['baseline_period_end'] == \
+            '2014-01-01T00:00:00Z'
+        assert response.data[0]['reporting_period_start'] == \
+            '2014-01-01T00:00:00Z'
+        assert response.data[0]['reporting_period_end'] is None
         assert response.data[0]['weather_station'] == 'STATION'
         assert response.data[0]['zipcode'] == 'ZIPCODE'
         assert response.data[0]['latitude'] == 0.0
@@ -228,10 +239,12 @@ class ProjectAPITestCase(OAuthTestCase):
 
         assert response.data[0]['project_owner'] == self.project_owner.id
         assert response.data[0]['project_id'] == 'PROJECT_ID'
-        assert response.data[0]['baseline_period_start'] == None
-        assert response.data[0]['baseline_period_end'] == '2014-01-01T00:00:00Z'
-        assert response.data[0]['reporting_period_start'] == '2014-01-02T00:00:00Z'
-        assert response.data[0]['reporting_period_end'] == None
+        assert response.data[0]['baseline_period_start'] is None
+        assert response.data[0]['baseline_period_end'] == \
+            '2014-01-01T00:00:00Z'
+        assert response.data[0]['reporting_period_start'] == \
+            '2014-01-02T00:00:00Z'
+        assert response.data[0]['reporting_period_end'] is None
         assert response.data[0]['weather_station'] == 'STATION'
         assert response.data[0]['zipcode'] == 'ZIPCODE'
         assert response.data[0]['latitude'] == 0.0
@@ -253,7 +266,8 @@ class ProjectAPITestCase(OAuthTestCase):
             "longitude": 0.0,
         }])
 
-        response.data[0]['message'] == "could not convert string to float: 'NOT A NUMBER'"
+        response.data[0]['message'] == \
+            "could not convert string to float: 'NOT A NUMBER'"
         response.data[0]['project_id'] == 'PROJECT_ID'
         response.data[0]['status'] == 'error - bad field value - update'
 

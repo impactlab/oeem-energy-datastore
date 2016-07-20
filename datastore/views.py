@@ -1,14 +1,12 @@
 from rest_framework.permissions import (
     IsAuthenticated,
     DjangoModelPermissionsOrAnonReadOnly,
-    BasePermission
 )
 from rest_framework.decorators import list_route
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
-from rest_framework.parsers import BaseParser
 
 import django_filters
 from django.db import IntegrityError, transaction
@@ -20,15 +18,15 @@ from . import models
 from . import serializers
 from . import tasks
 from . import services
-from collections import defaultdict
-from datetime import datetime
 
 from django.conf import settings
+
 
 if settings.DEBUG:
     default_permissions_classes = [DjangoModelPermissionsOrAnonReadOnly]
 else:
     default_permissions_classes = [IsAuthenticated, TokenHasReadWriteScope]
+
 
 def projects_filter(queryset, value):
     """Project filter for non-project views"""
@@ -47,6 +45,7 @@ def _filter_projects(queryset, value, attr):
 
     return queryset.filter(**{attr: project_set})
 
+
 def _parse_part(part):
     try:
         return set([int(part)])
@@ -56,6 +55,7 @@ def _parse_part(part):
             return set(range(int(parts[0]), int(parts[1]) + 1))
         else:
             return set()
+
 
 class SyncMixin(object):
 
@@ -83,7 +83,7 @@ class SyncMixin(object):
         """
 
         foreign_objects = self._find_foreign_objects(record)
-        if "status" in foreign_objects: # one or more not found
+        if "status" in foreign_objects:  # one or more not found
             return foreign_objects
 
         record = self._parse_record(record, foreign_objects)
@@ -92,13 +92,18 @@ class SyncMixin(object):
             with transaction.atomic():
                 obj, created = self._get_or_create(record, foreign_objects)
         except KeyError as e:
-            return self._serialize_error(record, "error - missing field", e, foreign_objects)
+            return self._serialize_error(record, "error - missing field", e,
+                                         foreign_objects)
         except models.Project.MultipleObjectsReturned as e:
-            return self._serialize_error(record, "error - multiple records", e, foreign_objects)
+            return self._serialize_error(record, "error - multiple records",
+                                         e, foreign_objects)
         except ValueError as e:
-            return self._serialize_error(record, "error - bad field value - create", e, foreign_objects)
+            return self._serialize_error(
+                record, "error - bad field value - create", e, foreign_objects)
         except IntegrityError as e:
-            return self._serialize_error(record, "error - integrity error - create", e.__cause__, foreign_objects)
+            return self._serialize_error(
+                record, "error - integrity error - create", e.__cause__,
+                foreign_objects)
 
         if created:
             return self._serialize(obj, status="created")
@@ -115,13 +120,18 @@ class SyncMixin(object):
                     with transaction.atomic():
                         obj.save()
                 except ValueError as e:
-                    return self._serialize_error(record, "error - bad field value - update", e, foreign_objects)
+                    return self._serialize_error(
+                        record, "error - bad field value - update", e,
+                        foreign_objects)
                 except IntegrityError as e:
-                    return self._serialize_error(record, "error - integrity error - update", e.__cause__, foreign_objects)
+                    return self._serialize_error(
+                        record, "error - integrity error - update",
+                        e.__cause__, foreign_objects)
 
                 return self._serialize(obj, status="updated")
             else:
-                return self._serialize(obj, status="unchanged - update not valid")
+                return self._serialize(
+                    obj, status="unchanged - update not valid")
         else:
             return self._serialize(obj, status="unchanged - same record")
 
@@ -140,7 +150,6 @@ class SyncMixin(object):
         data["status"] = status
         data["message"] = str(exception)
         return data
-
 
     def _serialize(self, obj, status):
         """ Serialize obj and add sync status
@@ -214,7 +223,10 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             "unit",
         ]
 
-        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
+        self.project_dict = {
+            p.project_id: p for p in models.Project.objects.all()
+        }
+
     def _find_foreign_objects(self, record):
 
         project = self.project_dict.get(str(record["project_project_id"]))
@@ -273,7 +285,7 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                      "start": "2016-03-15T00:00:00+0000",
                      "end": "2016-03-15T00:15:00+0000",
                      "value": 10.2,
-                     "project_id": "SOMEPROJECTID", # not the primary key - the project_id attribute.
+                     "project_id": "SOMEPROJECTID", # not the pk
                      "interpretation": "ELECTRICITY_CONSUMPTION_SUPPLIED",
                      "unit_name": "KWH"
                 },
@@ -281,7 +293,6 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
             ]
 
         """
-
 
     def _create_properties(self):
         self.attributes = [
@@ -291,12 +302,15 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 
         consumption_metadatas = models.ConsumptionMetadata.objects.all()
 
-        self.metadata_dict = {(cm.project.project_id, cm.interpretation): cm
-                         for cm in consumption_metadatas if cm.project}
+        self.metadata_dict = {
+            (cm.project.project_id, cm.interpretation): cm
+            for cm in consumption_metadatas if cm.project
+        }
 
     def _find_foreign_objects(self, record):
 
-        cm = self.metadata_dict.get((str(record["project_id"]), record["interpretation"]))
+        cm = self.metadata_dict.get((str(record["project_id"]),
+                                     record["interpretation"]))
         if cm is None:
             return {
                 "status": "error - no consumption metadata",
@@ -328,8 +342,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         """
         `POST /api/v1/consumption_records/sync2/`
 
-        A much faster sync implementation. Slightly different behavior than the existing sync route in that
-        it expects a `metadata_id` rather than the metadata properties.
+        A much faster sync implementation. Slightly different behavior than
+        the existing sync route in that it expects a `metadata_id` rather
+        than the metadata properties.
 
         Expects records like the following::
 
@@ -337,7 +352,7 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                 {
                      "start": "2016-03-15T00:00:00+0000",
                      "value": 10.2,
-                     "metadata_id": 1 # Retrieved using /consumptions_metadata/sync/
+                     "metadata_id": 1  # From /consumptions_metadata/sync/
                 },
                 ...
             ]
@@ -351,7 +366,9 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         if type(records) is not list:
             records = [records]
 
-        result, status = services.bulk_sync(records, fields, models.ConsumptionRecord, ['start', 'metadata_id'])
+        result, status = services.bulk_sync(
+            records, fields, models.ConsumptionRecord,
+            ['start', 'metadata_id'])
 
         return Response(result, status=status)
 
@@ -359,15 +376,15 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
 class ProjectFilter(django_filters.FilterSet):
 
     projectblock_and = django_filters.ModelMultipleChoiceFilter(
-            name='projectblock',
-            queryset=models.ProjectBlock.objects.all(),
-            conjoined=True)
+        name='projectblock',
+        queryset=models.ProjectBlock.objects.all(),
+        conjoined=True)
     projectblock_or = django_filters.ModelMultipleChoiceFilter(
-            name='projectblock',
-            queryset=models.ProjectBlock.objects.all(),
-            conjoined=False)
+        name='projectblock',
+        queryset=models.ProjectBlock.objects.all(),
+        conjoined=False)
     projects = django_filters.MethodFilter(
-            action="projects_filter")
+        action="projects_filter")
     baseline_period_end = django_filters.DateFromToRangeFilter()
     reporting_period_start = django_filters.DateFromToRangeFilter()
 
@@ -391,6 +408,7 @@ class ProjectFilter(django_filters.FilterSet):
         """
         return _filter_projects(queryset, value, "pk__in")
 
+
 class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
 
     # parser_classes = (ProjectViewSetParser,)
@@ -401,12 +419,13 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
     sync_serializer_class = serializers.ProjectSerializer
 
     def get_queryset(self):
-        return models.Project.objects.all()\
-                                     .prefetch_related('consumptionmetadata_set')\
-                                     .prefetch_related('projectattribute_set')\
-                                     .prefetch_related('projectattribute_set__key')\
-                                     .order_by('pk')
-
+        return (
+            models.Project.objects.all()
+            .prefetch_related('consumptionmetadata_set')
+            .prefetch_related('projectattribute_set')
+            .prefetch_related('projectattribute_set__key')
+            .order_by('pk')
+        )
 
     def get_serializer(self, *args, **kwargs):
         queryset = self.get_queryset()
@@ -423,7 +442,7 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         else:
             kwargs['context']['project_ids'] = []
 
-        return serializer_class(*args, **kwargs) #data=queryset, context=context, many=True)
+        return serializer_class(*args, **kwargs)
 
     def get_serializer_class(self):
         if not hasattr(self.request, 'query_params'):
@@ -467,7 +486,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
 
         """
 
-
     def _create_properties(self):
         self.attributes = [
             "project_owner_id",
@@ -495,10 +513,12 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
     def _parse_record(self, record, foreign_objects):
 
         if record["baseline_period_end"] is not None:
-            record["baseline_period_end"] = parse_datetime(record["baseline_period_end"])
+            record["baseline_period_end"] = parse_datetime(
+                record["baseline_period_end"])
 
         if record["reporting_period_start"] is not None:
-            record["reporting_period_start"] = parse_datetime(record["reporting_period_start"])
+            record["reporting_period_start"] = parse_datetime(
+                record["reporting_period_start"])
 
         return record
 
@@ -521,17 +541,15 @@ class ProjectRunViewSet(mixins.CreateModelMixin,
     filter_class = ProjectRunFilter
 
     def perform_create(self, serializer):
-      # Create the object normally
-      mixins.CreateModelMixin.perform_create(self, serializer)
-      project_run = serializer.instance
+        # Create the object normally
+        mixins.CreateModelMixin.perform_create(self, serializer)
+        project_run = serializer.instance
 
-      # ...and also push a celery job
-      tasks.execute_project_run.delay(project_run.pk)
+        # ...and also push a celery job
+        tasks.execute_project_run.delay(project_run.pk)
 
     def get_queryset(self):
-        return (models.ProjectRun.objects
-                                 .all()
-                                 .order_by('pk'))
+        return models.ProjectRun.objects.all().order_by('pk')
 
     def get_serializer_class(self):
         return serializers.ProjectRunSerializer
@@ -542,7 +560,8 @@ class ProjectResultViewSet(viewsets.ModelViewSet):
     permission_classes = default_permissions_classes
 
     def get_queryset(self):
-        return (models.ProjectResult.objects.all().order_by('pk')
+        return (
+            models.ProjectResult.objects.all().order_by('pk')
             .prefetch_related('modeling_periods')
             .prefetch_related('modeling_period_groups')
             .prefetch_related('derivative_aggregations')
@@ -674,8 +693,12 @@ class ProjectAttributeViewSet(SyncMixin, viewsets.ModelViewSet):
             "integer_value",
         ]
 
-        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
-        self.project_attribute_key_dict = {pak.name: pak for pak in models.ProjectAttributeKey.objects.all()}
+        self.project_dict = {
+            p.project_id: p for p in models.Project.objects.all()
+        }
+        self.project_attribute_key_dict = {
+            pak.name: pak for pak in models.ProjectAttributeKey.objects.all()
+        }
 
     def _find_foreign_objects(self, record):
 
@@ -686,11 +709,13 @@ class ProjectAttributeViewSet(SyncMixin, viewsets.ModelViewSet):
                 "project_project_id": record["project_project_id"],
             }
 
-        key = self.project_attribute_key_dict.get(record["project_attribute_key_name"])
+        key = self.project_attribute_key_dict.get(
+            record["project_attribute_key_name"])
         if key is None:
             return {
                 "status": "error - no ProjectAttributeKey found",
-                "project_attribute_key_name": record["project_attribute_key_name"],
+                "project_attribute_key_name":
+                    record["project_attribute_key_name"],
             }
 
         return {"key": key, "project": project}
@@ -704,7 +729,8 @@ class ProjectAttributeViewSet(SyncMixin, viewsets.ModelViewSet):
     def _error_fields(self, record, foreign_objects):
         return {
             "project_project_id": record["project_project_id"],
-            "project_attribute_key_name": record["project_attribute_key_name"],
+            "project_attribute_key_name":
+                record["project_attribute_key_name"],
         }
 
     def _parse_record(self, record, foreign_objects):

@@ -84,9 +84,12 @@ class EnergyTraceModelResultSerializer(serializers.ModelSerializer):
 
 class ProjectResultSerializer(serializers.ModelSerializer):
     modeling_periods = ModelingPeriodSerializer(many=True, read_only=True)
-    modeling_period_groups = ModelingPeriodGroupSerializer(many=True, read_only=True)
-    derivative_aggregations = DerivativeAggregationSerializer(many=True, read_only=True)
-    energy_trace_model_results = EnergyTraceModelResultSerializer(many=True, read_only=True)
+    modeling_period_groups = ModelingPeriodGroupSerializer(
+        many=True, read_only=True)
+    derivative_aggregations = DerivativeAggregationSerializer(
+        many=True, read_only=True)
+    energy_trace_model_results = EnergyTraceModelResultSerializer(
+        many=True, read_only=True)
 
     class Meta:
         model = models.ProjectResult

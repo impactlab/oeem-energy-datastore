@@ -1,21 +1,16 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import tempfile
 
 from eemeter.structures import (
     Project,
-    ModelingPeriod,
-    ZIPCodeSite,
 )
 from eemeter.testing.mocks import MockWeatherClient
 from eemeter.weather import TMY3WeatherSource, ISDWeatherSource
-import numpy as np
-from numpy.testing import assert_allclose
 import pytz
 
-from datastore import models
 from datastore.services import create_project
 
 
@@ -24,7 +19,8 @@ class ProjectTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
 
-        cls.user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+        cls.user = User.objects.create_user('john', 'lennon@thebeatles.com',
+                                            'johnpassword')
 
         cls.project = create_project(spec={
             "project_id": "ABCD",
@@ -109,7 +105,6 @@ class ProjectTestCase(TestCase):
         ws.client = MockWeatherClient()
         cls.weather_source = ws
 
-
     def test_attributes(self):
         attributes = [
             "project_owner",
@@ -138,8 +133,9 @@ class ProjectTestCase(TestCase):
 
     def test_run_meter(self):
 
-        project_result = self.project.run_meter(weather_source=self.weather_source,
-                               weather_normal_source=self.weather_normal_source)
+        project_result = self.project.run_meter(
+            weather_source=self.weather_source,
+            weather_normal_source=self.weather_normal_source)
 
         assert project_result.eemeter_version == "0.3.20"
         assert project_result.meter_class == "EnergyEfficiencyMeter"

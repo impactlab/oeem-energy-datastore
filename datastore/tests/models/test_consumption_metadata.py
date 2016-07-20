@@ -5,10 +5,12 @@ from datastore import models
 
 from eemeter.structures import EnergyTrace
 
+
 class ConsumptionMetadataTestCase(TestCase):
 
     def setUp(self):
-        user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+        user = User.objects.create_user('john', 'lennon@thebeatles.com',
+                                        'johnpassword')
         project = models.Project.objects.create(
             project_owner=user.projectowner,
             project_id="PROJECTID_6",
@@ -18,7 +20,6 @@ class ConsumptionMetadataTestCase(TestCase):
             interpretation="E_C_S",
             unit="KWH",
         )
-
 
     def test_attributes(self):
         attributes = [

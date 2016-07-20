@@ -5,14 +5,17 @@ from django.http import HttpResponse
 
 from datastore import services
 
+
 def index(request):
     data = services.overview()
     return render(request, 'index.html', data)
+
 
 def meter_runs(request):
     """Render the table of exported MeterRun results in html"""
     data = services.meterruns_export()
     return render(request, 'project_run_table.html', data)
+
 
 def csv_export(request):
     """Return a dump of all the MeterRuns in CSV form"""

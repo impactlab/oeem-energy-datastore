@@ -3,7 +3,8 @@ import os
 from celery import Celery
 from django.conf import settings
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'oeem_energy_datastore.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE',
+                      'oeem_energy_datastore.settings')
 
 app = Celery('oeem_energy_datastore')
 app.config_from_object('django.conf:settings')

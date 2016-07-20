@@ -1,5 +1,6 @@
 from datastore import models
 
+
 def serialize(meter_run):
 
     attrs = [
@@ -34,13 +35,15 @@ def serialize(meter_run):
     for attr in project_attrs:
         resp['project_' + attr] = getattr(meter_run.project, attr)
     for attr in consumption_metadata_attrs:
-        resp['consumption_metadata_' + attr] = getattr(meter_run.consumption_metadata, attr)
+        resp['consumption_metadata_' + attr] = \
+            getattr(meter_run.consumption_metadata, attr)
 
     return resp
 
 
 def meterruns_export():
-    meter_runs = models.MeterRun.objects.all().prefetch_related("project", "consumption_metadata")
+    meter_runs = models.MeterRun.objects.all()\
+        .prefetch_related("project", "consumption_metadata")
 
     meter_runs_serialized = list(map(serialize, meter_runs))
 
@@ -49,4 +52,3 @@ def meterruns_export():
         headers = meter_runs_serialized[0].keys()
 
     return {'meter_runs': meter_runs_serialized, 'headers': headers}
-

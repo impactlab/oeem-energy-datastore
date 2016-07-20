@@ -1,6 +1,6 @@
 from .shared import OAuthTestCase
-
 from datastore import models
+
 
 class ProjectAttributeAPITestCase(OAuthTestCase):
 
@@ -27,16 +27,17 @@ class ProjectAttributeAPITestCase(OAuthTestCase):
         assert isinstance(response.data['id'], int)
         assert response.data['key'] == self.project_attribute_key.pk
         assert response.data['project'] == self.project.pk
-        assert response.data['date_value'] == None
-        assert response.data['datetime_value'] == None
-        assert response.data['boolean_value'] == None
-        assert response.data['char_value'] == None
+        assert response.data['date_value'] is None
+        assert response.data['datetime_value'] is None
+        assert response.data['boolean_value'] is None
+        assert response.data['char_value'] is None
         assert response.data['value'] == 0.0
         assert response.data['float_value'] == 0.0
-        assert response.data['integer_value'] == None
+        assert response.data['integer_value'] is None
 
         project_attribute_id = response.data['id']
-        response = self.get('/api/v1/project_attributes/{}/'.format(project_attribute_id))
+        response = self.get(
+            '/api/v1/project_attributes/{}/'.format(project_attribute_id))
         assert response.status_code == 200
 
         assert isinstance(response.data['id'], int)
