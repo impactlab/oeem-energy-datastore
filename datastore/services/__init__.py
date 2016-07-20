@@ -47,12 +47,12 @@ views.py
 
 from .bulk_sync import bulk_sync
 from .create_project import create_project
-from .meterruns_export import meterruns_export
+from .projectresult_export import projectresult_export
 from .overview import overview
 
 __all__ = (
     'bulk_sync',
     'create_project',
-    'meterruns_export',
+    'projectresult_export',
     'overview',
 )
