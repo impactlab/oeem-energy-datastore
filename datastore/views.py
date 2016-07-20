@@ -489,9 +489,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         self.attributes = [
             "project_owner_id",
             "zipcode",
-            "latitude",
-            "longitude",
-            "weather_station",
             "baseline_period_end",
             "reporting_period_start",
         ]
