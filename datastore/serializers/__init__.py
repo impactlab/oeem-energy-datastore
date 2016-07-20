@@ -134,6 +134,7 @@ class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
             'interpretation',
             'unit',
             'project',
+            'label',
         )
 
 
@@ -163,6 +164,7 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
             'unit',
             'records',
             'project',
+            'label',
         )
 
     def create(self, validated_data):

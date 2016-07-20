@@ -6,33 +6,33 @@ from datastore import models
 class ConsumptionRecordAPITestCase(OAuthTestCase):
 
     def setUp(self):
+<<<<<<< 9ea5744407ab3b4c783d4083a682e5729e2377d8
         """
         Setup methods for a eemeter run storage
         engine.
         """
         super(ConsumptionRecordAPITestCase, self).setUp()
+=======
+        super(ConsumptionRecordAPITestCase,self).setUp()
+>>>>>>> Update API routes and tests to include `CM.label` field
 
-        self.consumption_metadata = models.ConsumptionMetadata(
-            interpretation="E_C_S",
-            unit="KWH",
-        )
-        self.consumption_metadata.save()
 
     def test_consumption_record_sync(self):
 
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
             "unit": "KWH",
-            "interpretation": "E_C_S"
+            "interpretation": "E_C_S",
+            "label": "first-trace"
         }])
 
-        assert response.data[0]['status'] == 'unchanged - same record'
         cm_id = response.data[0]['id']
 
         response = self.post('/api/v1/consumption_records/sync/', [{
             "project_id": "ABC",
             "unit": "KWH",
             "interpretation": "E_C_S",
+            "label": "first-trace",
             "start": "2014-01-01T00:00:00+00:00",
             "value": 1.0,
             "estimated": True
@@ -40,6 +40,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
             "project_id": "ABC",
             "unit": "KWH",
             "interpretation": "E_C_S",
+            "label": "first-trace",
             "start": "2014-01-01T01:00:00+00:00",
             "value": 2.0,
             "estimated": True
@@ -55,14 +56,15 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
             "project_project_id": "ABC",
             "unit": "KWH",
-            "interpretation": "E_C_S"
+            "interpretation": "E_C_S",
+            "label": "first-trace"
         }, {
             "project_project_id": "DEF",
             "unit": "KWH",
-            "interpretation": "E_C_S"
+            "interpretation": "E_C_S",
+            "label": "first-trace"
         }])
 
-        assert response.data[0]['status'] == 'unchanged - same record'
         cm_id = response.data[0]['id']
         cm_id2 = response.data[1]['id']
 
@@ -172,11 +174,20 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert response.data['status'] == 'error'
 
     def test_consumption_record_create_read(self):
+
+        response = self.post('/api/v1/consumption_metadatas/sync/', [{
+            "project_project_id": "ABC",
+            "unit": "KWH",
+            "interpretation": "E_C_S",
+            "label": "first-trace"
+        }])
+        cm_id = response.data[0]['id']
+
         data = [{
             "start": "2014-01-01T00:00:00+00:00",
             "value": 0.0,
             "estimated": False,
-            "metadata": self.consumption_metadata.pk,
+            "metadata": cm_id,
         }]
 
         response = self.post('/api/v1/consumption_records/', data)
@@ -186,8 +197,13 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert isinstance(response.data[0]['id'], int)
         assert response.data[0]['start'] == '2014-01-01T00:00:00Z'
         assert response.data[0]['value'] == 0.0
+<<<<<<< 9ea5744407ab3b4c783d4083a682e5729e2377d8
         assert response.data[0]['estimated'] is False
         assert response.data[0]['metadata'] == self.consumption_metadata.pk
+=======
+        assert response.data[0]['estimated'] == False
+        assert response.data[0]['metadata'] == cm_id
+>>>>>>> Update API routes and tests to include `CM.label` field
 
         consumption_record_id = response.data[0]['id']
         response = self.get(
@@ -198,5 +214,11 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert isinstance(response.data['id'], int)
         assert response.data['start'] == '2014-01-01T00:00:00Z'
         assert response.data['value'] == 0.0
+<<<<<<< 9ea5744407ab3b4c783d4083a682e5729e2377d8
         assert response.data['estimated'] is False
         assert response.data['metadata'] == self.consumption_metadata.pk
+=======
+        assert response.data['estimated'] == False
+        assert response.data['metadata'] == cm_id
+
+>>>>>>> Update API routes and tests to include `CM.label` field
