@@ -113,9 +113,23 @@ class ConsumptionMetadataSummarySerializer(serializers.ModelSerializer):
         )
 
 
+class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):
+
+    value = serializers.FloatField(source='value_clean')
+
+    class Meta:
+        model = models.ConsumptionRecord
+        fields = (
+            'id',
+            'start',
+            'value',
+            'estimated',
+        )
+
+
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
-    records = ConsumptionRecordSerializer(many=True)
+    records = ConsumptionRecordEmbeddedSerializer(many=True)
 
     class Meta:
         model = models.ConsumptionMetadata

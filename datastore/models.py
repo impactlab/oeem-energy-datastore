@@ -185,12 +185,12 @@ class Project(models.Model):
                     modeling_period=modeling_period_mapping[model_label],
                     model_serializiation=None,
                     status=outputs['status'],
-                    r2=outputs['r2'],
-                    rmse=outputs['rmse'],
-                    cvrmse=outputs['cvrmse'],
-                    upper=outputs['upper'],
-                    lower=outputs['lower'],
-                    n=outputs['n'],
+                    r2=outputs.get('r2'),
+                    rmse=outputs.get('rmse'),
+                    cvrmse=outputs.get('cvrmse'),
+                    upper=outputs.get('upper'),
+                    lower=outputs.get('lower'),
+                    n=outputs.get('n'),
                 )
                 energy_trace_model_result_mapping[
                     (trace_label, model_label)] = etm
@@ -199,6 +199,8 @@ class Project(models.Model):
 
         for trace_label, modeling_period_group_derivatives in \
                 results['modeled_energy_trace_derivatives'].items():
+
+            # get all modeling period derivatives
             modeling_period_derivatives = {}
             for (baseline_label, reporting_label), derivatives in \
                     modeling_period_group_derivatives.items():
@@ -206,26 +208,29 @@ class Project(models.Model):
                         derivatives['BASELINE']
                 modeling_period_derivatives[reporting_label] = \
                         derivatives['REPORTING']
+
             for modeling_period_label, derivatives in \
                     modeling_period_derivatives.items():
 
                 for interpretation in aggregation_interpretations:
 
-                    derivative = derivatives[interpretation]
+                    derivative = derivatives.get(interpretation, None)
 
-                    d = Derivative.objects.create(
-                        energy_trace_model_result=
-                            energy_trace_model_result_mapping[
-                                (trace_label, modeling_period_label)],
-                        interpretation=interpretation,
-                        value=derivative[0],
-                        upper=derivative[1],
-                        lower=derivative[2],
-                        n=derivative[3],
-                    )
+                    if derivative is not None:
+                        d = Derivative.objects.create(
+                            energy_trace_model_result=
+                                energy_trace_model_result_mapping[
+                                    (trace_label, modeling_period_label)],
+                            interpretation=interpretation,
+                            value=derivative[0],
+                            upper=derivative[1],
+                            lower=derivative[2],
+                            n=derivative[3],
+                        )
 
         # one result per aggregation - baseline + reporting?
-        for group_label, group_derivatives in results['project_derivatives'].items():
+        for group_label, group_derivatives in \
+                results['project_derivatives'].items():
             for name, named_results in group_derivatives.items():
                 if named_results is None:
                     continue

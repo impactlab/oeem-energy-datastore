@@ -16,6 +16,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['unit'] == 'KWH'
         assert response.data['interpretation'] == 'E_C_S'
         assert response.data['project'] == None
+        assert 'records' not in response.data
 
         consumption_metadata_id = response.data['id']
         response = self.get('/api/v1/consumption_metadatas/{}/'.format(consumption_metadata_id))

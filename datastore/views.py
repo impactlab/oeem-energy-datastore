@@ -542,7 +542,13 @@ class ProjectResultViewSet(viewsets.ModelViewSet):
     permission_classes = default_permissions_classes
 
     def get_queryset(self):
-        return models.ProjectResult.objects.all()
+        return (models.ProjectResult.objects.all().order_by('pk')
+            .prefetch_related('modeling_periods')
+            .prefetch_related('modeling_period_groups')
+            .prefetch_related('derivative_aggregations')
+            .prefetch_related('energy_trace_model_results')
+            .prefetch_related('energy_trace_model_results__derivatives')
+        )
 
     def get_serializer_class(self):
         return serializers.ProjectResultSerializer
