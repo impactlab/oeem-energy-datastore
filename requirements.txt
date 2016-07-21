@@ -17,6 +17,6 @@ requests
 sqlalchemy
 django-grappelli
 gunicorn
-django-rest-swagger
+django-rest-swagger==0.3.5
 djangorestframework-bulk
 whitenoise
