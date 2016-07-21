@@ -195,7 +195,10 @@ class Project(models.Model):
                 energy_trace_model_result_mapping[
                     (trace_label, model_label)] = etm
 
-        aggregation_interpretations = ['annualized_weather_normal']
+        aggregation_interpretations = [
+            'annualized_weather_normal',
+            'gross_predicted',
+        ]
 
         for trace_label, modeling_period_group_derivatives in \
                 results['modeled_energy_trace_derivatives'].items():

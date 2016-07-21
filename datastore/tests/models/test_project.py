@@ -142,7 +142,7 @@ class ProjectTestCase(TestCase):
         assert isinstance(project_result.project_id, int)
         assert project_result.meter_settings is None
 
-        assert len(project_result.derivative_aggregations.all()) == 4
+        assert len(project_result.derivative_aggregations.all()) == 8
         assert len(project_result.energy_trace_model_results.all()) == 12
         assert len(project_result.modeling_periods.all()) == 2
         assert len(project_result.modeling_period_groups.all()) == 1
