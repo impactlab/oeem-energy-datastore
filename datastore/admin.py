@@ -8,7 +8,12 @@ admin.site.register(models.ProjectAttributeKey)
 admin.site.register(models.ProjectAttribute)
 admin.site.register(models.ConsumptionMetadata)
 admin.site.register(models.ConsumptionRecord)
-# admin.site.register(models.MeterRun)
 admin.site.register(models.ProjectRun)
+admin.site.register(models.ProjectResult)
+admin.site.register(models.ModelingPeriod)
+admin.site.register(models.ModelingPeriodGroup)
+admin.site.register(models.EnergyTraceModelResult)
+admin.site.register(models.Derivative)
+admin.site.register(models.DerivativeAggregation)
 
 admin.site.site_header = "Open Energy Efficiency Meter"
