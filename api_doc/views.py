@@ -1,5 +1,4 @@
 from rest_framework_swagger.views import SwaggerUIView
-from rest_framework_swagger.views import SwaggerApiView
 from rest_framework_swagger.views import SwaggerResourcesView
 import rest_framework_swagger as rfs
 
@@ -19,9 +18,10 @@ def get_full_base_path(request):
     try:
         protocol = rfs.SWAGGER_SETTINGS['protocol']
     except KeyError:
-        protocol = 'https' if self.request.is_secure() else 'http'
+        protocol = 'https' if request.is_secure() else 'http'
 
     return '{0}://{1}'.format(protocol, base_path.rstrip('/'))
+
 
 class MySwaggerUIView(SwaggerUIView):
 
@@ -45,17 +45,20 @@ class MySwaggerUIView(SwaggerUIView):
                 'DEFAULT_VERSIONING_CLASS':
                     settings.REST_FRAMEWORK.get('DEFAULT_VERSIONING_CLASS', '')
                     if hasattr(settings, 'REST_FRAMEWORK') else None,
-
             },
             'django_settings': {
                 'CSRF_COOKIE_NAME': mark_safe(
-                    json.dumps(getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken'))),
+                    json.dumps(
+                        getattr(settings, 'CSRF_COOKIE_NAME', 'csrftoken')
+                    )
+                ),
             }
         }
         response = render_to_response(
             template_name, RequestContext(request, data))
 
         return response
+
 
 class MySwaggerResourcesView(SwaggerResourcesView):
 

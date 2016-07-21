@@ -2,6 +2,7 @@ from .shared import OAuthTestCase
 
 from datastore import models
 
+
 class ConsumptionRecordAPITestCase(OAuthTestCase):
 
     def setUp(self):
@@ -9,7 +10,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         Setup methods for a eemeter run storage
         engine.
         """
-        super(ConsumptionRecordAPITestCase,self).setUp()
+        super(ConsumptionRecordAPITestCase, self).setUp()
 
         self.consumption_metadata = models.ConsumptionMetadata(
             interpretation="E_C_S",
@@ -67,7 +68,8 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
         # Make sure the records don't already exist
         def get_test_record_by_start(start, cm_id=cm_id):
-            return models.ConsumptionRecord.objects.filter(start=start, metadata_id=cm_id).first()
+            return models.ConsumptionRecord.objects.filter(
+                start=start, metadata_id=cm_id).first()
         start_a = "2014-01-01T00:00:00+00:00"
         start_b = "2014-01-01T01:00:00+00:00"
         a = get_test_record_by_start(start_a)
@@ -113,7 +115,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
 
         c = get_test_record_by_start(start_c)
         assert c.value == 4.0
-        assert c.estimated == False
+        assert c.estimated is False
 
         # Test metadata_id keys properly
         response = self.post('/api/v1/consumption_records/sync2/', [{
@@ -148,7 +150,6 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert a is not None
         assert a.value is None
 
-
         # Test some invalid records
 
         # Missing field `start` should error out
@@ -170,7 +171,6 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert response.status_code == 400
         assert response.data['status'] == 'error'
 
-
     def test_consumption_record_create_read(self):
         data = [{
             "start": "2014-01-01T00:00:00+00:00",
@@ -186,17 +186,17 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert isinstance(response.data[0]['id'], int)
         assert response.data[0]['start'] == '2014-01-01T00:00:00Z'
         assert response.data[0]['value'] == 0.0
-        assert response.data[0]['estimated'] == False
+        assert response.data[0]['estimated'] is False
         assert response.data[0]['metadata'] == self.consumption_metadata.pk
 
         consumption_record_id = response.data[0]['id']
-        response = self.get('/api/v1/consumption_records/{}/'.format(consumption_record_id))
+        response = self.get(
+            '/api/v1/consumption_records/{}/'.format(consumption_record_id))
 
         assert response.status_code == 200
 
         assert isinstance(response.data['id'], int)
         assert response.data['start'] == '2014-01-01T00:00:00Z'
         assert response.data['value'] == 0.0
-        assert response.data['estimated'] == False
+        assert response.data['estimated'] is False
         assert response.data['metadata'] == self.consumption_metadata.pk
-

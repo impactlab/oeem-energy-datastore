@@ -18,10 +18,10 @@
           <th>{{ header }} </th>
           {% endfor %}
         </tr>
-        {% for meter_run in meter_runs %}
+        {% for project_result in project_results %}
         <tr>
           {% for header in headers %}
-          <td>{{ meter_run|getattribute:header }}</td>
+          <td>{{ project_result|getattribute:header }}</td>
           {% endfor %}
         </tr>
         {% endfor %}

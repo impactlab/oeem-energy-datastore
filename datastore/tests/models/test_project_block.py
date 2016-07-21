@@ -5,10 +5,12 @@ import pytest
 
 from datastore import models
 
+
 class ProjectBlockTestCase(TestCase):
 
     def setUp(self):
-        user = User.objects.create_user('john', 'lennon@thebeatles.com', 'johnpassword')
+        user = User.objects.create_user(
+            'john', 'lennon@thebeatles.com', 'johnpassword')
 
         project1 = models.Project.objects.create(
             project_owner=user.projectowner,

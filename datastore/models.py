@@ -1,9 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from django.utils.timezone import now
 from django.utils.encoding import python_2_unicode_compatible
-from django.db.models.signals import post_save, post_init
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from eemeter.structures import (
@@ -18,11 +17,7 @@ from eemeter.ee.meter import EnergyEfficiencyMeter
 from eemeter import get_version
 
 from warnings import warn
-from datetime import timedelta, datetime
 import numpy as np
-import json
-from collections import defaultdict, OrderedDict
-import itertools
 
 METER_CLASS_CHOICES = {
     'EnergyEfficiencyMeter': EnergyEfficiencyMeter,
@@ -52,6 +47,7 @@ PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES = [
     ('INTEGER', 'integer_value'),
 ]
 
+
 def _json_clean(value):
     if value is None or np.isnan(value) or np.isinf(value):
         return None
@@ -67,6 +63,7 @@ class ProjectOwner(models.Model):
 
     def __str__(self):
         return u'ProjectOwner {}'.format(self.user.username)
+
 
 @python_2_unicode_compatible
 class Project(models.Model):
@@ -105,7 +102,8 @@ class Project(models.Model):
         return EEMeterProject(energy_trace_set, interventions, site)
 
     def _eemeter_intervention(self):
-        return Intervention(self.baseline_period_end, self.reporting_period_start)
+        return Intervention(self.baseline_period_end,
+                            self.reporting_period_start)
 
     def _eemeter_location(self):
         return ZIPCodeSite(zipcode=self.zipcode)
@@ -176,8 +174,10 @@ class Project(models.Model):
 
         # one result per trace per model
         energy_trace_model_result_mapping = {}
-        for trace_label, modeled_energy_trace in results['modeled_energy_traces'].items():
-            for model_label, outputs in modeled_energy_trace.fit_outputs.items():
+        for trace_label, modeled_energy_trace in \
+                results['modeled_energy_traces'].items():
+            for model_label, outputs in \
+                    modeled_energy_trace.fit_outputs.items():
 
                 etm = EnergyTraceModelResult.objects.create(
                     project_result=project_result,
@@ -185,47 +185,57 @@ class Project(models.Model):
                     modeling_period=modeling_period_mapping[model_label],
                     model_serializiation=None,
                     status=outputs['status'],
-                    r2=outputs['r2'],
-                    rmse=outputs['rmse'],
-                    cvrmse=outputs['cvrmse'],
-                    upper=outputs['upper'],
-                    lower=outputs['lower'],
-                    n=outputs['n'],
+                    r2=outputs.get('r2'),
+                    rmse=outputs.get('rmse'),
+                    cvrmse=outputs.get('cvrmse'),
+                    upper=outputs.get('upper'),
+                    lower=outputs.get('lower'),
+                    n=outputs.get('n'),
                 )
                 energy_trace_model_result_mapping[
                     (trace_label, model_label)] = etm
 
-        aggregation_interpretations = ['annualized_weather_normal']
+        aggregation_interpretations = [
+            'annualized_weather_normal',
+            'gross_predicted',
+        ]
 
         for trace_label, modeling_period_group_derivatives in \
                 results['modeled_energy_trace_derivatives'].items():
+
+            # get all modeling period derivatives
             modeling_period_derivatives = {}
             for (baseline_label, reporting_label), derivatives in \
                     modeling_period_group_derivatives.items():
                 modeling_period_derivatives[baseline_label] = \
-                        derivatives['BASELINE']
+                    derivatives['BASELINE']
                 modeling_period_derivatives[reporting_label] = \
-                        derivatives['REPORTING']
+                    derivatives['REPORTING']
+
             for modeling_period_label, derivatives in \
                     modeling_period_derivatives.items():
 
                 for interpretation in aggregation_interpretations:
 
-                    derivative = derivatives[interpretation]
+                    derivative = derivatives.get(interpretation, None)
 
-                    d = Derivative.objects.create(
-                        energy_trace_model_result=
-                            energy_trace_model_result_mapping[
-                                (trace_label, modeling_period_label)],
-                        interpretation=interpretation,
-                        value=derivative[0],
-                        upper=derivative[1],
-                        lower=derivative[2],
-                        n=derivative[3],
-                    )
+                    energy_trace_model_res = \
+                        energy_trace_model_result_mapping[
+                            (trace_label, modeling_period_label)]
+
+                    if derivative is not None:
+                        Derivative.objects.create(
+                            energy_trace_model_result=energy_trace_model_res,
+                            interpretation=interpretation,
+                            value=derivative[0],
+                            upper=derivative[1],
+                            lower=derivative[2],
+                            n=derivative[3],
+                        )
 
         # one result per aggregation - baseline + reporting?
-        for group_label, group_derivatives in results['project_derivatives'].items():
+        for group_label, group_derivatives in \
+                results['project_derivatives'].items():
             for name, named_results in group_derivatives.items():
                 if named_results is None:
                     continue
@@ -237,10 +247,12 @@ class Project(models.Model):
                     reporting_output = \
                         named_results['REPORTING'][interpretation]
 
-                    aggregation = DerivativeAggregation.objects.create(
+                    modeling_period_group = \
+                        modeling_period_group_mapping[group_label]
+
+                    DerivativeAggregation.objects.create(
                         project_result=project_result,
-                        modeling_period_group=
-                            modeling_period_group_mapping[group_label],
+                        modeling_period_group=modeling_period_group,
                         trace_interpretation=name,
                         interpretation=interpretation,
                         baseline_value=baseline_output[0],
@@ -264,96 +276,15 @@ class Project(models.Model):
         meter = MeterClass(settings=settings)
         return meter
 
-    @staticmethod
-    def recent_meter_runs(project_pks=[]):
-        """
-        Returns most recently create MeterRun objects for each
-        ConsumptionMetadata object associated with the set of projects.
-        NOTE: not an instance method!!
-
-        Parameters
-        ----------
-        project_pks : list of int, default []
-            Primary keys of projects for which to get recent meter runs. If
-            an empty list, will get recent meter runs for every project in
-            the database.
-
-        Returns
-        -------
-        out : dict of dict
-            Dictionary in which project primary keys are keys and associated
-            meter runs are values. E.g.::
-
-            { # keys are primary keys of Project objects
-                1: { # keys are primary keys of ConsumptionMetadata objects
-                    1: {
-                        "meter_run": <MeterRun object>,
-                        "interpretation": "E"
-                    },
-                    2: {
-                        "meter_run": <MeterRun object>,
-                        "interpretation": "NG"
-                    }
-                },
-                2: {
-                    3: {
-                        "meter_run": <MeterRun object>,
-                        "interpretation": "E"
-                    },
-                    4: {
-                        "meter_run": <MeterRun object>,
-                        "interpretation": "NG"
-                    }
-                }
-            }
-
-        """
-
-        meter_run_query = '''
-          SELECT DISTINCT ON (consumption.id)
-            meter.*,
-            consumption.interpretation AS interpretation_
-          FROM datastore_meterrun AS meter
-          JOIN datastore_consumptionmetadata AS consumption
-            ON meter.consumption_metadata_id = consumption.id
-          JOIN datastore_project AS project
-            ON meter.project_id = project.id
-        '''
-
-        qargs = []
-
-        if project_pks:
-            meter_run_query += '''
-              WHERE project.id IN %s
-            '''
-            qargs.append(tuple(project_pks))
-
-        meter_run_query += '''
-          ORDER BY consumption.id,
-            meter.added DESC
-        '''
-
-        meter_runs = MeterRun.objects.raw(meter_run_query, qargs)
-
-        # initialize with ordereddict for each project.
-        results = defaultdict(OrderedDict)
-
-        for meter_run in meter_runs:
-
-            results[meter_run.project_id][meter_run.consumption_metadata_id] = {
-                'meter_run': meter_run,
-                'interpretation': meter_run.interpretation_,
-            }
-
-        return results
-
     def attributes(self):
         return self.projectattribute_set.all()
 
 
 @python_2_unicode_compatible
 class ProjectRun(models.Model):
-    """Encapsulates the request to run a Project's meters, pointing to Celery objects and Meter results."""
+    """ Encapsulates the request to run a Project's meters, pointing to
+       Celery objects and Meter results.
+    """
     STATUS_CHOICES = (
         ('PENDING', 'Pending'),
         ('RUNNING', 'Running'),
@@ -365,25 +296,34 @@ class ProjectRun(models.Model):
         ('commercial', 'Commercial'),
     )
     project = models.ForeignKey(Project)
-    status = models.CharField(max_length=250, choices=STATUS_CHOICES, default="PENDING")
-    meter_class = models.CharField(max_length=250, null=True, default="EnergyEfficiencyMeter")
+    status = models.CharField(max_length=250, choices=STATUS_CHOICES,
+                              default="PENDING")
+    meter_class = models.CharField(max_length=250, null=True,
+                                   default="EnergyEfficiencyMeter")
     meter_settings = JSONField(null=True)
     traceback = models.CharField(max_length=10000, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return u'ProjectRun(project_id={}, status={})'.format(self.project.project_id, self.status)
+        return (
+            u'ProjectRun(project_id={}, status={})'
+            .format(self.project.project_id, self.status)
+        )
 
 
 @python_2_unicode_compatible
 class ProjectAttributeKey(models.Model):
     name = models.CharField(max_length=100, unique=True)
     display_name = models.CharField(max_length=100)
-    data_type = models.CharField(max_length=25, choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
+    data_type = models.CharField(max_length=25,
+                                 choices=PROJECT_ATTRIBUTE_DATA_TYPE_CHOICES)
 
     def __str__(self):
-        return u'"{}" ({}, {})'.format(self.display_name, self.name, self.data_type)
+        return (
+            u'"{}" ({}, {})'
+            .format(self.display_name, self.name, self.data_type)
+        )
 
 
 @python_2_unicode_compatible
@@ -414,7 +354,10 @@ class ProjectAttribute(models.Model):
             return None
 
     def __str__(self):
-        return u'({}, {}, project:{})'.format(self.key.name, self.value(), self.project)
+        return (
+            u'({}, {}, project:{})'
+            .format(self.key.name, self.value(), self.project)
+        )
 
 
 @python_2_unicode_compatible
@@ -425,9 +368,13 @@ class ProjectBlock(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return u'(name={}, n_projects={})'.format(self.name, self.projects.count())
+        return (
+            u'(name={}, n_projects={})'
+            .format(self.name, self.projects.count())
+        )
 
-    def run_meters(self, meter_class='EnergyEfficiencyMeter', meter_settings=None):
+    def run_meters(self, meter_class='EnergyEfficiencyMeter',
+                   meter_settings=None):
         """ Run meter for each project in the project block.
         """
         for project in self.projects.all():
@@ -436,7 +383,8 @@ class ProjectBlock(models.Model):
 
 @python_2_unicode_compatible
 class ConsumptionMetadata(models.Model):
-    interpretation = models.CharField(max_length=16, choices=INTERPRETATION_CHOICES)
+    interpretation = models.CharField(max_length=16,
+                                      choices=INTERPRETATION_CHOICES)
     unit = models.CharField(max_length=3, choices=UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
     label = models.CharField(max_length=140, blank=True, null=True)
@@ -452,7 +400,10 @@ class ConsumptionMetadata(models.Model):
 
     def __str__(self):
         n = len(self.records.all())
-        return u'ConsumptionMetadata(interpretation={}, unit={}, n={})'.format(self.interpretation, self.unit, n)
+        return (
+            u'ConsumptionMetadata(interpretation={}, unit={}, n={})'
+            .format(self.interpretation, self.unit, n)
+        )
 
 
 @python_2_unicode_compatible
@@ -463,13 +414,20 @@ class ConsumptionRecord(models.Model):
     estimated = models.BooleanField()
 
     def __str__(self):
-        return u'Consumption(start={}, value={}, estimated={})'.format(self.start, self.value, self.estimated)
+        return (
+            u'Consumption(start={}, value={}, estimated={})'
+            .format(self.start, self.value, self.estimated)
+        )
 
     class Meta:
         ordering = ['start']
 
     def eemeter_record(self):
-        return {"start": self.start, "value": self.value, "estimated": self.estimated }
+        return {
+            "start": self.start,
+            "value": self.value,
+            "estimated": self.estimated
+        }
 
     def value_clean(self):
         return _json_clean(self.value)
@@ -477,7 +435,7 @@ class ConsumptionRecord(models.Model):
 
 @python_2_unicode_compatible
 class ProjectResult(models.Model):
-    project = models.ForeignKey(Project)
+    project = models.ForeignKey(Project, related_name='project_result')
     eemeter_version = models.CharField(max_length=100)
     meter_class = models.CharField(max_length=250, blank=True, null=True)
     meter_settings = JSONField(null=True)
@@ -495,7 +453,8 @@ class ProjectResult(models.Model):
 
 @python_2_unicode_compatible
 class ModelingPeriod(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
+    project_result = models.ForeignKey(ProjectResult,
+                                       related_name='modeling_periods')
     interpretation = models.CharField(
         max_length=10,
         choices=(('BASELINE', 'Baseline'), ('REPORTING', 'Reporting'),)
@@ -509,13 +468,17 @@ class ModelingPeriod(models.Model):
             .format(self.interpretation, self.start_date, self.end_date)
         )
 
+
 @python_2_unicode_compatible
 class ModelingPeriodGroup(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
+    project_result = models.ForeignKey(ProjectResult,
+                                       related_name='modeling_period_groups')
+
+    # TODO: validate consistency of these
     baseline_period = models.ForeignKey(ModelingPeriod,
-        related_name='baseline_period')
+                                        related_name='baseline_groups')
     reporting_period = models.ForeignKey(ModelingPeriod,
-        related_name='reporting_period')
+                                         related_name='reporting_groups')
 
     def __str__(self):
         return (
@@ -526,7 +489,8 @@ class ModelingPeriodGroup(models.Model):
 
 @python_2_unicode_compatible
 class EnergyTraceModelResult(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
+    project_result = models.ForeignKey(
+        ProjectResult, related_name='energy_trace_model_results')
     energy_trace = models.ForeignKey(ConsumptionMetadata)
     modeling_period = models.ForeignKey(ModelingPeriod)
     status = models.CharField(max_length=1000, null=True)
@@ -534,7 +498,7 @@ class EnergyTraceModelResult(models.Model):
     rmse = models.FloatField(null=True, blank=True)
     cvrmse = models.FloatField(null=True, blank=True)
     model_serializiation = models.CharField(max_length=10000, null=True,
-        blank=True)
+                                            blank=True)
     upper = models.FloatField(null=True, blank=True)
     lower = models.FloatField(null=True, blank=True)
     n = models.FloatField(null=True, blank=True)
@@ -548,7 +512,8 @@ class EnergyTraceModelResult(models.Model):
 
 @python_2_unicode_compatible
 class Derivative(models.Model):
-    energy_trace_model_result = models.ForeignKey(EnergyTraceModelResult)
+    energy_trace_model_result = models.ForeignKey(EnergyTraceModelResult,
+                                                  related_name='derivatives')
     interpretation = models.CharField(max_length=100)
     value = models.FloatField()
     upper = models.FloatField()
@@ -564,8 +529,10 @@ class Derivative(models.Model):
 
 @python_2_unicode_compatible
 class DerivativeAggregation(models.Model):
-    project_result = models.ForeignKey(ProjectResult)
-    modeling_period_group = models.ForeignKey(ModelingPeriodGroup)
+    project_result = models.ForeignKey(
+        ProjectResult, related_name='derivative_aggregations')
+    modeling_period_group = models.ForeignKey(
+        ModelingPeriodGroup, related_name='derivative_aggregations')
     trace_interpretation = models.CharField(max_length=100)
     interpretation = models.CharField(max_length=100)
     baseline_value = models.FloatField()

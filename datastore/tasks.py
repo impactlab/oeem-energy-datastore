@@ -1,10 +1,11 @@
 from __future__ import absolute_import
-import logging, traceback
+import logging
+import traceback
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from datastore.models import Project, ProjectRun
+from datastore.models import ProjectRun
 
 
 logger = get_task_logger(__name__)

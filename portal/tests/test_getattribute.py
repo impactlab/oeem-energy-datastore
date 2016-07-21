@@ -2,6 +2,7 @@ from collections import namedtuple
 from django.test import TestCase
 from django.template import Context, Template
 
+
 class GetAttributeTestCase(TestCase):
 
     def render_template(self, string, context=None):
