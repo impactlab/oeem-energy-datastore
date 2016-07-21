@@ -5,25 +5,29 @@ from django.http import HttpResponse
 
 from datastore import services
 
+
 def index(request):
     data = services.overview()
     return render(request, 'index.html', data)
 
+
 def meter_runs(request):
     """Render the table of exported MeterRun results in html"""
-    data = services.meterruns_export()
-    return render(request, 'project_run_table.html', data)
+    data = services.projectresult_export()
+    return render(request, 'project_result_table.html', data)
+
 
 def csv_export(request):
     """Return a dump of all the MeterRuns in CSV form"""
     response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="meter_runs.csv"'
+    response["Content-Disposition"] = \
+        'attachment; filename="project_results.csv"'
 
-    data = services.meterruns_export()
+    data = services.projectresult_export()
 
     writer = csv.DictWriter(response, fieldnames=data['headers'])
     writer.writeheader()
-    for meter_run in data['meter_runs']:
-        writer.writerow(meter_run)
+    for project_result in data['project_results']:
+        writer.writerow(project_result)
 
     return response

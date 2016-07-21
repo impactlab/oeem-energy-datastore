@@ -7,7 +7,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 
-DEBUG = os.environ.get("DEBUG","false").lower() == "true"
+DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
 
 ALLOWED_HOSTS = ['*']
 
@@ -80,12 +80,13 @@ USE_TZ = True
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'staticfiles')
 STATIC_URL = '/static/'
+
 # Extra places for collectstatic to find static files.
-STATICFILES_DIRS = ( os.path.join(BASE_DIR,'staticfiles'),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'staticfiles'),)
 
 OAUTH2_PROVIDER = {
     'SCOPES': {'read': 'Read scope', 'write': 'Write scope'},
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 315360000, # 10 years
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 315360000,  # 10 years
 }
 
 REST_FRAMEWORK = {
@@ -104,7 +105,9 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s [%(name)s:%(lineno)s] %(module)s %(process)d %(thread)d %(message)s'
+            'format':
+                '%(asctime)s %(levelname)s [%(name)s:%(lineno)s]'
+                ' %(module)s %(process)d %(thread)d %(message)s'
         }
     },
     'filters': {
@@ -151,13 +154,15 @@ LOGGING = {
 
 BROKER_URL = os.environ.get("BROKER_URL", None)
 
-# Support pointing BROKER_URL at another environment variable by prefixing with $
+# Support pointing BROKER_URL at another environment variable by prefixing
+# with $
 if BROKER_URL is not None and BROKER_URL.startswith("$"):
     BROKER_URL = os.environ.get(BROKER_URL[1:], None)
 
 # defaults for development, should be overriden in production.
 BROKER_TRANSPORT = os.environ.get("BROKER_TRANSPORT", "memory")
-CELERY_ALWAYS_EAGER = os.environ.get("CELERY_ALWAYS_EAGER", "true").lower() == "true"
+CELERY_ALWAYS_EAGER = \
+    os.environ.get("CELERY_ALWAYS_EAGER", "true").lower() == "true"
 
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -175,4 +180,3 @@ if DEBUG:
     MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     DEBUG_TOOLBAR_PATCH_SETTINGS = False
     INTERNAL_IPS = ['0.0.0.0', '127.0.0.1', 'localhost']
-

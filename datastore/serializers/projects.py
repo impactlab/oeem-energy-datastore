@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from django.db.models import Manager
-
 from .. import models
 
 __all__ = (
@@ -23,19 +21,6 @@ BASIC_PROJECT_FIELDS = (
     'latitude',
     'longitude',
 )
-
-def _update_with_recent_meter_runs(data, meter_runs, serializer):
-
-    meter_runs_data = []
-
-    for k, v in meter_runs.items():
-        meter_run = serializer.to_representation(v["meter_run"])
-        meter_run.update({"interpretation": v["interpretation"]})
-        meter_runs_data.append(meter_run)
-
-    data.update({"recent_meter_runs": meter_runs_data})
-
-    return data
 
 
 class ProjectSerializer(serializers.ModelSerializer):

@@ -1,4 +1,4 @@
-from django.utils.timezone import now, timedelta
+from django.utils.timezone import now
 from django.test import Client, TestCase
 from django.contrib.auth.models import User
 from oauth2_provider.models import AccessToken, get_application_model
@@ -12,6 +12,7 @@ from datastore import models
 
 ApplicationModel = get_application_model()
 
+
 class OAuthTestCase(TestCase):
 
     @classmethod
@@ -23,7 +24,8 @@ class OAuthTestCase(TestCase):
         super(OAuthTestCase, cls).setUpTestData()
 
         cls.client = Client()
-        cls.user = User.objects.create_user("username", "user@example.com", "123456")
+        cls.user = User.objects.create_user(
+            "username", "user@example.com", "123456")
         cls.project_owner = cls.user.projectowner
 
         cls.project = models.Project.objects.create(
@@ -58,9 +60,10 @@ class OAuthTestCase(TestCase):
                 value = np.nan
             else:
                 value = 1.0
+            start = datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i)
             records.append(models.ConsumptionRecord(
                 metadata=cls.cm_ng,
-                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                start=start,
                 value=value,
                 estimated=False,
             ))
@@ -70,9 +73,13 @@ class OAuthTestCase(TestCase):
                 value = np.nan
             else:
                 value = 1
+            start = (
+                datetime(2011, 12, 1, tzinfo=pytz.UTC) +
+                timedelta(seconds=i*900)
+            )
             records.append(models.ConsumptionRecord(
                 metadata=cls.cm_e,
-                start=datetime(2011, 12, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
+                start=start,
                 value=value,
                 estimated=False,
             ))
@@ -111,9 +118,10 @@ class OAuthTestCase(TestCase):
                 value = np.nan
             else:
                 value = 1.0
+            start = datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i)
             records.append(models.ConsumptionRecord(
                 metadata=cls.cm_ng,
-                start=datetime(2011, 1, 1, tzinfo=pytz.UTC) + timedelta(days=i),
+                start=start,
                 value=value,
                 estimated=False,
             ))
@@ -123,9 +131,13 @@ class OAuthTestCase(TestCase):
                 value = np.nan
             else:
                 value = 1
+            start = (
+                datetime(2011, 12, 1, tzinfo=pytz.UTC) +
+                timedelta(seconds=i*900)
+            )
             records.append(models.ConsumptionRecord(
                 metadata=cls.cm_e,
-                start=datetime(2011, 12, 1, tzinfo=pytz.UTC) + timedelta(seconds=i*900),
+                start=start,
                 value=value,
                 estimated=False,
             ))
@@ -146,7 +158,6 @@ class OAuthTestCase(TestCase):
             expires=now() + timedelta(days=365),
             scope="read write"
         )
-
 
     @classmethod
     def tearDownClass(cls):
@@ -169,4 +180,5 @@ class OAuthTestCase(TestCase):
                                 Authorization="Bearer " + "tokstr")
 
     def get(self, url, data=None):
-        return self.client.get(url, Authorization="Bearer " + "tokstr", data=data)
+        return self.client.get(
+            url, Authorization="Bearer " + "tokstr", data=data)

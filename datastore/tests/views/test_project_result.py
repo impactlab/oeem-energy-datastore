@@ -1,41 +1,21 @@
-from django.utils.timezone import now, timedelta
-from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
-from oauth2_provider.models import AccessToken, get_application_model
+from .shared import OAuthTestCase
+
 from datetime import datetime
+
 import pytz
+
 from datastore.services import create_project
 
-ApplicationModel = get_application_model()
 
+class ProjectAPITestCase(OAuthTestCase):
 
-class Command(BaseCommand):
-    help = "Initialize the datastore for development"
+    @classmethod
+    def setUpTestData(cls):
+        super(ProjectAPITestCase, cls).setUpTestData()
 
-    def handle(self, *args, **options):
-        # create a superuser
-        user = User.objects.create_superuser('demo', 'demo@example.com',
-                                             'demo-password')
-        user.save()
-
-        app = ApplicationModel.objects.create(
-            name='app',
-            client_type=ApplicationModel.CLIENT_CONFIDENTIAL,
-            authorization_grant_type=ApplicationModel.GRANT_CLIENT_CREDENTIALS,
-            user=user
-        )
-
-        AccessToken.objects.create(
-            user=user,
-            token='tokstr',
-            application=app,
-            expires=now() + timedelta(days=365),
-            scope="read write"
-        )
-
-        create_project(spec={
-            "project_id": "ABC",
-            "project_owner": user.projectowner,
+        cls.project = create_project(spec={
+            "project_id": "BCDE",
+            "project_owner": cls.project_owner,
             "baseline_period_end": datetime(2012, 1, 1, tzinfo=pytz.UTC),
             "reporting_period_start": datetime(2012, 2, 1, tzinfo=pytz.UTC),
             "zipcode": "91104",
@@ -102,3 +82,80 @@ class Command(BaseCommand):
                 },
             ],
         })
+        cls.project.run_meter()
+
+    def test_project_result_read(self):
+        response = self.get('/api/v1/project_results/')
+        assert response.status_code == 200
+        project_result = response.data[0]
+        assert list(project_result.keys()) == [
+            'id',
+            'eemeter_version',
+            'meter_class',
+            'meter_settings',
+            'modeling_periods',
+            'modeling_period_groups',
+            'derivative_aggregations',
+            'energy_trace_model_results',
+            'added',
+            'updated',
+        ]
+
+        modeling_period = project_result['modeling_periods'][0]
+        assert list(modeling_period.keys()) == [
+            'id',
+            'interpretation',
+            'start_date',
+            'end_date',
+        ]
+
+        modeling_period_group = project_result['modeling_period_groups'][0]
+        assert list(modeling_period_group.keys()) == [
+            'id',
+            'baseline_period',
+            'reporting_period',
+        ]
+
+        derivative_aggregation = project_result['derivative_aggregations'][0]
+        assert list(derivative_aggregation.keys()) == [
+            'id',
+            'modeling_period_group',
+            'trace_interpretation',
+            'interpretation',
+            'baseline_value',
+            'baseline_upper',
+            'baseline_lower',
+            'baseline_n',
+            'reporting_value',
+            'reporting_upper',
+            'reporting_lower',
+            'reporting_n',
+        ]
+
+        energy_trace_model_result = \
+            project_result['energy_trace_model_results'][0]
+        assert list(energy_trace_model_result.keys()) == [
+            'id',
+            'project_result',
+            'energy_trace',
+            'modeling_period',
+            'derivatives',
+            'status',
+            'r2',
+            'rmse',
+            'cvrmse',
+            'model_serializiation',
+            'upper',
+            'lower',
+            'n',
+        ]
+
+        derivative = energy_trace_model_result['derivatives'][0]
+        assert list(derivative.keys()) == [
+            'id',
+            'interpretation',
+            'value',
+            'upper',
+            'lower',
+            'n',
+        ]

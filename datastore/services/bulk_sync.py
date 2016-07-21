@@ -10,16 +10,19 @@ except ImportError:
 
 from django.db import connection
 
+
 def success_response():
     return ({
         "status": "success"
     }, 200)
+
 
 def error_response(message="Error attempting to sync"):
     return ({
         "status": "error",
         "message": message
     }, 400)
+
 
 def bulk_sync(records, fields, model_class, keys):
     """
@@ -92,7 +95,8 @@ def bulk_sync(records, fields, model_class, keys):
       CREATE TEMPORARY TABLE {tmp_tablename}({schema_statement});
     """.format(tmp_tablename=tmp_tablename, schema_statement=schema_statement)
 
-    # Write the request data to an in-memory CSV file for a subsequent Postgres COPY
+    # Write the request data to an in-memory CSV file for a subsequent
+    # Postgres COPY
     infile = StringIO()
     fieldnames = records[0].keys()
     writer = csv.DictWriter(infile, fieldnames=fieldnames)
@@ -102,19 +106,24 @@ def bulk_sync(records, fields, model_class, keys):
 
     # Build SQL statement for upsert from temporary table to real table
     update_schema_statement = ",".join([
-      "{name} = {tmp_tablename}.{name}".format(name=column['name'], tmp_tablename=tmp_tablename) for column in schema
+        "{name} = {tmp_tablename}.{name}"
+        .format(name=column['name'], tmp_tablename=tmp_tablename)
+        for column in schema
     ])
 
     insert_columns = ",".join([
-      column['name'] for column in schema
+        column['name'] for column in schema
     ])
 
     insert_schema_statement = ",".join([
-      "{tmp_tablename}.{name}".format(name=column['name'], tmp_tablename=tmp_tablename) for column in schema
+        "{tmp_tablename}.{name}"
+        .format(name=column['name'], tmp_tablename=tmp_tablename)
+        for column in schema
     ])
 
     key_statement = " AND ".join([
-        "{tablename}.{key} = {tmp_tablename}.{key}".format(tablename=tablename, tmp_tablename=tmp_tablename, key=key)
+        "{tablename}.{key} = {tmp_tablename}.{key}"
+        .format(tablename=tablename, tmp_tablename=tmp_tablename, key=key)
         for key in keys
     ])
 
@@ -149,7 +158,8 @@ def bulk_sync(records, fields, model_class, keys):
         cursor.execute(create_tmp_table_statement)
 
         # Load data into temporary table from CSV
-        cursor.copy_from(file=infile, table=tmp_tablename, sep=',', columns=fieldnames, null="")
+        cursor.copy_from(file=infile, table=tmp_tablename, sep=',',
+                         columns=fieldnames, null="")
 
         # Upsert it into the actual table
         cursor.execute(upsert_statement)
