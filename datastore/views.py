@@ -181,7 +181,7 @@ class ConsumptionMetadataFilter(django_filters.FilterSet):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['interpretation', 'unit', 'project']
+        fields = ['interpretation', 'unit', 'project', 'label']
 
 
 class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
@@ -211,7 +211,8 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
                 {
                     "project_project_id": "PROJECT_A",
                     "interpretation": "E_C_S",
-                    "unit": "KWH"
+                    "unit": "KWH",
+                    "label": "client-specific-label-123"
                 },
                 ...
             ]
@@ -223,31 +224,29 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             "unit",
         ]
 
-        self.project_dict = {
-            p.project_id: p for p in models.Project.objects.all()
-        }
+        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
 
     def _find_foreign_objects(self, record):
-
         project = self.project_dict.get(str(record["project_project_id"]))
         if project is None:
             return {
                 "status": "error - no Project found",
                 "project_project_id": record["project_project_id"],
             }
-
         return {"project": project}
 
     def _get_fields(self, record, foreign_objects):
         return {
             "project": foreign_objects["project"],
             "interpretation": record["interpretation"],
+            "label": record["label"],
         }
 
     def _error_fields(self, record, foreign_objects):
         return {
             "project": record["project_project_id"],
             "interpretation": record["interpretation"],
+            "label": record["label"],
         }
 
     def _parse_record(self, record, foreign_objects):
