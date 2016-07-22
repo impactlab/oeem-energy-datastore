@@ -171,10 +171,7 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data[0]['reporting_period_start'] == \
             '2014-01-01T00:00:00Z'
         assert response.data[0]['reporting_period_end'] is None
-        assert response.data[0]['weather_station'] == 'STATION'
         assert response.data[0]['zipcode'] == 'ZIPCODE'
-        assert response.data[0]['latitude'] == 0.0
-        assert response.data[0]['longitude'] == 0.0
         assert response.data[0]['status'] == 'created'
         assert isinstance(response.data[0]['id'], int)
 
@@ -200,10 +197,7 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data[0]['reporting_period_start'] == \
             '2014-01-01T00:00:00Z'
         assert response.data[0]['reporting_period_end'] is None
-        assert response.data[0]['weather_station'] == 'STATION'
         assert response.data[0]['zipcode'] == 'ZIPCODE'
-        assert response.data[0]['latitude'] == 0.0
-        assert response.data[0]['longitude'] == 0.0
         assert response.data[0]['status'] == 'unchanged - same record'
         assert isinstance(response.data[0]['id'], int)
 
@@ -245,31 +239,10 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data[0]['reporting_period_start'] == \
             '2014-01-02T00:00:00Z'
         assert response.data[0]['reporting_period_end'] is None
-        assert response.data[0]['weather_station'] == 'STATION'
         assert response.data[0]['zipcode'] == 'ZIPCODE'
-        assert response.data[0]['latitude'] == 0.0
-        assert response.data[0]['longitude'] == 0.0
         assert response.data[0]['status'] == 'updated'
         assert isinstance(response.data[0]['id'], int)
 
-        # update invalid
-        response = self.post('/api/v1/projects/sync/', [{
-            "project_owner_id": self.project_owner.id,
-            "project_id": "PROJECT_ID",
-            "baseline_period_start": None,
-            "baseline_period_end": "2014-01-01T00:00:00+00:00",
-            "reporting_period_start": "2014-01-01T00:00:00+00:00",
-            "reporting_period_end": None,
-            "zipcode": "ZIPCODE",
-            "weather_station": "STATION",
-            "latitude": "NOT A NUMBER",
-            "longitude": 0.0,
-        }])
-
-        response.data[0]['message'] == \
-            "could not convert string to float: 'NOT A NUMBER'"
-        response.data[0]['project_id'] == 'PROJECT_ID'
-        response.data[0]['status'] == 'error - bad field value - update'
 
     def test_project_read_no_query_params(self):
         data = self.get(
