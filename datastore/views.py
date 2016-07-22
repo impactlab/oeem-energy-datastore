@@ -181,7 +181,7 @@ class ConsumptionMetadataFilter(django_filters.FilterSet):
 
     class Meta:
         model = models.ConsumptionMetadata
-        fields = ['interpretation', 'unit', 'project']
+        fields = ['interpretation', 'unit', 'project', 'label']
 
 
 class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
@@ -211,7 +211,8 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
                 {
                     "project_project_id": "PROJECT_A",
                     "interpretation": "E_C_S",
-                    "unit": "KWH"
+                    "unit": "KWH",
+                    "label": "client-specific-label-123"
                 },
                 ...
             ]
@@ -228,26 +229,26 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
         }
 
     def _find_foreign_objects(self, record):
-
         project = self.project_dict.get(str(record["project_project_id"]))
         if project is None:
             return {
                 "status": "error - no Project found",
                 "project_project_id": record["project_project_id"],
             }
-
         return {"project": project}
 
     def _get_fields(self, record, foreign_objects):
         return {
             "project": foreign_objects["project"],
             "interpretation": record["interpretation"],
+            "label": record["label"],
         }
 
     def _error_fields(self, record, foreign_objects):
         return {
             "project": record["project_project_id"],
             "interpretation": record["interpretation"],
+            "label": record["label"],
         }
 
     def _parse_record(self, record, foreign_objects):
@@ -396,7 +397,6 @@ class ProjectFilter(django_filters.FilterSet):
             'projectblock_or',
             'projects',
             'project_id',
-            'weather_station',
             'project_owner',
             'baseline_period_end',
             'reporting_period_start',
@@ -475,9 +475,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
                     "project_id": "ID_1",
                     "project_owner_id": 1,
                     "zipcode": "01234",
-                    "weather_station": "012345",
-                    "latitude": 89.0,
-                    "longitude": -42.0,
                     "baseline_period_end": datetime(2015, 1, 1),
                     "reporting_period_start": datetime(2015, 2, 1),
                 },
@@ -490,9 +487,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         self.attributes = [
             "project_owner_id",
             "zipcode",
-            "latitude",
-            "longitude",
-            "weather_station",
             "baseline_period_end",
             "reporting_period_start",
         ]
