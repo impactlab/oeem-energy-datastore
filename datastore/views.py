@@ -224,7 +224,9 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             "unit",
         ]
 
-        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
+        self.project_dict = {
+            p.project_id: p for p in models.Project.objects.all()
+        }
 
     def _find_foreign_objects(self, record):
         project = self.project_dict.get(str(record["project_project_id"]))
