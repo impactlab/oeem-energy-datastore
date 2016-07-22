@@ -74,21 +74,11 @@ class Project(models.Model):
     reporting_period_start = models.DateTimeField(blank=True, null=True)
     reporting_period_end = models.DateTimeField(blank=True, null=True)
     zipcode = models.CharField(max_length=10, blank=True, null=True)
-    weather_station = models.CharField(max_length=10, blank=True, null=True)
-    latitude = models.FloatField(blank=True, null=True)
-    longitude = models.FloatField(blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return u'Project {}'.format(self.project_id)
-
-    @property
-    def lat_lng(self):
-        if self.latitude is not None and self.longitude is not None:
-            return (self.latitude, self.longitude)
-        else:
-            return None
 
     def eemeter_project(self):
         cm_set = self.consumptionmetadata_set.all()
@@ -140,11 +130,17 @@ class Project(models.Model):
         results = meter.evaluate(project, weather_source=weather_source,
                                  weather_normal_source=weather_normal_source)
 
+        weather_source_station = results['weather_source'].station
+        weather_normal_source_station = \
+            results['weather_normal_source'].station
+
         project_result = ProjectResult.objects.create(
             project=self,
             eemeter_version=get_version(),
             meter_class=meter_class,
             meter_settings=meter_settings,
+            weather_source_station=weather_source_station,
+            weather_normal_source_station=weather_normal_source_station,
         )
 
         modeling_period_mapping = {}
@@ -439,6 +435,10 @@ class ProjectResult(models.Model):
     eemeter_version = models.CharField(max_length=100)
     meter_class = models.CharField(max_length=250, blank=True, null=True)
     meter_settings = JSONField(null=True)
+    weather_source_station = models.CharField(
+        max_length=20, blank=True, null=True)
+    weather_normal_source_station = models.CharField(
+        max_length=20, blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

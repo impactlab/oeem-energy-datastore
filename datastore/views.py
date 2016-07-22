@@ -396,7 +396,6 @@ class ProjectFilter(django_filters.FilterSet):
             'projectblock_or',
             'projects',
             'project_id',
-            'weather_station',
             'project_owner',
             'baseline_period_end',
             'reporting_period_start',
@@ -475,9 +474,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
                     "project_id": "ID_1",
                     "project_owner_id": 1,
                     "zipcode": "01234",
-                    "weather_station": "012345",
-                    "latitude": 89.0,
-                    "longitude": -42.0,
                     "baseline_period_end": datetime(2015, 1, 1),
                     "reporting_period_start": datetime(2015, 2, 1),
                 },
@@ -490,9 +486,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
         self.attributes = [
             "project_owner_id",
             "zipcode",
-            "latitude",
-            "longitude",
-            "weather_station",
             "baseline_period_end",
             "reporting_period_start",
         ]

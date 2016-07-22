@@ -17,9 +17,6 @@ BASIC_PROJECT_FIELDS = (
     'reporting_period_start',
     'reporting_period_end',
     'zipcode',
-    'weather_station',
-    'latitude',
-    'longitude',
 )
 
 
