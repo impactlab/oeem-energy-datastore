@@ -36,9 +36,6 @@ class OAuthTestCase(TestCase):
             reporting_period_start=datetime(2012, 1, 2, tzinfo=pytz.UTC),
             reporting_period_end=None,
             zipcode="91104",
-            weather_station="722880",
-            latitude=0,
-            longitude=0,
         )
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(
@@ -94,9 +91,6 @@ class OAuthTestCase(TestCase):
             reporting_period_start=datetime(2012, 1, 2, tzinfo=pytz.UTC),
             reporting_period_end=None,
             zipcode="91104",
-            weather_station="722880",
-            latitude=0,
-            longitude=0,
         )
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(

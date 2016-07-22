@@ -21,9 +21,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "reporting_period_start": "2014-01-01T00:00:00+00:00",
             "reporting_period_end": "2014-01-01T00:00:00+00:00",
             "zipcode": "ZIPCODE",
-            "weather_station": "STATION",
-            "latitude": 0.0,
-            "longitude": 0.0,
         }
 
         cls.empty_project = models.Project.objects.create(
@@ -39,9 +36,6 @@ class ProjectAPITestCase(OAuthTestCase):
             reporting_period_start=datetime(2012, 1, 2, tzinfo=pytz.UTC),
             reporting_period_end=None,
             zipcode="91104",
-            weather_station="722880",
-            latitude=0,
-            longitude=0,
         )
 
         cls.cm_ng = models.ConsumptionMetadata.objects.create(
@@ -104,9 +98,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "2014-01-01T00:00:00Z"
         assert response.data['reporting_period_end'] == "2014-01-01T00:00:00Z"
         assert response.data['zipcode'] == "ZIPCODE"
-        assert response.data['weather_station'] == "STATION"
-        assert response.data['latitude'] == 0.0
-        assert response.data['longitude'] == 0.0
 
         project_id = response.data['id']
         response = self.get('/api/v1/projects/{}/'.format(project_id))
@@ -122,9 +113,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "2014-01-01T00:00:00Z"
         assert response.data['reporting_period_end'] == "2014-01-01T00:00:00Z"
         assert response.data['zipcode'] == "ZIPCODE"
-        assert response.data['weather_station'] == "STATION"
-        assert response.data['latitude'] == 0.0
-        assert response.data['longitude'] == 0.0
 
     def test_project_sync_missing_field(self):
 
@@ -136,9 +124,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "baseline_period_end": "2014-01-01T00:00:00+00:00",
             "reporting_period_start": "2014-01-01T00:00:00+00:00",
             "reporting_period_end": "2014-01-01T00:00:00+00:00",
-            "weather_station": "STATION",
-            "latitude": 0.0,
-            "longitude": 0.0,
         }])
 
         assert response.data == [{
@@ -158,9 +143,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "reporting_period_start": "2014-01-01T00:00:00+00:00",
             "reporting_period_end": "2014-01-01T00:00:00+00:00",
             "zipcode": "ZIPCODE",
-            "weather_station": "STATION",
-            "latitude": 0.0,
-            "longitude": 0.0,
         }])
 
         assert response.data[0]['project_owner'] == self.project_owner.id
@@ -184,9 +166,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "reporting_period_start": "2014-01-01T00:00:00+00:00",
             "reporting_period_end": "2014-01-01T00:00:00+00:00",
             "zipcode": "ZIPCODE",
-            "weather_station": "STATION",
-            "latitude": 0.0,
-            "longitude": 0.0,
         }])
 
         assert response.data[0]['project_owner'] == self.project_owner.id
@@ -210,9 +189,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "reporting_period_start": "2014-01-01T00:00:00+00:00",
             "reporting_period_end": "2014-01-02T00:00:00+00:00",
             "zipcode": "ZIPCODE",
-            "weather_station": "STATION",
-            "latitude": 0.0,
-            "longitude": 0.0,
         }])
 
         assert response.data[0]['status'] == 'unchanged - same record'
@@ -226,9 +202,6 @@ class ProjectAPITestCase(OAuthTestCase):
             "reporting_period_start": "2014-01-02T00:00:00+00:00",
             "reporting_period_end": "2014-01-02T00:00:00+00:00",
             "zipcode": "ZIPCODE",
-            "weather_station": "STATION",
-            "latitude": 0.0,
-            "longitude": 0.0,
         }])
 
         assert response.data[0]['project_owner'] == self.project_owner.id
@@ -242,7 +215,6 @@ class ProjectAPITestCase(OAuthTestCase):
         assert response.data[0]['zipcode'] == 'ZIPCODE'
         assert response.data[0]['status'] == 'updated'
         assert isinstance(response.data[0]['id'], int)
-
 
     def test_project_read_no_query_params(self):
         data = self.get(
@@ -259,9 +231,6 @@ class ProjectAPITestCase(OAuthTestCase):
             'reporting_period_start',
             'reporting_period_end',
             'zipcode',
-            'weather_station',
-            'latitude',
-            'longitude',
         ])
 
         assert fields == set(data.keys())
@@ -281,9 +250,6 @@ class ProjectAPITestCase(OAuthTestCase):
             'reporting_period_start',
             'reporting_period_end',
             'zipcode',
-            'weather_station',
-            'latitude',
-            'longitude',
             'attributes',
         ])
 

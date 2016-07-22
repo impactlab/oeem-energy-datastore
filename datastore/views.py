@@ -224,7 +224,9 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             "unit",
         ]
 
-        self.project_dict = {p.project_id: p for p in models.Project.objects.all()}
+        self.project_dict = {
+            p.project_id: p for p in models.Project.objects.all()
+        }
 
     def _find_foreign_objects(self, record):
         project = self.project_dict.get(str(record["project_project_id"]))
@@ -395,7 +397,6 @@ class ProjectFilter(django_filters.FilterSet):
             'projectblock_or',
             'projects',
             'project_id',
-            'weather_station',
             'project_owner',
             'baseline_period_end',
             'reporting_period_start',
@@ -474,9 +475,6 @@ class ProjectViewSet(SyncMixin, viewsets.ModelViewSet):
                     "project_id": "ID_1",
                     "project_owner_id": 1,
                     "zipcode": "01234",
-                    "weather_station": "012345",
-                    "latitude": 89.0,
-                    "longitude": -42.0,
                     "baseline_period_end": datetime(2015, 1, 1),
                     "reporting_period_start": datetime(2015, 2, 1),
                 },

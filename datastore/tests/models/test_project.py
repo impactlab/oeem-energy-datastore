@@ -114,17 +114,11 @@ class ProjectTestCase(TestCase):
             "reporting_period_start",
             "reporting_period_end",
             "zipcode",
-            "weather_station",
-            "latitude",
-            "longitude",
             "added",
             "updated",
         ]
         for attribute in attributes:
             assert hasattr(self.project, attribute)
-
-    def test_lat_lng(self):
-        assert self.project.lat_lng is None
 
     def test_eemeter_project(self):
 
@@ -137,7 +131,7 @@ class ProjectTestCase(TestCase):
             weather_source=self.weather_source,
             weather_normal_source=self.weather_normal_source)
 
-        assert project_result.eemeter_version == "0.4.0"
+        assert project_result.eemeter_version == "0.4.1"
         assert project_result.meter_class == "EnergyEfficiencyMeter"
         assert isinstance(project_result.project_id, int)
         assert project_result.meter_settings is None
