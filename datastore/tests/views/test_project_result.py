@@ -90,6 +90,7 @@ class ProjectAPITestCase(OAuthTestCase):
         project_result = response.data[0]
         assert list(project_result.keys()) == [
             'id',
+            'project',
             'eemeter_version',
             'meter_class',
             'meter_settings',
