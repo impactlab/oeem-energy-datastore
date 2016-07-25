@@ -26,6 +26,7 @@ INSTALLED_APPS = (
     'datastore',
     'djcelery',
     'portal',
+    'registry',
 )
 
 MIDDLEWARE_CLASSES = (
