@@ -1,26 +1,15 @@
-"""oeem_energy_datastore URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/1.8/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
-Including another URLconf
-    1. Add an import:  from blog import urls as blog_urls
-    2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
-"""
 import os
+
 from django.views.generic.base import RedirectView
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf import settings
+
 from rest_framework.routers import DefaultRouter
+
 from datastore import views as datastore_views
 from portal import views as portal_views
+from registry import views as registry_views
 from letsencrypt import views as letsencrypt_views
 
 router = DefaultRouter()
@@ -84,6 +73,8 @@ urlpatterns = [
         name='project_results_table'),
     url(r'^portal/csv_export/$', portal_views.csv_export,
         name='portal_csv_export'),
+    url(r'^registry/summary/$', registry_views.RegistrySummary.as_view(),
+        name='registry_summary'),
     url(r'^\.well-known/acme-challenge/%s$' % challenge_slug,
         letsencrypt_views.challenge, name='letsencrypt_challenge'),
     url(r'^$', RedirectView.as_view(url='admin/', permanent=False),
