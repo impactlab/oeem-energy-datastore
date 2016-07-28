@@ -8,6 +8,7 @@ class ConnectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Connection
         fields = (
+            'id',
             'projects',
             'token',
         )

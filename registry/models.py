@@ -2,8 +2,11 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 import uuid
+from collections import OrderedDict
 
 from datastore import models as datastore_models
+from oeem_energy_datastore import VERSION
+
 
 
 @python_2_unicode_compatible
@@ -33,42 +36,44 @@ class Connection(models.Model):
             .prefetch_related(
                 'project',
                 'project__project_results',
-                'project__project_results__derivative_aggregations')
+                'project__project_results__derivative_aggregations'
+            ).order_by('-pk')
 
         projects = []
         for membership in connection_memberships:
 
             project_results = membership.project.project_results\
-                .order_by('-id')
+                .order_by('-pk')
             if len(project_results) == 0:
                 continue
             project_result = project_results[0]
 
             summaries = [
-                {
-                    "derivative_interpretation": agg.interpretation,
-                    "trace_interpretation": agg.trace_interpretation,
-                    "baseline_value": agg.baseline_value,
-                    "baseline_upper": agg.baseline_upper,
-                    "baseline_lower": agg.baseline_lower,
-                    "reporting_value": agg.reporting_value,
-                    "reporting_upper": agg.reporting_upper,
-                    "reporting_lower": agg.reporting_lower,
-                }
+                OrderedDict([
+                    ("trace_interpretation", agg.trace_interpretation),
+                    ("derivative_interpretation", agg.interpretation),
+                    ("baseline_value", agg.baseline_value),
+                    ("baseline_upper", agg.baseline_upper),
+                    ("baseline_lower", agg.baseline_lower),
+                    ("reporting_value", agg.reporting_value),
+                    ("reporting_upper", agg.reporting_upper),
+                    ("reporting_lower", agg.reporting_lower),
+                ])
                 for agg in project_result.derivative_aggregations.all()
             ]
-            project_data = {
-                "registry_id": membership.registry_id,
-                "eemeter_version": project_result.eemeter_version,
-                "meter_class": project_result.meter_class,
-                "meter_settings": project_result.meter_settings,
-                "summaries": summaries,
-            }
+            project_data = OrderedDict([
+                ("registry_id", membership.registry_id),
+                ("eemeter_version", project_result.eemeter_version),
+                ("meter_class", project_result.meter_class),
+                ("meter_settings", project_result.meter_settings),
+                ("summaries", summaries),
+            ])
             projects.append(project_data)
 
-        return {
-            "projects": projects,
-        }
+        return OrderedDict([
+            ("datastore_version", VERSION),
+            ("projects", projects),
+        ])
 
 
 @python_2_unicode_compatible

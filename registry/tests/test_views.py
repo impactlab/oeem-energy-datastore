@@ -53,6 +53,7 @@ class ConnectionViewSetTestCase(TestCase):
             HTTP_AUTHORIZATION='Bearer tokstr')
 
         data = response.json()
+        assert 'id' in data
         assert data['token'] == '00000000-0000-0000-0000-000000000000'
         assert data['projects'] == []
 
@@ -61,6 +62,7 @@ class ConnectionViewSetTestCase(TestCase):
             HTTP_AUTHORIZATION='Bearer tokstr')
 
         data = response.json()[0]
+        assert 'id' in data
         assert data['token'] == '00000000-0000-0000-0000-000000000000'
         assert data['projects'] == []
 
@@ -89,6 +91,7 @@ class ConnectionViewSetTestCase(TestCase):
             HTTP_AUTHORIZATION='Bearer tokstr')
 
         data = response.json()
+        assert 'id' in data
         assert len(data['token']) == 36
         assert data['projects'] == [project.pk]
 
@@ -97,6 +100,7 @@ class ConnectionViewSetTestCase(TestCase):
             HTTP_AUTHORIZATION='Bearer tokstr')
 
         data = response.json()[0]
+        assert 'id' in data
         assert len(data['token']) == 36
         assert data['projects'] == [project.pk]
 
@@ -139,6 +143,7 @@ class RegistrySummaryViewTestCase(TestCase):
 
         data = response.json()
         projects = data['projects']
+        assert 'datastore_version' in data
         assert len(projects) == 1
         project = projects[0]
         assert len(project['registry_id']) == 36
