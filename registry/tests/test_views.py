@@ -64,6 +64,42 @@ class ConnectionViewSetTestCase(TestCase):
         assert data['token'] == '00000000-0000-0000-0000-000000000000'
         assert data['projects'] == []
 
+    def test_with_projects(self):
+        response = self.client.get(
+            '/api/v1/registry/connections/',
+            HTTP_AUTHORIZATION='Bearer tokstr')
+
+        data = response.json()
+        assert data == []
+
+        project = create_project(spec={
+            "project_id": uuid.uuid4(),
+            "project_owner": self.user.projectowner,
+            "baseline_period_end": datetime(2012, 1, 1, tzinfo=pytz.UTC),
+            "reporting_period_start": datetime(2012, 2, 1, tzinfo=pytz.UTC),
+            "zipcode": "91104",
+            "traces": [],
+        })
+
+        response = self.client.post(
+            '/api/v1/registry/connections/',
+            data={
+                'projects': [project.pk],
+            },
+            HTTP_AUTHORIZATION='Bearer tokstr')
+
+        data = response.json()
+        assert len(data['token']) == 36
+        assert data['projects'] == [project.pk]
+
+        response = self.client.get(
+            '/api/v1/registry/connections/',
+            HTTP_AUTHORIZATION='Bearer tokstr')
+
+        data = response.json()[0]
+        assert len(data['token']) == 36
+        assert data['projects'] == [project.pk]
+
 
 class RegistrySummaryViewTestCase(TestCase):
 
