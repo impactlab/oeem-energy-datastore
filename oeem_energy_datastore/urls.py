@@ -59,6 +59,11 @@ router.register(
     datastore_views.ProjectResultViewSet,
     base_name='project_result')
 
+router.register(
+    r'registry/connections',
+    registry_views.ConnectionViewSet,
+    base_name='connection')
+
 challenge_slug = os.environ.get("CHALLENGE_SLUG")
 
 urlpatterns = [

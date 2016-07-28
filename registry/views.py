@@ -1,12 +1,23 @@
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import AnonymousUser
 
+from oauth2_provider.ext.rest_framework import TokenHasReadWriteScope
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import authentication, permissions
 from rest_framework import exceptions
+from rest_framework import viewsets
 
-from .models import Connection
+from registry import models
+from registry import serializers
+
+
+class ConnectionViewSet(viewsets.ModelViewSet):
+
+    permission_classes = [permissions.IsAuthenticated, TokenHasReadWriteScope]
+    serializer_class = serializers.ConnectionSerializer
+    queryset = models.Connection.objects.all().order_by('pk')
 
 
 class RegistryConnectionTokenAuthentication(authentication.BaseAuthentication):
@@ -36,8 +47,8 @@ class RegistryConnectionTokenAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed(msg)
 
         try:
-            connection = Connection.objects.get(token=token)
-        except Connection.DoesNotExist:
+            connection = models.Connection.objects.get(token=token)
+        except models.Connection.DoesNotExist:
             raise exceptions.AuthenticationFailed(_('Invalid token.'))
 
         return (AnonymousUser(), connection)
