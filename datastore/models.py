@@ -431,7 +431,7 @@ class ConsumptionRecord(models.Model):
 
 @python_2_unicode_compatible
 class ProjectResult(models.Model):
-    project = models.ForeignKey(Project, related_name='project_result')
+    project = models.ForeignKey(Project, related_name='project_results')
     eemeter_version = models.CharField(max_length=100)
     meter_class = models.CharField(max_length=250, blank=True, null=True)
     meter_settings = JSONField(null=True)
