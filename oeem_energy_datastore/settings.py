@@ -129,9 +129,8 @@ LOGGING = {
         'logfile': {
             'level': 'DEBUG',
             'filters': ['require_debug_false'],
-            'class': 'logging.handlers.WatchedFileHandler',
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
-            'filename': os.environ.get("DJANGO_LOGFILE", "django.log"),
         },
         'celery': {
             'level': 'DEBUG',
