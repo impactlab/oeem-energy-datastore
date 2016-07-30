@@ -1,4 +1,4 @@
-import csv
+import pandas as pd
 
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -25,9 +25,7 @@ def csv_export(request):
 
     data = services.projectresult_export()
 
-    writer = csv.DictWriter(response, fieldnames=data['headers'])
-    writer.writeheader()
-    for project_result in data['project_results']:
-        writer.writerow(project_result)
+    df = pd.DataFrame(data['project_results'])
+    df.to_csv(response, columns=data['headers'], index=False)
 
     return response

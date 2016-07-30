@@ -98,11 +98,14 @@ def projectresult_export():
             "modeling_period_groups__reporting_period")
 
     projectresults_serialized = []
+    headers = set()
     for pr in project_results:
-        projectresults_serialized.extend(serialize(pr))
+        serialized = serialize(pr)
+        for item in serialized:
+            headers.update(item.keys())
+        projectresults_serialized.extend(serialized)
 
-    headers = []
-    if len(projectresults_serialized) > 0:
-        headers = sorted(list(projectresults_serialized[0].keys()))
-
-    return {'project_results': projectresults_serialized, 'headers': headers}
+    return {
+        'project_results': projectresults_serialized,
+        'headers': sorted(headers)
+    }

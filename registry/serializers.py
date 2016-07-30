@@ -17,7 +17,8 @@ class ConnectionSerializer(serializers.ModelSerializer):
         projects = self.initial_data.pop('projects', [])
         connection = models.Connection.objects.create(**validated_data)
         models.ConnectionMembership.objects.bulk_create([
-            models.ConnectionMembership(project_id=project_id, connection=connection)
+            models.ConnectionMembership(project_id=project_id,
+                                        connection=connection)
             for project_id in projects
         ])
         return connection

@@ -8,7 +8,6 @@ from datastore import models as datastore_models
 from oeem_energy_datastore import VERSION
 
 
-
 @python_2_unicode_compatible
 class Connection(models.Model):
     projects = models.ManyToManyField(datastore_models.Project,

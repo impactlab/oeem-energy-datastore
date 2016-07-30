@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from oauth2_provider.models import AccessToken, get_application_model
 import pytz
 
-from registry.models import Connection, ConnectionMembership
+from registry.models import Connection
 from datastore.services import create_project
 
 ApplicationModel = get_application_model()
