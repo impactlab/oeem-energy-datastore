@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 import os
+import sys
+
 import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -126,11 +128,12 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
-        'logfile': {
+        'stream': {
             'level': 'DEBUG',
             'filters': ['require_debug_false'],
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'stream': sys.stdout,
         },
         'celery': {
             'level': 'DEBUG',
@@ -142,7 +145,7 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'logfile'],
+            'handlers': ['console', 'stream'],
             'level': 'DEBUG',
         },
         'celery': {
