@@ -129,7 +129,7 @@ LOGGING = {
             'formatter': 'verbose'
         },
         'stream': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'filters': ['require_debug_false'],
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
