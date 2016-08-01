@@ -62,6 +62,7 @@ class Connection(models.Model):
             ]
             project_data = OrderedDict([
                 ("registry_id", membership.registry_id),
+                ("project_result_pk", project_result.pk),
                 ("eemeter_version", project_result.eemeter_version),
                 ("meter_class", project_result.meter_class),
                 ("meter_settings", project_result.meter_settings),

@@ -99,8 +99,8 @@ class Project(models.Model):
         return ZIPCodeSite(zipcode=self.zipcode)
 
     def run_meter(self, meter_class='EnergyEfficiencyMeter',
-                  meter_settings=None, weather_source=None,
-                  weather_normal_source=None):
+                  meter_settings=None, project_run=None,
+                  weather_source=None, weather_normal_source=None):
         """
         If possible, run the meter specified by meter_class.
 
@@ -136,6 +136,7 @@ class Project(models.Model):
 
         project_result = ProjectResult.objects.create(
             project=self,
+            project_run=project_run,
             eemeter_version=get_version(),
             meter_class=meter_class,
             meter_settings=meter_settings,
@@ -432,6 +433,7 @@ class ConsumptionRecord(models.Model):
 @python_2_unicode_compatible
 class ProjectResult(models.Model):
     project = models.ForeignKey(Project, related_name='project_results')
+    project_run = models.ForeignKey(ProjectRun, blank=True, null=True)
     eemeter_version = models.CharField(max_length=100)
     meter_class = models.CharField(max_length=250, blank=True, null=True)
     meter_settings = JSONField(null=True)
