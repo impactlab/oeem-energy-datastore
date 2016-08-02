@@ -48,7 +48,7 @@ class RegistryConnectionTokenAuthentication(authentication.BaseAuthentication):
 
         try:
             connection = models.Connection.objects.get(token=token)
-        except models.Connection.DoesNotExist:
+        except:
             raise exceptions.AuthenticationFailed(_('Invalid token.'))
 
         return (AnonymousUser(), connection)
