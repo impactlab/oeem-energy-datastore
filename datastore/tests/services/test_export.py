@@ -88,6 +88,6 @@ class ExportServiceTestCase(TestCase):
     def test_export(self):
         result = projectresult_export()
         headers = result['headers']
-        assert len(headers) == 87
+        assert len(headers) == 88
         project_results = result['project_results']
         assert len(project_results) == 1

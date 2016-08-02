@@ -10,6 +10,7 @@ def serialize(project_result):
 
         project_result_attrs = [
             'id',
+            ('project_run', 'id'),
             'eemeter_version',
             'meter_class',
         ]
@@ -56,7 +57,17 @@ def serialize(project_result):
             resp['project__' + attr] = getattr(project, attr)
 
         for attr in project_result_attrs:
-            resp['project_result__' + attr] = getattr(project_result, attr)
+            attr_name = ""
+            if isinstance(attr, tuple):
+                attribute = project_result
+                for attr_ in attr:
+                    if attribute is None:
+                        break
+                    attribute = getattr(attribute, attr_)
+                    attr_name += "__" + attr_
+                resp['project_result' + attr_name] = attribute
+            else:
+                resp['project_result__' + attr] = getattr(project_result, attr)
 
         for attr in modeling_period_group_attrs:
             resp['modeling_period_group__' + attr] = \
