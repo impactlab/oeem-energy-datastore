@@ -139,6 +139,10 @@ LOGGING = {
             'handlers': ['console', 'stream'],
             'level': 'DEBUG',
         },
+        'eemeter': {
+            'handlers': ['console', 'stream'],
+            'level': 'DEBUG',
+        },
         'celery': {
             'handlers': ['console', 'stream'],
             'level': 'DEBUG',
