@@ -52,6 +52,8 @@ def serialize(project_result):
 
         energy_trace_model_result_attrs = [
             'id',
+            'energy_trace_id',
+            'modeling_period_id',
             'status',
             'r2',
             'rmse',
@@ -110,12 +112,9 @@ def serialize(project_result):
         energy_trace_model_results = project_result.energy_trace_model_results\
             .order_by('energy_trace_id')\
             .order_by('modeling_period_id')
-        for energy_trace_model_result in energy_trace_model_results:
-            prefix = 'energy_trace_model_result__'
-            for attr in ['energy_trace_id', 'modeling_period_id']:
-                prefix += "{}-{}__".format(
-                    attr, getattr(energy_trace_model_result, attr)
-                )
+        for i, energy_trace_model_result in \
+                enumerate(energy_trace_model_results):
+            prefix = 'energy_trace_model_result-{}__'.format(i)
             for attr in energy_trace_model_result_attrs:
                 resp[prefix + attr] = getattr(energy_trace_model_result, attr)
 
