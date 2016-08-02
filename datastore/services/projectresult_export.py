@@ -131,7 +131,8 @@ def projectresult_export():
             "energy_trace_model_results",
             "modeling_period_groups",
             "modeling_period_groups__baseline_period",
-            "modeling_period_groups__reporting_period")
+            "modeling_period_groups__reporting_period")\
+        .order_by('project', '-id').distinct('project')
 
     projectresults_serialized = []
     headers = set()
