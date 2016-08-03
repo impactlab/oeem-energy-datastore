@@ -17,7 +17,7 @@ def meter_runs(request):
     return render(request, 'project_result_table.html', data)
 
 
-def csv_export(request):
+def projectresult_export_csv(request):
     """Return a dump of all the MeterRuns in CSV form"""
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = \
@@ -26,6 +26,20 @@ def csv_export(request):
     data = services.projectresult_export()
 
     df = pd.DataFrame(data['project_results'])
+    df.to_csv(response, columns=data['headers'], index=False)
+
+    return response
+
+
+def diagnostic_export_csv(request):
+    """Return a dump of all the MeterRuns in CSV form"""
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = \
+        'attachment; filename="diagnostics.csv"'
+
+    data = services.diagnostic_export()
+
+    df = pd.DataFrame(data['rows'])
     df.to_csv(response, columns=data['headers'], index=False)
 
     return response

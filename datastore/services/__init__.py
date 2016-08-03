@@ -49,10 +49,12 @@ from .bulk_sync import bulk_sync
 from .create_project import create_project
 from .projectresult_export import projectresult_export
 from .overview import overview
+from .diagnostic_export import diagnostic_export
 
 __all__ = (
     'bulk_sync',
     'create_project',
+    'diagnostic_export',
     'projectresult_export',
     'overview',
 )
