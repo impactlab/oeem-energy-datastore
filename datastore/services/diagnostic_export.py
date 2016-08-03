@@ -4,8 +4,8 @@ from datastore import models
 def project_diagnostic_row(project):
     project_runs = project.projectrun_set.all()
     row = {
-        'project_id': project.project_id,
         'project_pk': project.id,
+        'project_id': project.project_id,
         'project_result_count': project.project_results.count(),
         'project_run_count': len(project_runs),
         'project_run_count-PENDING': sum([
@@ -59,12 +59,12 @@ def diagnostic_export():
         'project_results',
         'projectrun_set',
         'consumptionmetadata_set',
-    ).order_by('-id')
+    ).order_by('project_id')
 
     return {
         'headers': [
-            'project_id',
             'project_pk',
+            'project_id',
             'project_result_count',
             'project_run_count',
             'project_run_count-PENDING',

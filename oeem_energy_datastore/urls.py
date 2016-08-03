@@ -84,7 +84,7 @@ urlpatterns = [
         name='registry_summary'),
     url(r'^\.well-known/acme-challenge/%s$' % challenge_slug,
         letsencrypt_views.challenge, name='letsencrypt_challenge'),
-    url(r'^$', RedirectView.as_view(url='admin/', permanent=False),
+    url(r'^$', RedirectView.as_view(url='portal/', permanent=False),
         name='index')
 ]
 
