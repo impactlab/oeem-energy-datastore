@@ -130,9 +130,18 @@ class Project(models.Model):
         results = meter.evaluate(project, weather_source=weather_source,
                                  weather_normal_source=weather_normal_source)
 
-        weather_source_station = results['weather_source'].station
-        weather_normal_source_station = \
-            results['weather_normal_source'].station
+        weather_source = results['weather_source']
+        if weather_source is not None:
+            weather_source_station = weather_source.station
+        else:
+            weather_source_station = None
+
+        weather_normal_source = \
+            results['weather_normal_source']
+        if weather_normal_source is not None:
+            weather_normal_source_station = weather_normal_source.station
+        else:
+            weather_normal_source_station = None
 
         project_result = ProjectResult.objects.create(
             project=self,
