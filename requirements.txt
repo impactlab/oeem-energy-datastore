@@ -9,7 +9,7 @@ django-celery
 django-filter
 django-oauth-toolkit
 djangorestframework
-eemeter==0.4.4
+eemeter==0.4.5
 pandas>=0.18
 psycopg2
 redis
