@@ -76,10 +76,14 @@ def diagnostic_export():
             'consumption_metadata_count-ELECTRICITY_CONSUMPTION_NET',
             'consumption_metadata_count-ELECTRICITY_CONSUMPTION_TOTAL',
             'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL',
-            'consumption_metadata_count-'
-                'ELECTRICITY_ON_SITE_GENERATION_CONSUMED',
-            'consumption_metadata_count-'
-                'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED',
+            (
+                'consumption_metadata_count-'
+                'ELECTRICITY_ON_SITE_GENERATION_CONSUMED'
+            ),
+            (
+                'consumption_metadata_count-'
+                'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'
+            ),
             'consumption_metadata_count-NATURAL_GAS_CONSUMPTION_SUPPLIED',
         ],
         'rows': [

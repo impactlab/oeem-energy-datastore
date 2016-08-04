@@ -64,7 +64,6 @@ def serialize(project_result):
             'n',
         ]
 
-
         resp = {}
 
         project = project_result.project

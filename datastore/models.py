@@ -370,13 +370,6 @@ class ProjectBlock(models.Model):
             .format(self.name, self.projects.count())
         )
 
-    def run_meters(self, meter_class='EnergyEfficiencyMeter',
-                   meter_settings=None):
-        """ Run meter for each project in the project block.
-        """
-        for project in self.projects.all():
-            project.run_meter(meter_class, meter_settings)
-
 
 @python_2_unicode_compatible
 class ConsumptionMetadata(models.Model):
