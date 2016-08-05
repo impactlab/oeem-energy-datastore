@@ -59,5 +59,5 @@ class ExportServiceTestCase(TestCase):
         result = projectresult_export()
         headers = result['headers']
         assert len(headers) == 154
-        project_results = result['project_results']
+        project_results = result['rows']
         assert len(project_results) == 1
