@@ -6,8 +6,7 @@ from datastore import models
 class ConsumptionRecordAPITestCase(OAuthTestCase):
 
     def setUp(self):
-        super(ConsumptionRecordAPITestCase,self).setUp()
-
+        super(ConsumptionRecordAPITestCase, self).setUp()
 
     def test_consumption_record_sync(self):
 
@@ -189,7 +188,7 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert isinstance(response.data[0]['id'], int)
         assert response.data[0]['start'] == '2014-01-01T00:00:00Z'
         assert response.data[0]['value'] == 0.0
-        assert response.data[0]['estimated'] == False
+        assert response.data[0]['estimated'] is False
         assert response.data[0]['metadata'] == cm_id
 
         consumption_record_id = response.data[0]['id']
@@ -201,6 +200,5 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert isinstance(response.data['id'], int)
         assert response.data['start'] == '2014-01-01T00:00:00Z'
         assert response.data['value'] == 0.0
-        assert response.data['estimated'] == False
+        assert response.data['estimated'] is False
         assert response.data['metadata'] == cm_id
-

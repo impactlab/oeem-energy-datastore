@@ -1,33 +1,66 @@
-import csv
+from django.shortcuts import render, render_to_response
+from django.http import (
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseRedirect
+)
+from django.core.urlresolvers import reverse
 
-from django.shortcuts import render
-from django.http import HttpResponse
+import pandas as pd
 
+from portal.tasks import (
+    generate_projectresult_export_csv,
+    generate_diagnostic_export_csv,
+)
+from portal.models import CSVDownload
 from datastore import services
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def index(request):
     data = services.overview()
     return render(request, 'index.html', data)
 
 
-def meter_runs(request):
-    """Render the table of exported MeterRun results in html"""
-    data = services.projectresult_export()
-    return render(request, 'project_result_table.html', data)
-
-
-def csv_export(request):
+@login_required
+def projectresult_export_csv(request):
     """Return a dump of all the MeterRuns in CSV form"""
-    response = HttpResponse(content_type="text/csv")
-    response["Content-Disposition"] = \
-        'attachment; filename="project_results.csv"'
+    csv_download = CSVDownload.objects.create(
+        completed=False, filename="project_results"
+    )
+    generate_projectresult_export_csv.delay(csv_download.pk)
+    url = reverse("download_csv") + "?csv_id={}".format(csv_download.pk)
+    return HttpResponseRedirect(url)
 
-    data = services.projectresult_export()
 
-    writer = csv.DictWriter(response, fieldnames=data['headers'])
-    writer.writeheader()
-    for project_result in data['project_results']:
-        writer.writerow(project_result)
+@login_required
+def diagnostic_export_csv(request):
+    """Return a dump of all the MeterRuns in CSV form"""
+    csv_download = CSVDownload.objects.create(
+        completed=False, filename="diagnostics"
+    )
+    generate_diagnostic_export_csv.delay(csv_download.pk)
+    url = reverse("download_csv") + "?csv_id={}".format(csv_download.pk)
+    return HttpResponseRedirect(url)
 
-    return response
+
+@login_required
+def download_csv(request):
+    csv_id = request.GET.get("csv_id")
+    try:
+        csv_download = CSVDownload.objects.get(pk=csv_id)
+    except CSVDownload.objects.DoesNotExist:
+        return HttpResponseForbidden()
+
+    if csv_download.completed:
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = (
+            'attachment; filename="{}.csv"'
+            .format(csv_download.filename)
+        )
+        response.write(csv_download.content)
+        return response
+    else:
+        return render_to_response("download_csv.html",
+                                  {"csv_id": csv_download.pk})

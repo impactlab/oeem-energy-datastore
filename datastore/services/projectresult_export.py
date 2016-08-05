@@ -10,6 +10,7 @@ def serialize(project_result):
 
         project_result_attrs = [
             'id',
+            ('project_run', 'id'),
             'eemeter_version',
             'meter_class',
         ]
@@ -49,6 +50,20 @@ def serialize(project_result):
             'reporting_n',
         ]
 
+        energy_trace_model_result_attrs = [
+            'id',
+            'energy_trace_id',
+            'modeling_period_id',
+            'status',
+            'r2',
+            'rmse',
+            'cvrmse',
+            'model_serializiation',
+            'upper',
+            'lower',
+            'n',
+        ]
+
         resp = {}
 
         project = project_result.project
@@ -56,7 +71,17 @@ def serialize(project_result):
             resp['project__' + attr] = getattr(project, attr)
 
         for attr in project_result_attrs:
-            resp['project_result__' + attr] = getattr(project_result, attr)
+            attr_name = ""
+            if isinstance(attr, tuple):
+                attribute = project_result
+                for attr_ in attr:
+                    if attribute is None:
+                        break
+                    attribute = getattr(attribute, attr_)
+                    attr_name += "__" + attr_
+                resp['project_result' + attr_name] = attribute
+            else:
+                resp['project_result__' + attr] = getattr(project_result, attr)
 
         for attr in modeling_period_group_attrs:
             resp['modeling_period_group__' + attr] = \
@@ -83,6 +108,15 @@ def serialize(project_result):
             for attr in derivative_aggregation_attrs:
                 resp[prefix + attr] = getattr(derivative_aggregation, attr)
 
+        energy_trace_model_results = project_result.energy_trace_model_results\
+            .order_by('energy_trace_id')\
+            .order_by('modeling_period_id')
+        for i, energy_trace_model_result in \
+                enumerate(energy_trace_model_results):
+            prefix = 'energy_trace_model_result-{}__'.format(i)
+            for attr in energy_trace_model_result_attrs:
+                resp[prefix + attr] = getattr(energy_trace_model_result, attr)
+
         rows.append(resp)
 
     return rows
@@ -93,16 +127,21 @@ def projectresult_export():
         .prefetch_related(
             "project",
             "derivative_aggregations",
+            "energy_trace_model_results",
             "modeling_period_groups",
             "modeling_period_groups__baseline_period",
-            "modeling_period_groups__reporting_period")
+            "modeling_period_groups__reporting_period")\
+        .order_by('project', '-id').distinct('project')
 
     projectresults_serialized = []
+    headers = set()
     for pr in project_results:
-        projectresults_serialized.extend(serialize(pr))
+        serialized = serialize(pr)
+        for item in serialized:
+            headers.update(item.keys())
+        projectresults_serialized.extend(serialized)
 
-    headers = []
-    if len(projectresults_serialized) > 0:
-        headers = sorted(list(projectresults_serialized[0].keys()))
-
-    return {'project_results': projectresults_serialized, 'headers': headers}
+    return {
+        'headers': sorted(headers),
+        'rows': projectresults_serialized,
+    }

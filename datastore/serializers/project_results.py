@@ -95,6 +95,7 @@ class ProjectResultSerializer(serializers.ModelSerializer):
         model = models.ProjectResult
         fields = (
             'id',
+            'project',
             'eemeter_version',
             'meter_class',
             'meter_settings',

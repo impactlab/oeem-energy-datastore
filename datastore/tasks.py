@@ -31,7 +31,8 @@ def execute_project_run(project_run_pk):
 
     try:
         project.run_meter(meter_class=project_run.meter_class,
-                          meter_settings=project_run.meter_settings)
+                          meter_settings=project_run.meter_settings,
+                          project_run=project_run)
         project_run.status = 'SUCCESS'
         logger.info(
             "Successfully ran {} meter for project {}"

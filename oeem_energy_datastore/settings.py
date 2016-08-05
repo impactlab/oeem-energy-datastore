@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+
 import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +27,7 @@ INSTALLED_APPS = (
     'datastore',
     'djcelery',
     'portal',
+    'registry',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -125,28 +127,24 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
-        'logfile': {
-            'level': 'DEBUG',
+        'stream': {
+            'level': 'INFO',
             'filters': ['require_debug_false'],
-            'class': 'logging.handlers.WatchedFileHandler',
-            'formatter': 'verbose',
-            'filename': os.environ.get("DJANGO_LOGFILE", "django.log"),
-        },
-        'celery': {
-            'level': 'DEBUG',
-            'filters': ['require_debug_true'],
-            'class': 'logging.handlers.WatchedFileHandler',
-            'filename': os.environ.get("CELERY_LOGFILE", "celery.log"),
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'logfile'],
+            'handlers': ['console', 'stream'],
+            'level': 'DEBUG',
+        },
+        'eemeter': {
+            'handlers': ['console', 'stream'],
             'level': 'DEBUG',
         },
         'celery': {
-            'handlers': ['console', 'celery'],
+            'handlers': ['console', 'stream'],
             'level': 'DEBUG',
         },
     },
@@ -173,6 +171,7 @@ SWAGGER_SETTINGS = {
     'protocol': os.environ["PROTOCOL"],
 }
 
+LOGIN_URL = '/admin/login/'
 
 # DJANGO DEBUG TOOLBAR
 if DEBUG:

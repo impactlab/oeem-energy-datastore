@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Download CSV{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="row-md-12">
+
+    <div class="col-md-12">
+      <p>Download will start when CSV has been built.</p>
+    </div>
+  </div>
+</div>
+<script>
+  setTimeout(function(){
+     window.location.reload(1);
+  }, 5000);
+</script>
+
+{% endblock body %}
