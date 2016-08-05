@@ -142,6 +142,6 @@ def projectresult_export():
         projectresults_serialized.extend(serialized)
 
     return {
-        'project_results': projectresults_serialized,
-        'headers': sorted(headers)
+        'headers': sorted(headers),
+        'rows': projectresults_serialized,
     }
