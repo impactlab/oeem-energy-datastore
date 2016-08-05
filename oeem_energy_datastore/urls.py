@@ -74,8 +74,6 @@ urlpatterns = [
     url(r'^docs/', include('api_doc.urls')),
     url(r'^api/v1/', include(router.urls)),
     url(r'^portal/$', portal_views.index, name='index'),
-    url(r'^portal/project_results/$', portal_views.meter_runs,
-        name='project_results_table'),
     url(r'^portal/projectresult_csv_export/$',
         portal_views.projectresult_export_csv,
         name='portal_projectresult_csv_export'),

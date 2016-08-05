@@ -21,12 +21,6 @@ def index(request):
     return render(request, 'index.html', data)
 
 
-def meter_runs(request):
-    """Render the table of exported MeterRun results in html"""
-    data = services.projectresult_export()
-    return render(request, 'project_result_table.html', data)
-
-
 def projectresult_export_csv(request):
     """Return a dump of all the MeterRuns in CSV form"""
     csv_download = CSVDownload.objects.create(
