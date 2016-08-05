@@ -14,13 +14,16 @@ from portal.tasks import (
 )
 from portal.models import CSVDownload
 from datastore import services
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def index(request):
     data = services.overview()
     return render(request, 'index.html', data)
 
 
+@login_required
 def projectresult_export_csv(request):
     """Return a dump of all the MeterRuns in CSV form"""
     csv_download = CSVDownload.objects.create(
@@ -31,6 +34,7 @@ def projectresult_export_csv(request):
     return HttpResponseRedirect(url)
 
 
+@login_required
 def diagnostic_export_csv(request):
     """Return a dump of all the MeterRuns in CSV form"""
     csv_download = CSVDownload.objects.create(
@@ -41,6 +45,7 @@ def diagnostic_export_csv(request):
     return HttpResponseRedirect(url)
 
 
+@login_required
 def download_csv(request):
     csv_id = request.GET.get("csv_id")
     try:

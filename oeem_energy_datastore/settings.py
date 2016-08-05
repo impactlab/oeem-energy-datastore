@@ -171,6 +171,7 @@ SWAGGER_SETTINGS = {
     'protocol': os.environ["PROTOCOL"],
 }
 
+LOGIN_URL = '/admin/login/'
 
 # DJANGO DEBUG TOOLBAR
 if DEBUG:
