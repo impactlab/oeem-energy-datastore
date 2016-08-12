@@ -250,23 +250,23 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
     def _parse_record(self, record, foreign_objects):
         return record
 
-    def get_object(self, pk):
+    def get_object_by_label(self, label):
         try:
-            return models.ConsumptionMetadata.objects.get(pk=pk)
+            return models.ConsumptionMetadata.objects.get(label=label)
         except:
-            return models.ConsumptionMetadata(pk=pk)
+            return models.ConsumptionMetadata()
 
     @list_route(methods=['post'])
     def many(self, request, *args, **kwargs):
         """Create or Update a list of ConsumptionMetata objects
 
-        If `id` is passed, tries to find the object with the corresponding `id`. Otherwise,
+        If `label` is passed, tries to find the object with the corresponding `label`. Otherwise,
         creates it.
         """
         response_data = []
         for record in request.data:
             partial = kwargs.pop('partial', False)
-            instance = self.get_object(record['id'])
+            instance = self.get_object_by_label(record['label'])
             serializer = self.get_serializer(instance, data=record, partial=partial)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)

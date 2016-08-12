@@ -164,12 +164,6 @@ class ConsumptionMetadataSerializer(serializers.ModelSerializer):
             'label',
         )
 
-    # def create(self, validated_data):
-    #     consumption_metadata = \
-    #         models.ConsumptionMetadata.objects.create(**validated_data)
-    #     return consumption_metadata
-
-
 
 
 
