@@ -81,8 +81,6 @@ def project_diagnostic_row(project):
 
 def diagnostic_export():
 
-    import pdb;pdb.set_trace()
-
     projects = models.Project.objects.all().prefetch_related(
         'project_results',
         'project_results__modeling_periods',
