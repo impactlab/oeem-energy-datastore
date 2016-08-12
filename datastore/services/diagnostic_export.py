@@ -3,6 +3,7 @@ from datastore import models
 
 def project_diagnostic_row(project):
     project_runs = project.projectrun_set.all()
+
     row = {
         'project_pk': project.id,
         'project_id': project.project_id,
@@ -51,12 +52,44 @@ def project_diagnostic_row(project):
             .filter(interpretation='NG_C_S').count()
         ),
     }
+
+    try:
+        project_result = project.project_results.latest('pk')
+    except models.ProjectResult.DoesNotExist:
+        project_result = None
+    else:
+        row.update({
+            'project_result_id': project_result.id,
+            'project_result_added': project_result.added.isoformat(),
+            'modeling_period_count':
+                project_result.modeling_periods.count(),
+            'modeling_period_group_count':
+                project_result.modeling_period_groups.count(),
+            'energy_trace_model_result_count':
+                project_result.energy_trace_model_results.count(),
+            'derivative_count':
+                sum([
+                    etmr.derivatives.count()
+                    for etmr in project_result.energy_trace_model_results.all()
+                ]),
+            'derivative_aggregation_count':
+                project_result.derivative_aggregations.count(),
+        })
+
     return row
 
 
 def diagnostic_export():
+
+    import pdb;pdb.set_trace()
+
     projects = models.Project.objects.all().prefetch_related(
         'project_results',
+        'project_results__modeling_periods',
+        'project_results__modeling_period_groups',
+        'project_results__energy_trace_model_results',
+        'project_results__energy_trace_model_results__derivatives',
+        'project_results__derivative_aggregations',
         'projectrun_set',
         'consumptionmetadata_set',
     ).order_by('project_id')
@@ -85,6 +118,13 @@ def diagnostic_export():
                 'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'
             ),
             'consumption_metadata_count-NATURAL_GAS_CONSUMPTION_SUPPLIED',
+            'project_result_id',
+            'project_result_added',
+            'modeling_period_count',
+            'modeling_period_group_count',
+            'energy_trace_model_result_count',
+            'derivative_count',
+            'derivative_aggregation_count',
         ],
         'rows': [
             project_diagnostic_row(project) for project in projects

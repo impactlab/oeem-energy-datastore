@@ -6,6 +6,8 @@ from django.http import (
 )
 from django.core.urlresolvers import reverse
 
+import logging
+
 import pandas as pd
 
 from portal.tasks import (
@@ -15,6 +17,8 @@ from portal.tasks import (
 from portal.models import CSVDownload
 from datastore import services
 from django.contrib.auth.decorators import login_required
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -54,6 +58,7 @@ def download_csv(request):
         return HttpResponseForbidden()
 
     if csv_download.completed:
+        logger.info("CSV creation finished; sending download.")
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = (
             'attachment; filename="{}.csv"'
@@ -62,5 +67,6 @@ def download_csv(request):
         response.write(csv_download.content)
         return response
     else:
+        logger.info("CSV not completed, re-rendering download waiting page.")
         return render_to_response("download_csv.html",
                                   {"csv_id": csv_download.pk})
