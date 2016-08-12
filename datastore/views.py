@@ -224,12 +224,9 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
             "unit",
         ]
 
-        self.project_dict = {
-            p.project_id: p for p in models.Project.objects.all()
-        }
-
     def _find_foreign_objects(self, record):
-        project = self.project_dict.get(str(record["project_project_id"]))
+        project = models.Project.objects.get(project_id=str(record["project_project_id"]))
+
         if project is None:
             return {
                 "status": "error - no Project found",
@@ -338,6 +335,28 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
         record["start"] = parse_datetime(record["start"])
         return record
 
+    def _bulk_load(self, request, method='bulk_sync'):
+
+        bulk_loading_method = {
+            'bulk_sync': services.bulk_sync,
+            'bulk_insert': services.bulk_insert
+        }[method]
+
+        fields = ['start', 'value', 'estimated', 'metadata_id']
+
+        records = request.data
+
+        # Wrap as list if missing
+        if type(records) is not list:
+            records = [records]
+
+        result, status = bulk_loading_method(
+            records, fields, models.ConsumptionRecord,
+            ['start', 'metadata_id'])
+
+        return Response(result, status=status)
+
+
     @list_route(methods=['post'])
     def sync2(self, request):
         """
@@ -357,21 +376,31 @@ class ConsumptionRecordViewSet(SyncMixin, BulkModelViewSet):
                 },
                 ...
             ]
+
         """
+        return self._bulk_load(request, method='bulk_sync')
 
-        fields = ['start', 'value', 'estimated', 'metadata_id']
+    @list_route(methods=['post'])
+    def bulk_insert(self, request):
+        """
+        `POST /api/v1/consumption_records/bulk_insert/`
 
-        records = request.data
+        The fastest way to load data -- simply inserts everything as new data. 
+        Follows the same payload schema as `sync2`.
 
-        # Wrap as list if missing
-        if type(records) is not list:
-            records = [records]
+        Expects records like the following::
 
-        result, status = services.bulk_sync(
-            records, fields, models.ConsumptionRecord,
-            ['start', 'metadata_id'])
+            [
+                {
+                     "start": "2016-03-15T00:00:00+0000",
+                     "value": 10.2,
+                     "metadata_id": 1  # From /consumptions_metadata/sync/
+                },
+                ...
+            ]
 
-        return Response(result, status=status)
+        """
+        return self._bulk_load(request, method='bulk_insert')
 
 
 class ProjectFilter(django_filters.FilterSet):

@@ -163,6 +163,7 @@ def bulk_sync(records, fields, model_class, keys):
 
         # Upsert it into the actual table
         cursor.execute(upsert_statement)
+
     except:
         # Log exception
         logging.error(traceback.print_exc())
