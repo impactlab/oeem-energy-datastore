@@ -3,9 +3,8 @@ from rest_framework.permissions import (
     DjangoModelPermissionsOrAnonReadOnly,
 )
 from rest_framework.decorators import list_route
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, filters, status
 from rest_framework.response import Response
-from rest_framework import filters
 from rest_framework_bulk import BulkModelViewSet
 
 import django_filters
@@ -251,6 +250,13 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
     def _parse_record(self, record, foreign_objects):
         return record
 
+    @list_route(methods=['post'])
+    def many(self, request):
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class ConsumptionRecordFilter(django_filters.FilterSet):
 
