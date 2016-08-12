@@ -250,13 +250,29 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
     def _parse_record(self, record, foreign_objects):
         return record
 
+    def get_object(self, pk):
+        try:
+            return models.ConsumptionMetadata.objects.get(pk=pk)
+        except:
+            return models.ConsumptionMetadata(pk=pk)
+
     @list_route(methods=['post'])
-    def many(self, request):
-        serializer = self.get_serializer(data=request.data, many=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    def many(self, request, *args, **kwargs):
+        """Create or Update a list of ConsumptionMetata objects
+
+        If `id` is passed, tries to find the object with the corresponding `id`. Otherwise,
+        creates it.
+        """
+        response_data = []
+        for record in request.data:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object(record['id'])
+            serializer = self.get_serializer(instance, data=record, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            response_data.append(serializer.data)
+            headers = self.get_success_headers(serializer.data)
+        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
 
 class ConsumptionRecordFilter(django_filters.FilterSet):
 
