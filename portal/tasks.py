@@ -1,6 +1,8 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+import csv
+
 from six import StringIO
 import pandas as pd
 
@@ -17,7 +19,7 @@ def save_csv(csv_download_pk, data):
     csv_download = CSVDownload.objects.get(pk=csv_download_pk)
     string = StringIO()
     df = pd.DataFrame(data['rows'])
-    df.to_csv(string, columns=data['headers'], index=False)
+    df.to_csv(string, columns=data['headers'], index=False, quoting=csv.QUOTE_NONNUMERIC)
     csv_download.content = string.getvalue()
     csv_download.completed = True
     csv_download.save()
