@@ -108,7 +108,24 @@ def project_diagnostic_row(project):
                     modeling_period_group.n_gap_days(),
             })
 
+        for i, energy_trace_model_result in \
+                enumerate(project_result.energy_trace_model_results.all()):
+            row.update({
+                'energy_trace_model_result_n|{}'.format(i):
+                    energy_trace_model_result.n,
+            })
+
     return row
+
+
+def get_max_n(rows, column_template):
+    ns = [
+        int(k.split('|')[-1])
+        for row in rows
+        for k in row.keys() if k.startswith(column_template)
+    ]
+
+    return max(ns) if ns != [] else 0
 
 
 def diagnostic_export():
@@ -125,48 +142,61 @@ def diagnostic_export():
         'consumptionmetadata_set',
     ).order_by('project_id')
 
+    headers = [
+        'project_pk',
+        'project_id',
+        'project_result_count',
+        'project_run_count',
+        'project_run_count-PENDING',
+        'project_run_count-RUNNING',
+        'project_run_count-SUCCESS',
+        'project_run_count-FAILED',
+        'consumption_metadata_count',
+        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_SUPPLIED',
+        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_NET',
+        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_TOTAL',
+        'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL',
+        (
+            'consumption_metadata_count-'
+            'ELECTRICITY_ON_SITE_GENERATION_CONSUMED'
+        ),
+        (
+            'consumption_metadata_count-'
+            'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'
+        ),
+        'consumption_metadata_count-NATURAL_GAS_CONSUMPTION_SUPPLIED',
+        'project_result_id',
+        'project_result_added',
+        'modeling_period_count',
+        'modeling_period_group_count',
+        'energy_trace_model_result_count',
+        'energy_trace_model_result_count-SUCCESS',
+        'energy_trace_model_result_count-FAILURE',
+        'derivative_count',
+        'derivative_aggregation_count',
+    ]
+
+    rows = [project_diagnostic_row(project) for project in projects]
+
+    # add extra rows for modeling periods
+    n_mp_max = get_max_n(rows, 'modeling_period_start_date-BASELINE')
+    for i in range(n_mp_max + 1):
+        headers.extend([
+            'modeling_period_start_date-BASELINE|{}'.format(i),
+            'modeling_period_end_date-BASELINE|{}'.format(i),
+            'modeling_period_n_days-BASELINE|{}'.format(i),
+            'modeling_period_start_date-REPORTING|{}'.format(i),
+            'modeling_period_end_date-REPORTING|{}'.format(i),
+            'modeling_period_n_days-REPORTING|{}'.format(i),
+            'modeling_period_n_gap_days|{}'.format(i),
+        ])
+
+    # add extra rows for energy energy_trace_model_results
+    n_etmr_max = get_max_n(rows, 'energy_trace_model_result_n')
+    for i in range(n_etmr_max):
+        headers.append('energy_trace_model_result_n|{}'.format(i))
+
     return {
-        'headers': [
-            'project_pk',
-            'project_id',
-            'project_result_count',
-            'project_run_count',
-            'project_run_count-PENDING',
-            'project_run_count-RUNNING',
-            'project_run_count-SUCCESS',
-            'project_run_count-FAILED',
-            'consumption_metadata_count',
-            'consumption_metadata_count-ELECTRICITY_CONSUMPTION_SUPPLIED',
-            'consumption_metadata_count-ELECTRICITY_CONSUMPTION_NET',
-            'consumption_metadata_count-ELECTRICITY_CONSUMPTION_TOTAL',
-            'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL',
-            (
-                'consumption_metadata_count-'
-                'ELECTRICITY_ON_SITE_GENERATION_CONSUMED'
-            ),
-            (
-                'consumption_metadata_count-'
-                'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'
-            ),
-            'consumption_metadata_count-NATURAL_GAS_CONSUMPTION_SUPPLIED',
-            'project_result_id',
-            'project_result_added',
-            'modeling_period_count',
-            'modeling_period_group_count',
-            'energy_trace_model_result_count',
-            'energy_trace_model_result_count-SUCCESS',
-            'energy_trace_model_result_count-FAILURE',
-            'derivative_count',
-            'derivative_aggregation_count',
-            'modeling_period_start_date-BASELINE|0',
-            'modeling_period_end_date-BASELINE|0',
-            'modeling_period_n_days-BASELINE|0',
-            'modeling_period_start_date-REPORTING|0',
-            'modeling_period_end_date-REPORTING|0',
-            'modeling_period_n_days-REPORTING|0',
-            'modeling_period_n_gap_days|0',
-        ],
-        'rows': [
-            project_diagnostic_row(project) for project in projects
-        ],
+        'headers': headers,
+        'rows': rows,
     }
