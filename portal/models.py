@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class CSVDownload(models.Model):
     completed = models.BooleanField()
     filename = models.CharField(max_length=100)

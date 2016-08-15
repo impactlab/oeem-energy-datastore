@@ -8,8 +8,6 @@ from django.core.urlresolvers import reverse
 
 import logging
 
-import pandas as pd
-
 from portal.tasks import (
     generate_projectresult_export_csv,
     generate_diagnostic_export_csv,

@@ -1,9 +1,10 @@
-from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
-from django.utils.encoding import python_2_unicode_compatible
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.encoding import python_2_unicode_compatible
 
 from eemeter.structures import (
     EnergyTrace,
@@ -197,6 +198,7 @@ class Project(models.Model):
                     upper=outputs.get('upper'),
                     lower=outputs.get('lower'),
                     n=outputs.get('n'),
+                    traceback=outputs.get('traceback'),
                 )
                 energy_trace_model_result_mapping[
                     (trace_label, model_label)] = etm
@@ -472,6 +474,26 @@ class ModelingPeriod(models.Model):
             .format(self.interpretation, self.start_date, self.end_date)
         )
 
+    def clean(self):
+        if self.interpretation == 'BASELINE' and self.end_date is None:
+            raise ValidationError({
+                'baseline_end_date':
+                    'end_date cannot be null with interpretation BASELINE.'
+            })
+
+        if self.interpretation == 'REPORTING' and self.start_date is None:
+            raise ValidationError({
+                'reporting_start_date':
+                    'start_date cannot be null with interpretation REPORTING.'
+            })
+        return True
+
+    def n_days(self):
+        if self.start_date is None or self.end_date is None:
+            return np.inf
+        else:
+            return (self.end_date - self.start_date).days
+
 
 @python_2_unicode_compatible
 class ModelingPeriodGroup(models.Model):
@@ -490,6 +512,31 @@ class ModelingPeriodGroup(models.Model):
             .format(self.baseline_period, self.reporting_period)
         )
 
+    def clean(self):
+        if self.baseline_period.interpretation != 'BASELINE':
+            raise ValidationError({
+                'baseline_period':
+                    'Baseline period must have interpretation BASELINE.'
+            })
+
+        if self.reporting_period.interpretation != 'REPORTING':
+            raise ValidationError({
+                'reporting_period':
+                    'Reporting period must have interpretation REPORTING.'
+            })
+
+        if self.baseline_period.end_date > self.reporting_period.start_date:
+            raise ValidationError({
+                'periods':
+                    'Reporting period must start after baseline period ends.'
+            })
+
+        return True
+
+    def n_gap_days(self):
+        gap = self.reporting_period.start_date - self.baseline_period.end_date
+        return gap.days
+
 
 @python_2_unicode_compatible
 class EnergyTraceModelResult(models.Model):
@@ -506,6 +553,7 @@ class EnergyTraceModelResult(models.Model):
     upper = models.FloatField(null=True, blank=True)
     lower = models.FloatField(null=True, blank=True)
     n = models.FloatField(null=True, blank=True)
+    traceback = models.CharField(max_length=10000, null=True, blank=True)
 
     def __str__(self):
         return (

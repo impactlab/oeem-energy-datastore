@@ -62,7 +62,7 @@ class DiagnosticExportServiceTestCase(TestCase):
     def test_basic_usage(self):
         result = diagnostic_export()
         headers = result['headers']
-        assert len(headers) == 16
+        assert len(headers) == 32
 
         rows = result['rows']
         assert len(rows) == 1
