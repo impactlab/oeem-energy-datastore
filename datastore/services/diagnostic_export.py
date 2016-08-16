@@ -58,7 +58,7 @@ def project_diagnostic_row(project):
     except models.ProjectResult.DoesNotExist:
         project_result = None
     else:
-        energy_trace_model_results = project_result.energy_trace_model_results
+        energy_trace_model_results = project_result.energy_trace_model_results.order_by('energy_trace_id').order_by('modeling_period_id')
         row.update({
             'project_result_id': project_result.id,
             'project_result_added': project_result.added.isoformat(),
@@ -112,14 +112,50 @@ def project_diagnostic_row(project):
                 enumerate(project_result.energy_trace_model_results.all()):
             start_date = energy_trace_model_result.input_start_date
             end_date = energy_trace_model_result.input_end_date
+            records = energy_trace_model_result.energy_trace.records.all()
+            record_count = records.count()
             row.update({
+                'energy_trace_model_result_id|{}'.format(i):
+                    energy_trace_model_result.pk,
+                'energy_trace_model_result_status|{}'.format(i):
+                    energy_trace_model_result.status,
+                'energy_trace_model_result_traceback|{}'.format(i):
+                    energy_trace_model_result.traceback,
+                'energy_trace_model_result_trace_id|{}'.format(i):
+                    energy_trace_model_result.energy_trace.pk,
+                'energy_trace_model_result_trace_interpretation|{}'.format(i):
+                    energy_trace_model_result.energy_trace.interpretation,
+                'energy_trace_model_result_modeling_period_id|{}'.format(i):
+                    energy_trace_model_result.modeling_period.pk,
+                'energy_trace_model_result_modeling_period_interpretation|{}'
+                .format(i):
+                    energy_trace_model_result.modeling_period.interpretation,
                 'energy_trace_model_result_input_start_date|{}'.format(i):
                     start_date.isoformat() if start_date is not None else None,
                 'energy_trace_model_result_input_end_date|{}'.format(i):
                     end_date.isoformat() if end_date is not None else None,
                 'energy_trace_model_result_input_n_rows|{}'.format(i):
                     energy_trace_model_result.n,
+                'energy_trace_model_result_records_count|{}'.format(i):
+                    record_count,
             })
+
+            if record_count > 0:
+                row.update({
+                    'energy_trace_model_result_records_start_date|{}'
+                    .format(i):
+                        records.order_by('start')[0].start,
+                    'energy_trace_model_result_records_end_date|{}'.format(i):
+                        records.order_by('-start')[0].start,
+                })
+            else:
+                row.update({
+                    'energy_trace_model_result_records_start_date|{}'
+                    .format(i):
+                        None,
+                    'energy_trace_model_result_records_end_date|{}'.format(i):
+                        None,
+                })
 
     return row
 
@@ -143,6 +179,8 @@ def diagnostic_export():
         'project_results__modeling_period_groups__reporting_period',
         'project_results__energy_trace_model_results',
         'project_results__energy_trace_model_results__derivatives',
+        'project_results__energy_trace_model_results__energy_trace',
+        'project_results__energy_trace_model_results__modeling_period',
         'project_results__derivative_aggregations',
         'projectrun_set',
         'consumptionmetadata_set',
@@ -201,6 +239,16 @@ def diagnostic_export():
     n_etmr_max = get_max_n(rows, 'energy_trace_model_result_input_start_date')
     for i in range(n_etmr_max):
         headers.extend([
+            'energy_trace_model_result_id|{}'.format(i),
+            'energy_trace_model_result_status|{}'.format(i),
+            'energy_trace_model_result_traceback|{}'.format(i),
+            'energy_trace_model_result_trace_id|{}'.format(i),
+            'energy_trace_model_result_trace_interpretation|{}'.format(i),
+            'energy_trace_model_result_records_start_date|{}'.format(i),
+            'energy_trace_model_result_records_end_date|{}'.format(i),
+            'energy_trace_model_result_records_count|{}'.format(i),
+            'energy_trace_model_result_modeling_period_id|{}'.format(i),
+            'energy_trace_model_result_modeling_period_interpretation|{}'.format(i),
             'energy_trace_model_result_input_start_date|{}'.format(i),
             'energy_trace_model_result_input_end_date|{}'.format(i),
             'energy_trace_model_result_input_n_rows|{}'.format(i),
