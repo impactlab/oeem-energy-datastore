@@ -58,7 +58,9 @@ def project_diagnostic_row(project):
     except models.ProjectResult.DoesNotExist:
         project_result = None
     else:
-        energy_trace_model_results = project_result.energy_trace_model_results.order_by('energy_trace_id').order_by('modeling_period_id')
+        energy_trace_model_results = \
+            project_result.energy_trace_model_results \
+                .order_by('energy_trace_id').order_by('modeling_period_id')
         row.update({
             'project_result_id': project_result.id,
             'project_result_added': project_result.added.isoformat(),
@@ -128,7 +130,7 @@ def project_diagnostic_row(project):
                 'energy_trace_model_result_modeling_period_id|{}'.format(i):
                     energy_trace_model_result.modeling_period.pk,
                 'energy_trace_model_result_modeling_period_interpretation|{}'
-                .format(i):
+                    .format(i):
                     energy_trace_model_result.modeling_period.interpretation,
                 'energy_trace_model_result_input_start_date|{}'.format(i):
                     start_date.isoformat() if start_date is not None else None,
@@ -235,7 +237,8 @@ def diagnostic_export():
             'energy_trace_model_result_records_end_date|{}'.format(i),
             'energy_trace_model_result_records_count|{}'.format(i),
             'energy_trace_model_result_modeling_period_id|{}'.format(i),
-            'energy_trace_model_result_modeling_period_interpretation|{}'.format(i),
+            'energy_trace_model_result_modeling_period_interpretation|{}'
+                .format(i),
             'energy_trace_model_result_input_start_date|{}'.format(i),
             'energy_trace_model_result_input_end_date|{}'.format(i),
             'energy_trace_model_result_input_n_rows|{}'.format(i),
