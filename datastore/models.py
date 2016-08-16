@@ -186,6 +186,15 @@ class Project(models.Model):
             for model_label, outputs in \
                     modeled_energy_trace.fit_outputs.items():
 
+                trace = modeled_energy_trace.trace
+                records_count = trace.data.shape[0]
+                if records_count > 0:
+                    records_start_date = trace.data.index[0]
+                    records_end_date = trace.data.index[-1]
+                else:
+                    records_start_date = None
+                    records_end_date = None
+
                 etm = EnergyTraceModelResult.objects.create(
                     project_result=project_result,
                     energy_trace_id=trace_label,
@@ -201,6 +210,9 @@ class Project(models.Model):
                     input_start_date=outputs.get('start_date'),
                     input_end_date=outputs.get('end_date'),
                     input_n_rows=outputs.get('n_rows'),
+                    records_start_date=records_start_date,
+                    records_end_date=records_end_date,
+                    records_count=records_count,
                     traceback=outputs.get('traceback'),
                 )
                 energy_trace_model_result_mapping[
@@ -559,6 +571,9 @@ class EnergyTraceModelResult(models.Model):
     input_start_date = models.DateTimeField(null=True, blank=True)
     input_end_date = models.DateTimeField(null=True, blank=True)
     input_n_rows = models.IntegerField(null=True, blank=True)
+    records_start_date = models.DateTimeField(null=True, blank=True)
+    records_end_date = models.DateTimeField(null=True, blank=True)
+    records_count = models.IntegerField(null=True, blank=True)
     traceback = models.CharField(max_length=10000, null=True, blank=True)
 
     def __str__(self):

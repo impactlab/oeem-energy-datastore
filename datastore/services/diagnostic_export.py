@@ -136,26 +136,13 @@ def project_diagnostic_row(project):
                     end_date.isoformat() if end_date is not None else None,
                 'energy_trace_model_result_input_n_rows|{}'.format(i):
                     energy_trace_model_result.n,
+                'energy_trace_model_result_records_start_date|{}'.format(i):
+                    energy_trace_model_result.records_start_date,
+                'energy_trace_model_result_records_end_date|{}'.format(i):
+                    energy_trace_model_result.records_end_date,
                 'energy_trace_model_result_records_count|{}'.format(i):
-                    record_count,
+                    energy_trace_model_result.records_count,
             })
-
-            if record_count > 0:
-                row.update({
-                    'energy_trace_model_result_records_start_date|{}'
-                    .format(i):
-                        records.order_by('start')[0].start,
-                    'energy_trace_model_result_records_end_date|{}'.format(i):
-                        records.order_by('-start')[0].start,
-                })
-            else:
-                row.update({
-                    'energy_trace_model_result_records_start_date|{}'
-                    .format(i):
-                        None,
-                    'energy_trace_model_result_records_end_date|{}'.format(i):
-                        None,
-                })
 
     return row
 
