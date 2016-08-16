@@ -198,6 +198,9 @@ class Project(models.Model):
                     upper=outputs.get('upper'),
                     lower=outputs.get('lower'),
                     n=outputs.get('n'),
+                    input_start_date=outputs.get('start_date'),
+                    input_end_date=outputs.get('end_date'),
+                    input_n_rows=outputs.get('n_rows'),
                     traceback=outputs.get('traceback'),
                 )
                 energy_trace_model_result_mapping[
@@ -553,6 +556,9 @@ class EnergyTraceModelResult(models.Model):
     upper = models.FloatField(null=True, blank=True)
     lower = models.FloatField(null=True, blank=True)
     n = models.FloatField(null=True, blank=True)
+    input_start_date = models.DateTimeField(null=True, blank=True)
+    input_end_date = models.DateTimeField(null=True, blank=True)
+    input_n_rows = models.IntegerField(null=True, blank=True)
     traceback = models.CharField(max_length=10000, null=True, blank=True)
 
     def __str__(self):

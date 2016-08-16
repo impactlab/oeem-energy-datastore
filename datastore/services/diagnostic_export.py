@@ -110,8 +110,14 @@ def project_diagnostic_row(project):
 
         for i, energy_trace_model_result in \
                 enumerate(project_result.energy_trace_model_results.all()):
+            start_date = energy_trace_model_result.input_start_date
+            end_date = energy_trace_model_result.input_end_date
             row.update({
-                'energy_trace_model_result_n|{}'.format(i):
+                'energy_trace_model_result_input_start_date|{}'.format(i):
+                    start_date.isoformat() if start_date is not None else None,
+                'energy_trace_model_result_input_end_date|{}'.format(i):
+                    end_date.isoformat() if end_date is not None else None,
+                'energy_trace_model_result_input_n_rows|{}'.format(i):
                     energy_trace_model_result.n,
             })
 
@@ -192,9 +198,13 @@ def diagnostic_export():
         ])
 
     # add extra rows for energy energy_trace_model_results
-    n_etmr_max = get_max_n(rows, 'energy_trace_model_result_n')
+    n_etmr_max = get_max_n(rows, 'energy_trace_model_result_input_start_date')
     for i in range(n_etmr_max):
-        headers.append('energy_trace_model_result_n|{}'.format(i))
+        headers.extend([
+            'energy_trace_model_result_input_start_date|{}'.format(i),
+            'energy_trace_model_result_input_end_date|{}'.format(i),
+            'energy_trace_model_result_input_n_rows|{}'.format(i),
+        ])
 
     return {
         'headers': headers,
