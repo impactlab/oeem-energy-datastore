@@ -17,7 +17,7 @@ def _get_records_inclusion_status(
         start = "OK" if records_start < mp_end else "ERROR"
         if mp_start is None:
             end = "WARNING" if records_end <= mp_end else "OK"
-        else: # mp_start is defined
+        else:  # mp_start is defined
             if records_end <= mp_start:
                 end = "ERROR"
             elif records_end <= mp_end:
@@ -30,7 +30,7 @@ def _get_records_inclusion_status(
 
         if mp_end is None:
             start = "WARNING" if mp_start <= records_start else "OK"
-        else: # mp_end is defined
+        else:  # mp_end is defined
             if mp_end <= records_start:
                 start = "ERROR"
             elif mp_start <= records_start:
@@ -77,7 +77,7 @@ def project_diagnostic_row(project):
     }
 
     derivative_aggregation_count = 0
-    inclusion_status_count = {"ERROR": 0, "WARNING":0, "OK": 0}
+    inclusion_status_count = {"ERROR": 0, "WARNING": 0, "OK": 0}
 
     try:
         project_result = project.project_results.latest('pk')
@@ -107,7 +107,7 @@ def project_diagnostic_row(project):
         # project result details
         energy_trace_model_results = \
             project_result.energy_trace_model_results \
-                .order_by('energy_trace_id', 'modeling_period_id')
+            .order_by('energy_trace_id', 'modeling_period_id')
         derivative_aggregation_count = \
             project_result.derivative_aggregations.count()
         row.update({
@@ -161,7 +161,6 @@ def project_diagnostic_row(project):
                 'modeling_period_n_gap_days|{}'.format(i):
                     modeling_period_group.n_gap_days(),
             })
-
 
         # energy trace model result details
         for i, energy_trace_model_result in \
@@ -252,7 +251,8 @@ def project_diagnostic_row(project):
         'inclusion_status_count-WARNING': inclusion_status_count['WARNING'],
         'inclusion_status_count-ERROR': inclusion_status_count['ERROR'],
         'EXPLANATION-has_no_energy_traces': has_no_energy_traces,
-        'EXPLANATION-has_no_successful_meter_runs': has_no_successful_meter_runs,
+        'EXPLANATION-has_no_successful_meter_runs':
+            has_no_successful_meter_runs,
         'EXPLANATION-has_derivative_aggregation': has_derivative_aggregation,
         'EXPLANATION-has_error_inclusion_status': has_error_inclusion_status,
         'EXPLANATION-has_explanation': has_explanation,
@@ -355,13 +355,13 @@ def diagnostic_export():
             'energy_trace_model_result_trace_interpretation|{}'.format(i),
             'energy_trace_model_result_modeling_period_id|{}'.format(i),
             'energy_trace_model_result_modeling_period_interpretation|{}'
-                .format(i),
+            .format(i),
             'energy_trace_model_result_records_start_inclusion_status|{}'
-                .format(i),
+            .format(i),
             'energy_trace_model_result_records_end_inclusion_status|{}'
-                .format(i),
+            .format(i),
             'energy_trace_model_result_modeling_period_start_date|{}'
-                .format(i),
+            .format(i),
             'energy_trace_model_result_modeling_period_end_date|{}'.format(i),
             'energy_trace_model_result_records_start_date|{}'.format(i),
             'energy_trace_model_result_records_end_date|{}'.format(i),
