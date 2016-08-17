@@ -4,63 +4,69 @@ from datastore import models
 def project_diagnostic_row(project):
     project_runs = project.projectrun_set.all()
 
+    trace_set = project.consumptionmetadata_set
+    trace_count = trace_set.count()
+
+    def status_count(status):
+        return sum([1 for pr in project_runs if pr.status == status])
+
     row = {
         'project_pk': project.id,
         'project_id': project.project_id,
         'project_result_count': project.project_results.count(),
         'project_run_count': len(project_runs),
-        'project_run_count-PENDING': sum([
-            1 for pr in project_runs if pr.status == 'PENDING'
-        ]),
-        'project_run_count-RUNNING': sum([
-            1 for pr in project_runs if pr.status == 'RUNNING'
-        ]),
-        'project_run_count-SUCCESS': sum([
-            1 for pr in project_runs if pr.status == 'SUCCESS'
-        ]),
-        'project_run_count-FAILED': sum([
-            1 for pr in project_runs if pr.status == 'FAILED'
-        ]),
-        'consumption_metadata_count': project.consumptionmetadata_set.count(),
-        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_SUPPLIED': (
-            project.consumptionmetadata_set
-            .filter(interpretation='E_C_S').count()
-        ),
-        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_NET': (
-            project.consumptionmetadata_set
-            .filter(interpretation='E_C_N').count()
-        ),
-        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_TOTAL': (
-            project.consumptionmetadata_set
-            .filter(interpretation='E_C_T').count()
-        ),
-        'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL': (
-            project.consumptionmetadata_set
-            .filter(interpretation='E_OSG_T').count()
-        ),
-        'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_CONSUMED': (
-            project.consumptionmetadata_set
-            .filter(interpretation='E_OSG_C').count()
-        ),
-        'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED':
-        (
-            project.consumptionmetadata_set
-            .filter(interpretation='E_OSG_U').count()
-        ),
-        'consumption_metadata_count-NATURAL_GAS_CONSUMPTION_SUPPLIED': (
-            project.consumptionmetadata_set
-            .filter(interpretation='NG_C_S').count()
-        ),
+        'project_run_count-PENDING': status_count('PENDING'),
+        'project_run_count-RUNNING': status_count('RUNNING'),
+        'project_run_count-SUCCESS': status_count('SUCCESS'),
+        'project_run_count-FAILED': status_count('FAILED'),
+        'trace_count': trace_count,
+        'trace_count-ELECTRICITY_CONSUMPTION_SUPPLIED':
+            trace_set.filter(interpretation='E_C_S').count(),
+        'trace_count-ELECTRICITY_CONSUMPTION_NET':
+            trace_set.filter(interpretation='E_C_N').count(),
+        'trace_count-ELECTRICITY_CONSUMPTION_TOTAL':
+            trace_set.filter(interpretation='E_C_T').count(),
+        'trace_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL':
+            trace_set.filter(interpretation='E_OSG_T').count(),
+        'trace_count-ELECTRICITY_ON_SITE_GENERATION_CONSUMED':
+            trace_set.filter(interpretation='E_OSG_C').count(),
+        'trace_count-ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED':
+            trace_set.filter(interpretation='E_OSG_U').count(),
+        'trace_count-NATURAL_GAS_CONSUMPTION_SUPPLIED':
+            trace_set.filter(interpretation='NG_C_S').count(),
     }
 
     try:
         project_result = project.project_results.latest('pk')
     except models.ProjectResult.DoesNotExist:
-        project_result = None
+        # maybe there was a failed (or incomplete) project run;
+        # if latest can be found, show status and traceback
+        try:
+            project_run = project.project_runs.latest('pk')
+        except models.ProjectRun.DoesNotExist:
+            pass
+        else:
+            row.update({
+                'project_run_id': project_run.id,
+                'project_run_status': project_run.status,
+                'project_run_traceback': project_run.traceback,
+            })
     else:
+        # project run details
+        project_run = project_result.project_run
+        if project_run is not None:
+            row.update({
+                'project_run_id': project_run.id,
+                'project_run_status': project_run.status,
+                'project_run_traceback': project_run.traceback,
+            })
+
+        # project result details
         energy_trace_model_results = \
             project_result.energy_trace_model_results \
                 .order_by('energy_trace_id').order_by('modeling_period_id')
+        derivative_aggregation_count = \
+            project_result.derivative_aggregations.count()
         row.update({
             'project_result_id': project_result.id,
             'project_result_added': project_result.added.isoformat(),
@@ -81,10 +87,10 @@ def project_diagnostic_row(project):
                     etmr.derivatives.count()
                     for etmr in energy_trace_model_results.all()
                 ]),
-            'derivative_aggregation_count':
-                project_result.derivative_aggregations.count(),
+            'derivative_aggregation_count': derivative_aggregation_count,
         })
 
+        # modeling period group details
         for i, modeling_period_group in \
                 enumerate(project_result.modeling_period_groups.all()):
             baseline_period = modeling_period_group.baseline_period
@@ -110,6 +116,7 @@ def project_diagnostic_row(project):
                     modeling_period_group.n_gap_days(),
             })
 
+        # energy trace model result details
         for i, energy_trace_model_result in \
                 enumerate(project_result.energy_trace_model_results.all()):
             start_date = energy_trace_model_result.input_start_date
@@ -145,6 +152,23 @@ def project_diagnostic_row(project):
                 'energy_trace_model_result_records_count|{}'.format(i):
                     energy_trace_model_result.records_count,
             })
+
+    # explanation
+    has_derivative_aggregation = derivative_aggregation_count > 0
+    has_no_energy_traces = trace_count == 0
+    has_no_successful_meter_runs = status_count('SUCCESS') == 0
+    has_explanation = (
+        has_derivative_aggregation or
+        has_no_energy_traces or
+        has_no_successful_meter_runs
+    )
+
+    row.update({
+        'EXPLANATION-has_no_energy_traces': has_no_energy_traces,
+        'EXPLANATION-has_no_successful_meter_runs': has_no_successful_meter_runs,
+        'EXPLANATION-has_derivative_aggregation': has_derivative_aggregation,
+        'EXPLANATION-has_explanation': has_explanation,
+    })
 
     return row
 
@@ -184,20 +208,17 @@ def diagnostic_export():
         'project_run_count-RUNNING',
         'project_run_count-SUCCESS',
         'project_run_count-FAILED',
-        'consumption_metadata_count',
-        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_SUPPLIED',
-        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_NET',
-        'consumption_metadata_count-ELECTRICITY_CONSUMPTION_TOTAL',
-        'consumption_metadata_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL',
-        (
-            'consumption_metadata_count-'
-            'ELECTRICITY_ON_SITE_GENERATION_CONSUMED'
-        ),
-        (
-            'consumption_metadata_count-'
-            'ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'
-        ),
-        'consumption_metadata_count-NATURAL_GAS_CONSUMPTION_SUPPLIED',
+        'trace_count',
+        'trace_count-ELECTRICITY_CONSUMPTION_SUPPLIED',
+        'trace_count-ELECTRICITY_CONSUMPTION_NET',
+        'trace_count-ELECTRICITY_CONSUMPTION_TOTAL',
+        'trace_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL',
+        'trace_count-ELECTRICITY_ON_SITE_GENERATION_CONSUMED',
+        'trace_count-ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED',
+        'trace_count-NATURAL_GAS_CONSUMPTION_SUPPLIED',
+        'project_run_id',
+        'project_run_status',
+        'project_run_traceback',
         'project_result_id',
         'project_result_added',
         'modeling_period_count',
@@ -243,6 +264,13 @@ def diagnostic_export():
             'energy_trace_model_result_input_end_date|{}'.format(i),
             'energy_trace_model_result_input_n_rows|{}'.format(i),
         ])
+
+    headers.extend([
+        'EXPLANATION-has_no_energy_traces',
+        'EXPLANATION-has_no_successful_meter_runs',
+        'EXPLANATION-has_derivative_aggregation',
+        'EXPLANATION-has_explanation',
+    ])
 
     return {
         'headers': headers,

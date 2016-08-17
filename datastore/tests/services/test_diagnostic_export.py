@@ -62,7 +62,7 @@ class DiagnosticExportServiceTestCase(TestCase):
     def test_basic_usage(self):
         result = diagnostic_export()
         headers = result['headers']
-        assert len(headers) == 97
+        assert len(headers) == 104
 
         rows = result['rows']
         assert len(rows) == 1
@@ -75,18 +75,12 @@ class DiagnosticExportServiceTestCase(TestCase):
         assert row['project_run_count-RUNNING'] == 0
         assert row['project_run_count-SUCCESS'] == 1
         assert row['project_run_count-FAILED'] == 0
-        assert row['consumption_metadata_count'] == 3
-        assert row['consumption_metadata_count'
-                   '-ELECTRICITY_CONSUMPTION_SUPPLIED'] == 1
-        assert row['consumption_metadata_count'
-                   '-ELECTRICITY_CONSUMPTION_TOTAL'] == 0
-        assert row['consumption_metadata_count'
-                   '-ELECTRICITY_CONSUMPTION_NET'] == 0
-        assert row['consumption_metadata_count'
-                   '-ELECTRICITY_ON_SITE_GENERATION_TOTAL'] == 0
-        assert row['consumption_metadata_count'
-                   '-ELECTRICITY_ON_SITE_GENERATION_CONSUMED'] == 0
-        assert row['consumption_metadata_count'
-                   '-ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'] == 1
-        assert row['consumption_metadata_count'
-                   '-NATURAL_GAS_CONSUMPTION_SUPPLIED'] == 1
+        assert row['trace_count'] == 3
+        assert row['trace_count-ELECTRICITY_CONSUMPTION_SUPPLIED'] == 1
+        assert row['trace_count-ELECTRICITY_CONSUMPTION_TOTAL'] == 0
+        assert row['trace_count-ELECTRICITY_CONSUMPTION_NET'] == 0
+        assert row['trace_count-ELECTRICITY_ON_SITE_GENERATION_TOTAL'] == 0
+        assert row['trace_count-ELECTRICITY_ON_SITE_GENERATION_CONSUMED'] == 0
+        assert row['trace_count-ELECTRICITY_ON_SITE_GENERATION_UNCONSUMED'] \
+            == 1
+        assert row['trace_count-NATURAL_GAS_CONSUMPTION_SUPPLIED'] == 1
