@@ -1,6 +1,46 @@
 from datastore import models
 
 
+def _get_records_inclusion_status(
+        mp_interpretation, mp_start, mp_end, records_start, records_end):
+    ''' Inclusions statuses: what does the extent of the records vs the
+        extent of the modeling period say about likelihood of errors
+
+    Status types:
+
+        - OK: no errors detected for either baseline or reporting
+        - WARNING: no errors detected for this period, other will have error
+        - ERROR: error detected for this period
+    '''
+
+    if mp_interpretation == "BASELINE":
+        start = "OK" if records_start < mp_end else "ERROR"
+        if mp_start is None:
+            end = "WARNING" if records_end <= mp_end else "OK"
+        else: # mp_start is defined
+            if records_end <= mp_start:
+                end = "ERROR"
+            elif records_end <= mp_end:
+                end = "WARNING"
+            else:
+                end = "OK"
+
+    if mp_interpretation == "REPORTING":
+        end = "OK" if mp_start < records_end else "ERROR"
+
+        if mp_end is None:
+            start = "WARNING" if mp_start <= records_start else "OK"
+        else: # mp_end is defined
+            if mp_end <= records_start:
+                start = "ERROR"
+            elif mp_start <= records_start:
+                start = "WARNING"
+            else:
+                start = "OK"
+
+    return start, end
+
+
 def project_diagnostic_row(project):
     project_runs = project.projectrun_set.all()
 
@@ -37,7 +77,8 @@ def project_diagnostic_row(project):
     }
 
     derivative_aggregation_count = 0
-    
+    inclusion_status_count = {"ERROR": 0, "WARNING":0, "OK": 0}
+
     try:
         project_result = project.project_results.latest('pk')
     except models.ProjectResult.DoesNotExist:
@@ -66,7 +107,7 @@ def project_diagnostic_row(project):
         # project result details
         energy_trace_model_results = \
             project_result.energy_trace_model_results \
-                .order_by('energy_trace_id').order_by('modeling_period_id')
+                .order_by('energy_trace_id', 'modeling_period_id')
         derivative_aggregation_count = \
             project_result.derivative_aggregations.count()
         row.update({
@@ -92,39 +133,65 @@ def project_diagnostic_row(project):
             'derivative_aggregation_count': derivative_aggregation_count,
         })
 
+        def _format_date(dt):
+            return dt.isoformat() if dt is not None else None
+
         # modeling period group details
         for i, modeling_period_group in \
                 enumerate(project_result.modeling_period_groups.all()):
             baseline_period = modeling_period_group.baseline_period
             reporting_period = modeling_period_group.reporting_period
             row.update({
+                'modeling_period_id-BASELINE|{}'.format(i):
+                    baseline_period.id,
                 'modeling_period_start_date-BASELINE|{}'.format(i):
-                    baseline_period.start_date.isoformat()
-                    if baseline_period.start_date is not None else None,
+                    _format_date(baseline_period.start_date),
                 'modeling_period_end_date-BASELINE|{}'.format(i):
-                    baseline_period.end_date.isoformat()
-                    if baseline_period.end_date is not None else None,
+                    _format_date(baseline_period.end_date),
                 'modeling_period_n_days-BASELINE|{}'.format(i):
                     baseline_period.n_days(),
+                'modeling_period_id-REPORTING|{}'.format(i):
+                    reporting_period.id,
                 'modeling_period_start_date-REPORTING|{}'.format(i):
-                    reporting_period.start_date.isoformat()
-                    if reporting_period.start_date is not None else None,
+                    _format_date(reporting_period.start_date),
                 'modeling_period_end_date-REPORTING|{}'.format(i):
-                    reporting_period.end_date.isoformat()
-                    if reporting_period.end_date is not None else None,
+                    _format_date(reporting_period.end_date),
                 'modeling_period_n_days-REPORTING|{}'.format(i):
                     reporting_period.n_days(),
                 'modeling_period_n_gap_days|{}'.format(i):
                     modeling_period_group.n_gap_days(),
             })
 
+
         # energy trace model result details
         for i, energy_trace_model_result in \
-                enumerate(project_result.energy_trace_model_results.all()):
-            start_date = energy_trace_model_result.input_start_date
-            end_date = energy_trace_model_result.input_end_date
-            records = energy_trace_model_result.energy_trace.records.all()
-            record_count = records.count()
+                enumerate(energy_trace_model_results):
+
+            input_start_date = _format_date(
+                energy_trace_model_result.input_start_date)
+            input_end_date = _format_date(
+                energy_trace_model_result.input_end_date)
+
+            modeling_period = energy_trace_model_result.modeling_period
+            mp_start_date = _format_date(modeling_period.start_date)
+            mp_end_date = _format_date(modeling_period.end_date)
+
+            records_start_date = _format_date(
+                energy_trace_model_result.records_start_date)
+            records_end_date = _format_date(
+                energy_trace_model_result.records_end_date)
+
+            start_inclusion_status, end_inclusion_status = \
+                _get_records_inclusion_status(
+                    modeling_period.interpretation,
+                    modeling_period.start_date,
+                    modeling_period.end_date,
+                    energy_trace_model_result.records_start_date,
+                    energy_trace_model_result.records_end_date,
+                )
+            inclusion_status_count[start_inclusion_status] += 1
+            inclusion_status_count[end_inclusion_status] += 1
+
             row.update({
                 'energy_trace_model_result_id|{}'.format(i):
                     energy_trace_model_result.pk,
@@ -137,45 +204,64 @@ def project_diagnostic_row(project):
                 'energy_trace_model_result_trace_interpretation|{}'.format(i):
                     energy_trace_model_result.energy_trace.interpretation,
                 'energy_trace_model_result_modeling_period_id|{}'.format(i):
-                    energy_trace_model_result.modeling_period.pk,
+                    modeling_period.pk,
                 'energy_trace_model_result_modeling_period_interpretation|{}'
                     .format(i):
-                    energy_trace_model_result.modeling_period.interpretation,
+                    modeling_period.interpretation,
+                'energy_trace_model_result_modeling_period_start_date|{}'
+                    .format(i):
+                    mp_start_date,
+                'energy_trace_model_result_modeling_period_end_date|{}'
+                    .format(i):
+                    mp_end_date,
                 'energy_trace_model_result_input_start_date|{}'.format(i):
-                    start_date.isoformat() if start_date is not None else None,
+                    input_start_date,
                 'energy_trace_model_result_input_end_date|{}'.format(i):
-                    end_date.isoformat() if end_date is not None else None,
+                    input_end_date,
                 'energy_trace_model_result_input_n_rows|{}'.format(i):
                     energy_trace_model_result.n,
                 'energy_trace_model_result_records_start_date|{}'.format(i):
-                    energy_trace_model_result.records_start_date,
+                    records_start_date,
                 'energy_trace_model_result_records_end_date|{}'.format(i):
-                    energy_trace_model_result.records_end_date,
+                    records_end_date,
                 'energy_trace_model_result_records_count|{}'.format(i):
                     energy_trace_model_result.records_count,
+                'energy_trace_model_result_records_start_inclusion_status|{}'
+                    .format(i):
+                    start_inclusion_status,
+                'energy_trace_model_result_records_end_inclusion_status|{}'
+                    .format(i):
+                    end_inclusion_status,
             })
 
     # explanation
     has_derivative_aggregation = derivative_aggregation_count > 0
     has_no_energy_traces = trace_count == 0
     has_no_successful_meter_runs = status_count('SUCCESS') == 0
+    has_error_inclusion_status = inclusion_status_count['ERROR'] > 0
     has_explanation = (
         has_derivative_aggregation or
         has_no_energy_traces or
-        has_no_successful_meter_runs
+        has_no_successful_meter_runs or
+        has_error_inclusion_status
     )
 
     row.update({
+        'inclusion_status_count': sum(inclusion_status_count.values()),
+        'inclusion_status_count-OK': inclusion_status_count['OK'],
+        'inclusion_status_count-WARNING': inclusion_status_count['WARNING'],
+        'inclusion_status_count-ERROR': inclusion_status_count['ERROR'],
         'EXPLANATION-has_no_energy_traces': has_no_energy_traces,
         'EXPLANATION-has_no_successful_meter_runs': has_no_successful_meter_runs,
         'EXPLANATION-has_derivative_aggregation': has_derivative_aggregation,
+        'EXPLANATION-has_error_inclusion_status': has_error_inclusion_status,
         'EXPLANATION-has_explanation': has_explanation,
     })
 
     return row
 
 
-def get_max_n(rows, column_template):
+def _get_max_n(rows, column_template):
     ns = [
         int(k.split('|')[-1])
         for row in rows
@@ -230,17 +316,28 @@ def diagnostic_export():
         'energy_trace_model_result_count-FAILURE',
         'derivative_count',
         'derivative_aggregation_count',
+        'inclusion_status_count',
+        'inclusion_status_count-OK',
+        'inclusion_status_count-WARNING',
+        'inclusion_status_count-ERROR',
+        'EXPLANATION-has_no_energy_traces',
+        'EXPLANATION-has_no_successful_meter_runs',
+        'EXPLANATION-has_derivative_aggregation',
+        'EXPLANATION-has_error_inclusion_status',
+        'EXPLANATION-has_explanation',
     ]
 
     rows = [project_diagnostic_row(project) for project in projects]
 
     # add extra rows for modeling periods
-    n_mp_max = get_max_n(rows, 'modeling_period_start_date-BASELINE')
+    n_mp_max = _get_max_n(rows, 'modeling_period_start_date-BASELINE')
     for i in range(n_mp_max + 1):
         headers.extend([
+            'modeling_period_id-BASELINE|{}'.format(i),
             'modeling_period_start_date-BASELINE|{}'.format(i),
             'modeling_period_end_date-BASELINE|{}'.format(i),
             'modeling_period_n_days-BASELINE|{}'.format(i),
+            'modeling_period_id-REPORTING|{}'.format(i),
             'modeling_period_start_date-REPORTING|{}'.format(i),
             'modeling_period_end_date-REPORTING|{}'.format(i),
             'modeling_period_n_days-REPORTING|{}'.format(i),
@@ -248,7 +345,7 @@ def diagnostic_export():
         ])
 
     # add extra rows for energy energy_trace_model_results
-    n_etmr_max = get_max_n(rows, 'energy_trace_model_result_input_start_date')
+    n_etmr_max = _get_max_n(rows, 'energy_trace_model_result_input_start_date')
     for i in range(n_etmr_max):
         headers.extend([
             'energy_trace_model_result_id|{}'.format(i),
@@ -256,23 +353,23 @@ def diagnostic_export():
             'energy_trace_model_result_traceback|{}'.format(i),
             'energy_trace_model_result_trace_id|{}'.format(i),
             'energy_trace_model_result_trace_interpretation|{}'.format(i),
-            'energy_trace_model_result_records_start_date|{}'.format(i),
-            'energy_trace_model_result_records_end_date|{}'.format(i),
-            'energy_trace_model_result_records_count|{}'.format(i),
             'energy_trace_model_result_modeling_period_id|{}'.format(i),
             'energy_trace_model_result_modeling_period_interpretation|{}'
                 .format(i),
+            'energy_trace_model_result_records_start_inclusion_status|{}'
+                .format(i),
+            'energy_trace_model_result_records_end_inclusion_status|{}'
+                .format(i),
+            'energy_trace_model_result_modeling_period_start_date|{}'
+                .format(i),
+            'energy_trace_model_result_modeling_period_end_date|{}'.format(i),
+            'energy_trace_model_result_records_start_date|{}'.format(i),
+            'energy_trace_model_result_records_end_date|{}'.format(i),
+            'energy_trace_model_result_records_count|{}'.format(i),
             'energy_trace_model_result_input_start_date|{}'.format(i),
             'energy_trace_model_result_input_end_date|{}'.format(i),
             'energy_trace_model_result_input_n_rows|{}'.format(i),
         ])
-
-    headers.extend([
-        'EXPLANATION-has_no_energy_traces',
-        'EXPLANATION-has_no_successful_meter_runs',
-        'EXPLANATION-has_derivative_aggregation',
-        'EXPLANATION-has_explanation',
-    ])
 
     return {
         'headers': headers,
