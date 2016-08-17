@@ -36,6 +36,8 @@ def project_diagnostic_row(project):
             trace_set.filter(interpretation='NG_C_S').count(),
     }
 
+    derivative_aggregation_count = 0
+    
     try:
         project_result = project.project_results.latest('pk')
     except models.ProjectResult.DoesNotExist:
