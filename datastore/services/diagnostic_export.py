@@ -42,7 +42,7 @@ def project_diagnostic_row(project):
         # maybe there was a failed (or incomplete) project run;
         # if latest can be found, show status and traceback
         try:
-            project_run = project.project_runs.latest('pk')
+            project_run = project.projectrun_set.latest('pk')
         except models.ProjectRun.DoesNotExist:
             pass
         else:
