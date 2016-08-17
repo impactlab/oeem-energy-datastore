@@ -32,4 +32,3 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['unit'] == 'KWH'
         assert response.data['interpretation'] == 'E_C_S'
         assert response.data['project'] is None
-        assert response.data['records'] == []
