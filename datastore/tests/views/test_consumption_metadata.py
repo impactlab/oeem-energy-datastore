@@ -32,3 +32,60 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
         assert response.data['unit'] == 'KWH'
         assert response.data['interpretation'] == 'E_C_S'
         assert response.data['project'] is None
+
+
+    def test_consumption_metadata_create_read_many(self):
+
+        # Test that two objects are created
+        post_body = [{
+            "interpretation": "E_C_S",
+            "unit": "KWH",
+            "label": "0",
+        }, {
+            "interpretation": "E_C_S",
+            "unit": "KWH",
+            "label": "1",
+        }]
+
+        response = self.post(
+            '/api/v1/consumption_metadatas/many/', post_body)
+
+        assert response.status_code == 201
+
+        assert len(response.data) == 2
+
+        for record in response.data:
+            assert isinstance(record['id'], int)
+            assert record['unit'] == 'KWH'
+            assert record['interpretation'] == 'E_C_S'
+            assert record['project'] is None
+
+        # Test updating using `label` to identify the record
+        id = response.data[0]['id']
+        label = response.data[0]['label']
+
+        post_body = [{
+            "unit": "THM",
+            "interpretation": "E_C_S",
+            "label": label,
+        }]
+
+        response = self.post(
+            '/api/v1/consumption_metadatas/many/', post_body)
+
+        response = self.get(
+            '/api/v1/consumption_metadatas/{}/'
+            .format(id)
+        )
+
+        assert response.status_code == 200
+
+        assert response.data['id'] == id
+        assert response.data['label'] == label
+        assert response.data['unit'] == 'THM'
+
+
+
+
+
+

@@ -164,6 +164,12 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert response.status_code == 400
         assert response.data['status'] == 'error'
 
+    def test_consumption_record_bulk_insert(self):
+
+        # TODO: write test
+        
+        pass
+
     def test_consumption_record_create_read(self):
 
         response = self.post('/api/v1/consumption_metadatas/sync/', [{
