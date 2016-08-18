@@ -41,10 +41,12 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
             "interpretation": "E_C_S",
             "unit": "KWH",
             "label": "0",
+            "project_project_id": "ABC",
         }, {
             "interpretation": "E_C_S",
             "unit": "KWH",
             "label": "1",
+            "project_project_id": "ABC",
         }]
 
         response = self.post(
@@ -58,7 +60,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
             assert isinstance(record['id'], int)
             assert record['unit'] == 'KWH'
             assert record['interpretation'] == 'E_C_S'
-            assert record['project'] is None
+            assert record['project'] == 1
 
         # Test updating using `label` to identify the record
         id = response.data[0]['id']

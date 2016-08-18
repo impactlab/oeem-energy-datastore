@@ -265,13 +265,25 @@ class ConsumptionMetadataViewSet(SyncMixin, viewsets.ModelViewSet):
         """
         response_data = []
         for record in request.data:
+
+            # If project_project_id is passed, try to find a Project with `project_id` that
+            # matches.
+            if 'project_project_id' in record:
+                record['project'] = models.Project.objects.get(project_id=record['project_project_id']).id
+
             partial = kwargs.pop('partial', False)
+
+            # Perform the lookup by `label` instead of `id`
             instance = self.get_object_by_label(record['label'])
+
+            # Serialize and update (extracted from DjangoRestFramework implementation)
             serializer = self.get_serializer(instance, data=record, partial=partial)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
+
             response_data.append(serializer.data)
             headers = self.get_success_headers(serializer.data)
+            
         return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
 
 class ConsumptionRecordFilter(django_filters.FilterSet):
