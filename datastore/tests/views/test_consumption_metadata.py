@@ -1,5 +1,5 @@
 from .shared import OAuthTestCase
-
+from datastore import models
 
 class ConsumptionMetadataAPITestCase(OAuthTestCase):
 
@@ -49,6 +49,8 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
             "project_project_id": "ABC",
         }]
 
+        project_id = models.Project.objects.get(project_id="ABC").pk
+
         response = self.post(
             '/api/v1/consumption_metadatas/many/', post_body)
 
@@ -60,7 +62,7 @@ class ConsumptionMetadataAPITestCase(OAuthTestCase):
             assert isinstance(record['id'], int)
             assert record['unit'] == 'KWH'
             assert record['interpretation'] == 'E_C_S'
-            assert record['project'] == 1
+            assert record['project'] == project_id
 
         # Test updating using `label` to identify the record
         id = response.data[0]['id']
