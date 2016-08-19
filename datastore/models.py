@@ -386,9 +386,10 @@ class ConsumptionMetadata(models.Model):
                                       choices=INTERPRETATION_CHOICES)
     unit = models.CharField(max_length=3, choices=UNIT_CHOICES)
     project = models.ForeignKey(Project, blank=True, null=True)
-    label = models.CharField(max_length=140, blank=True, null=True)
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    label = models.CharField(max_length=140, blank=True, null=True)
 
     def eemeter_consumption_data(self):
         records = [r.eemeter_record() for r in self.records.all()]

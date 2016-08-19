@@ -1,6 +1,9 @@
 from __future__ import absolute_import
 
+
 import os
+import sys
+import logging
 
 import dj_database_url
 
@@ -179,3 +182,8 @@ if DEBUG:
     MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     DEBUG_TOOLBAR_PATCH_SETTINGS = False
     INTERNAL_IPS = ['0.0.0.0', '127.0.0.1', 'localhost']
+
+
+# Disable noisy logging messages during test runs
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    logging.disable(logging.CRITICAL)
