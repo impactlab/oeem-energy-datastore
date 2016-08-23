@@ -63,7 +63,7 @@ You might consider adding these to your virtualenv postactivate script
 
 #### Run the tests
 
-    py.test
+    python manage.py test
 
 Run a single test:
 

@@ -164,6 +164,53 @@ class ConsumptionRecordAPITestCase(OAuthTestCase):
         assert response.status_code == 400
         assert response.data['status'] == 'error'
 
+    def test_consumption_record_bulk_insert(self):
+
+        # Create a two metadata objects
+        response = self.post('/api/v1/consumption_metadatas/sync/', [{
+            "project_project_id": "ABC",
+            "unit": "KWH",
+            "interpretation": "E_C_S",
+            "label": "first-trace"
+        }, {
+            "project_project_id": "DEF",
+            "unit": "KWH",
+            "interpretation": "E_C_S",
+            "label": "first-trace"
+        }])
+
+        cm_id = response.data[0]['id']
+        cm_id2 = response.data[1]['id']
+
+        # Make sure the records don't already exist
+        def get_test_record_by_start(start, cm_id=cm_id):
+            return models.ConsumptionRecord.objects.filter(
+                start=start, metadata_id=cm_id).first()
+        start_a = "2014-01-01T00:00:00+00:00"
+        start_b = "2014-01-01T01:00:00+00:00"
+        a = get_test_record_by_start(start_a)
+        b = get_test_record_by_start(start_b)
+        assert a is None
+        assert b is None
+
+        response = self.post('/api/v1/consumption_records/bulk_insert/', [{
+            "metadata_id": cm_id,
+            "start": start_a,
+            "value": 1.0,
+            "estimated": True
+        }, {
+            "metadata_id": cm_id,
+            "start": start_b,
+            "value": 2.0,
+            "estimated": True
+        }])
+
+        # Check that the two records were created
+        a = get_test_record_by_start(start_a)
+        b = get_test_record_by_start(start_b)
+        assert a is not None
+        assert b is not None
+
     def test_consumption_record_create_read(self):
 
         response = self.post('/api/v1/consumption_metadatas/sync/', [{

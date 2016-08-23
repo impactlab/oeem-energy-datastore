@@ -154,27 +154,17 @@ class ConsumptionRecordEmbeddedSerializer(serializers.ModelSerializer):
 
 class ConsumptionMetadataSerializer(serializers.ModelSerializer):
 
-    records = ConsumptionRecordEmbeddedSerializer(many=True)
-
     class Meta:
         model = models.ConsumptionMetadata
         fields = (
             'id',
             'interpretation',
             'unit',
-            'records',
             'project',
             'label',
         )
 
-    def create(self, validated_data):
-        records_data = validated_data.pop('records')
 
-        consumption_metadata = \
-            models.ConsumptionMetadata.objects.create(**validated_data)
 
-        for record_data in records_data:
-            models.ConsumptionRecord.objects.create(
-                metadata=consumption_metadata, **record_data)
 
-        return consumption_metadata
+
