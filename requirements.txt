@@ -7,7 +7,7 @@ dj-database-url
 Django==1.10.3
 django-celery==3.1.17
 django-filter==1.0.0
-django-oauth-toolkit
+django-oauth-toolkit==0.10.0
 djangorestframework==3.5.3
 eemeter==0.4.12
 pandas>=0.18
