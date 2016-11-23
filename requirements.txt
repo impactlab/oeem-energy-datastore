@@ -11,7 +11,7 @@ django-oauth-toolkit
 djangorestframework
 eemeter==0.4.6
 pandas>=0.18
-psycopg2
+psycopg2==2.6.2
 redis
 requests
 sqlalchemy
