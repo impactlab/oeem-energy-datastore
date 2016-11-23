@@ -6,7 +6,7 @@ kombu
 dj-database-url
 Django>=1.9,<1.10
 django-celery==3.1.17
-django-filter
+django-filter==1.0.0
 django-oauth-toolkit
 djangorestframework==3.5.3
 eemeter==0.4.6
