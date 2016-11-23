@@ -14,7 +14,7 @@ pandas>=0.18
 psycopg2==2.6.2
 redis
 requests
-sqlalchemy
+sqlalchemy==1.1.4
 django-grappelli
 gunicorn
 django-rest-swagger==2.1.0
