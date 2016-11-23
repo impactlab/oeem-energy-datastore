@@ -4,7 +4,7 @@ billiard==3.5.0.2
 celery
 kombu
 dj-database-url
-Django>=1.9,<1.10
+Django==1.10.3
 django-celery==3.1.17
 django-filter==1.0.0
 django-oauth-toolkit
