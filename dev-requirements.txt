@@ -1,5 +1,5 @@
 django-debug-toolbar==1.6
 pytest-django==3.1.1
 pytest-flake8==0.5
-django-pdb
+django-pdb==0.5.1
 ipdb
