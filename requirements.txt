@@ -1,6 +1,6 @@
 amqp==1.4.9
 anyjson
-billiard
+billiard==3.5.0.2
 celery
 kombu
 dj-database-url
