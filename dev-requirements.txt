@@ -1,4 +1,4 @@
-django-debug-toolbar==1.4
+django-debug-toolbar==1.6
 pytest-django
 pytest-flake8==0.5
 django-pdb
