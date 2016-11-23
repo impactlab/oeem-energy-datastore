@@ -5,7 +5,7 @@ celery
 kombu
 dj-database-url
 Django>=1.9,<1.10
-django-celery
+django-celery==3.1.17
 django-filter
 django-oauth-toolkit
 djangorestframework
